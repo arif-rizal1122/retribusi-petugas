@@ -22,6 +22,7 @@ import FieldInspection from './pages/FieldInspection';
 import Presentation from './pages/Presentation';
 import PetaLapangan from './pages/PetaLapangan';
 import PbbBapenda from './pages/PbbBapenda';
+import DownloadApp from './pages/DownloadApp';
 
 
 function HomeRoute() {
@@ -197,6 +198,8 @@ function App() {
             />
 
             <Route path="/user-guide" element={<UserGuide />} />
+            <Route path="/download" element={<DownloadApp />} />
+            <Route path="/unduh" element={<DownloadApp />} />
             <Route path="/presentation" element={<Presentation />} />
 
             <Route path="*" element={<Navigate to="/" replace />} />

@@ -7,7 +7,6 @@ import {
   Users,
   FileText,
   BarChart3,
-  Database,
   LogOut,
   Sun,
   Moon,
@@ -19,8 +18,8 @@ import {
   QrCode,
   Home,
   User,
-  Calculator,
-  Map
+  Map,
+  Download
 } from 'lucide-react';
 import { UserRole } from '../types';
 
@@ -67,22 +66,16 @@ const menuItems: MenuItem[] = [
     roles: ['super_admin', 'opd', 'viewer', 'petugas'],
   },
   {
-    label: 'Master Data',
-    path: '/master-data',
-    icon: <Database className="w-5 h-5" />,
-    roles: ['super_admin', 'opd', 'petugas'],
-  },
-  {
-    label: 'Kalkulator Pajak',
-    path: '/calculator',
-    icon: <Calculator className="w-5 h-5" />,
-    roles: ['super_admin', 'opd', 'petugas'],
-  },
-  {
     label: 'PBB Bapenda',
     path: '/pbb-bapenda',
     icon: <FileText className="w-5 h-5" />,
     roles: ['super_admin', 'opd', 'petugas'],
+  },
+  {
+    label: 'Unduh App',
+    path: '/download',
+    icon: <Download className="w-5 h-5" />,
+    roles: ['super_admin', 'opd', 'verifikator', 'petugas', 'viewer'],
   },
 ];
 
