@@ -19,7 +19,8 @@ import {
   Home,
   User,
   Map,
-  Download
+  Download,
+  CheckCircle
 } from 'lucide-react';
 import { UserRole } from '../types';
 
@@ -57,6 +58,12 @@ const menuItems: MenuItem[] = [
     label: 'Billing & Tagihan',
     path: '/billing',
     icon: <FileText className="w-5 h-5" />,
+    roles: ['super_admin', 'opd', 'petugas'],
+  },
+  {
+    label: 'Verifikasi Bayar',
+    path: '/verification',
+    icon: <CheckCircle className="w-5 h-5" />,
     roles: ['super_admin', 'opd', 'petugas'],
   },
   {

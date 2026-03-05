@@ -7,8 +7,7 @@ import {
   Loader2, 
   QrCode, 
   Plus, 
-  ImagePlus, 
-  X 
+  ImagePlus
 } from 'lucide-react';
 import SearchableSelect from '../components/SearchableSelect';
 import { Billing as BillingType } from '../types';
@@ -201,8 +200,16 @@ export default function Billing() {
     }
   };
 
+  const billIdsParam = searchParams.get('ids');
+  const idsToFilter = billIdsParam ? billIdsParam.split(',') : [];
+
   const filteredBillings = billings
     .filter((billing) => {
+      // If ids parameter exists, filter by those IDs first
+      if (idsToFilter.length > 0) {
+        return idsToFilter.includes(String(billing.id));
+      }
+
       const matchesSearch =
         billing.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
         billing.taxpayerName.toLowerCase().includes(searchTerm.toLowerCase()) ||

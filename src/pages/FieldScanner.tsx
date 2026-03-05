@@ -75,9 +75,21 @@ export default function FieldScanner() {
           setIsScanning(false);
           if (navigator.vibrate) navigator.vibrate(200);
           
+          let targetUrl = `/billing?search=${encodeURIComponent(decodedText)}`;
+          
+          try {
+            const data = JSON.parse(decodedText);
+            if (data.type === 'bill_payment' && data.ids) {
+                // If it's a digital bill, redirect to a confirmation page or bulk billing
+                targetUrl = `/billing?ids=${data.ids.join(',')}`;
+            }
+          } catch (e) {
+            // Not JSON, use default search behavior
+          }
+
           setTimeout(() => {
             stopScanner();
-            navigate(`/billing?search=${encodeURIComponent(decodedText)}`);
+            navigate(targetUrl);
           }, 1200);
         },
         () => {}

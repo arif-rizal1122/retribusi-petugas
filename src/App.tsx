@@ -23,6 +23,7 @@ import Presentation from './pages/Presentation';
 import PetaLapangan from './pages/PetaLapangan';
 import PbbBapenda from './pages/PbbBapenda';
 import DownloadApp from './pages/DownloadApp';
+import PaymentVerification from './pages/PaymentVerification';
 
 
 function HomeRoute() {
@@ -137,6 +138,17 @@ function App() {
                 <ProtectedRoute allowedRoles={['super_admin', 'opd', 'petugas']}>
                   <Layout>
                     <Billing />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/verification"
+              element={
+                <ProtectedRoute allowedRoles={['super_admin', 'opd', 'petugas']}>
+                  <Layout>
+                    <PaymentVerification />
                   </Layout>
                 </ProtectedRoute>
               }
