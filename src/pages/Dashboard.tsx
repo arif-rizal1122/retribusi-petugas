@@ -313,26 +313,9 @@ export default function Dashboard() {
         className: 'custom-div-icon',
         html: `
           <div style="position: relative;">
-            <div style="
-              width: 38px; height: 38px; 
-              background: white; border-radius: 50%; 
-              display: flex; align-items: center; justify-content: center; 
-              box-shadow: 0 4px 12px ${color}4d; border: 3px solid ${color};
-              overflow: hidden;
-              transition: all 0.3s ease;
-            ">
-              <img src="${photoUrl || fallbackAvatar}" style="width: 100%; height: 100%; object-fit: cover;" />
-            </div>
-            <div style="
-              position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
-              background: ${color}; color: white; padding: 2px 6px; border-radius: 4px;
-              font-size: 7px; font-weight: 900; white-space: nowrap; border: 1px solid white;
-              letter-spacing: 0.05em;
-            ">
-              ${label}
-            </div>
           </div>
-        `,
+        </div>
+      `,
         iconSize: [38, 38],
         iconAnchor: [19, 38],
       });
