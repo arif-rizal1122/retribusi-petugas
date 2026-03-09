@@ -24,6 +24,7 @@ import PetaLapangan from './pages/PetaLapangan';
 import PbbBapenda from './pages/PbbBapenda';
 import DownloadApp from './pages/DownloadApp';
 import PaymentVerification from './pages/PaymentVerification';
+import DaftarTugas from './pages/DaftarTugas';
 
 
 function HomeRoute() {
@@ -138,6 +139,17 @@ function App() {
                 <ProtectedRoute allowedRoles={['super_admin', 'opd', 'petugas']}>
                   <Layout>
                     <Billing />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/tasks"
+              element={
+                <ProtectedRoute allowedRoles={['super_admin', 'opd', 'petugas']}>
+                  <Layout>
+                    <DaftarTugas />
                   </Layout>
                 </ProtectedRoute>
               }

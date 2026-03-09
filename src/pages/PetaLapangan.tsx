@@ -186,11 +186,53 @@ export default function PetaLapangan() {
 
     setGpsStatus('loading');
     
+    // Store last sent position and time to limit API calls
+    let lastSentPosition: [number, number] | null = null;
+    let lastSentTime = 0;
+    const MIN_DISTANCE_METERS = 50; // Minimum 50 meters before sending update
+    const MIN_TIME_MS = 60000; // Minimum 1 minute before sending update
+
     watchIdRef.current = navigator.geolocation.watchPosition(
       (position) => {
         const newPos: [number, number] = [position.coords.latitude, position.coords.longitude];
         setMyPosition(newPos);
         setGpsStatus('active');
+        
+        // Throttling Logic for API calls
+        const now = Date.now();
+        
+        // Only consider sending if 1 minute has passed OR no position was sent yet
+        if (now - lastSentTime >= MIN_TIME_MS || !lastSentPosition) {
+          
+          let shouldSend = false;
+          
+          if (!lastSentPosition) {
+             shouldSend = true; // First time, always send
+          } else {
+             // Calculate distance from last sent position
+             const distance = calculateDistance(
+               lastSentPosition[0], lastSentPosition[1], 
+               newPos[0], newPos[1]
+             );
+             
+             // Send if distance > 50 meters
+             if (distance >= MIN_DISTANCE_METERS) {
+               shouldSend = true;
+             }
+          }
+          
+          if (shouldSend) {
+            // Update to API
+            api.put('/api/user/location', {
+              latitude: newPos[0],
+              longitude: newPos[1]
+            }).catch(err => console.error("Failed to update location to server:", err));
+            
+            // Update trackers
+            lastSentPosition = newPos;
+            lastSentTime = now;
+          }
+        }
       },
       (error) => {
         console.warn('GPS Watch High-Accuracy Error:', error.message);
@@ -198,8 +240,21 @@ export default function PetaLapangan() {
         // Coba pertolongan pertama dengan akurasi rendah (low-accuracy fallback)
         navigator.geolocation.getCurrentPosition(
           (pos) => {
-            setMyPosition([pos.coords.latitude, pos.coords.longitude]);
+            const newPos: [number, number] = [pos.coords.latitude, pos.coords.longitude];
+            setMyPosition(newPos);
             setGpsStatus('active');
+            
+            // Fallback location update, also apply minimum time logic but don't strictly require distance here
+            // as fallbacks are rare and we want to capture them
+            const now = Date.now();
+            if (now - lastSentTime >= MIN_TIME_MS) {
+                api.put('/api/user/location', {
+                  latitude: newPos[0],
+                  longitude: newPos[1]
+                }).catch(err => console.error("Failed fallback location update:", err));
+                lastSentPosition = newPos;
+                lastSentTime = now;
+            }
           },
           (fallbackErr) => {
              console.error('GPS Fallback Error:', fallbackErr.message);

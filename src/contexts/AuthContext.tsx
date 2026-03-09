@@ -36,6 +36,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.setItem('token', response.token);
         localStorage.setItem('user', JSON.stringify(response.user));
         setUser(response.user);
+
+        // Update user's real-time location upon successful login
+        if ('geolocation' in navigator) {
+          navigator.geolocation.getCurrentPosition(
+            async (position) => {
+              try {
+                await api.put('/api/user/location', {
+                  latitude: position.coords.latitude,
+                  longitude: position.coords.longitude
+                });
+                console.log('Location updated successfully upon login');
+              } catch (locErr) {
+                console.error('Failed to update location:', locErr);
+              }
+            },
+            (error) => {
+              console.warn('Geolocation error during login:', error.message);
+            },
+            {
+              enableHighAccuracy: true,
+              timeout: 10000,
+              maximumAge: 0
+            }
+          );
+        }
+
         return { error: null, user: response.user };
       }
       

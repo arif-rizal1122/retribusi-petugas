@@ -20,7 +20,8 @@ import {
   User,
   Map,
   Download,
-  CheckCircle
+  CheckCircle,
+  ClipboardList
 } from 'lucide-react';
 import { UserRole } from '../types';
 
@@ -46,6 +47,12 @@ const menuItems: MenuItem[] = [
     label: 'Peta Lapangan',
     path: '/peta',
     icon: <Map className="w-5 h-5" />,
+    roles: ['super_admin', 'opd', 'petugas'],
+  },
+  {
+    label: 'Tugas',
+    path: '/tasks',
+    icon: <ClipboardList className="w-5 h-5" />,
     roles: ['super_admin', 'opd', 'petugas'],
   },
   {
@@ -356,7 +363,7 @@ export default function Layout({ children }: LayoutProps) {
           { icon: Home, path: '/dashboard', label: 'Home' },
           { icon: FileText, path: '/billing', label: 'Billing' },
           { icon: QrCode, path: '/scanner', label: 'Scan' },
-          { icon: Users, path: '/taxpayers', label: 'WP' },
+          { icon: ClipboardList, path: '/tasks', label: 'Tugas' },
           { icon: User, path: '/profile', label: 'Profile' }
         ].map((item, i, arr) => {
           const isActive = location.pathname === item.path;
