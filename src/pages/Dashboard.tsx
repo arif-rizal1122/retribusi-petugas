@@ -634,29 +634,90 @@ export default function Dashboard() {
         </div>
       )}
 
+      {/* Quick Actions Panel (Desktop & Tablet) */}
+      <div className="hidden lg:grid grid-cols-2 gap-6">
+        <button 
+          onClick={() => navigate('/taxpayers')}
+          className="relative overflow-hidden group bg-white dark:bg-slate-900 p-8 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-xl transition-all text-left"
+        >
+          <div className="absolute right-0 top-0 w-32 h-32 bg-blue-500/5 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-blue-500/10 transition-all duration-700"></div>
+          <div className="flex items-center gap-6">
+            <div className="w-16 h-16 bg-blue-50 dark:bg-blue-900/20 rounded-2xl flex items-center justify-center text-[#2d5cd5] group-hover:scale-110 transition-transform">
+              <Plus size={32} />
+            </div>
+            <div>
+              <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">Tambah Wajib Pajak</h3>
+              <p className="text-sm text-slate-500 font-medium">Daftarkan subjek retribusi baru langsung dari lapangan</p>
+            </div>
+          </div>
+        </button>
+
+        <button 
+          onClick={() => navigate('/peta')}
+          className="relative overflow-hidden group bg-white dark:bg-slate-900 p-8 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-xl transition-all text-left"
+        >
+          <div className="absolute right-0 top-0 w-32 h-32 bg-emerald-500/5 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-emerald-500/10 transition-all duration-700"></div>
+          <div className="flex items-center gap-6">
+            <div className="w-16 h-16 bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl flex items-center justify-center text-emerald-600 group-hover:scale-110 transition-transform">
+              <MapIcon size={32} />
+            </div>
+            <div>
+              <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">Cek Peta Lapangan</h3>
+              <p className="text-sm text-slate-500 font-medium">Pantau sebaran titik potensi objek pajak secara real-time</p>
+            </div>
+          </div>
+        </button>
+      </div>
+
       {/* Buttons (Mobile Quick Actions) */}
       <div className="lg:hidden grid grid-cols-1 gap-4">
         <div className="grid grid-cols-2 gap-4">
           <button 
-            onClick={() => navigate('/scanner')}
-            className="flex items-center justify-center gap-3 bg-[#2d5cd5] text-white p-5 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-blue-500/20 active:scale-95 transition-all"
+            onClick={() => navigate('/taxpayers')}
+            className="flex flex-col items-center justify-center gap-2 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-800 p-5 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-sm active:scale-95 transition-all"
           >
-            <QrCode size={18} />
-            Scan QR
+            <div className="w-10 h-10 bg-blue-50 dark:bg-blue-900/20 rounded-xl flex items-center justify-center text-[#2d5cd5]">
+              <Plus size={20} />
+            </div>
+            Tambah WP
           </button>
           <button 
-            onClick={() => navigate('/billing')}
-            className="flex items-center justify-center gap-3 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-800 p-5 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-sm active:scale-95 transition-all"
+            onClick={() => navigate('/scanner')}
+            className="flex flex-col items-center justify-center gap-2 bg-[#2d5cd5] text-white p-5 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-blue-500/20 active:scale-95 transition-all"
           >
-            <SearchIcon size={18} />
-            Cari WP
+            <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+              <QrCode size={20} />
+            </div>
+            Scan QR
           </button>
         </div>
+        
+        <div className="grid grid-cols-2 gap-4">
+          <button 
+            onClick={() => navigate('/billing')}
+            className="flex flex-col items-center justify-center gap-2 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-800 p-5 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-sm active:scale-95 transition-all"
+          >
+            <div className="w-10 h-10 bg-slate-50 dark:bg-slate-800 rounded-xl flex items-center justify-center text-slate-500">
+              <SearchIcon size={20} />
+            </div>
+            Cari WP
+          </button>
+          <button 
+            onClick={() => navigate('/peta')}
+            className="flex flex-col items-center justify-center gap-2 bg-emerald-600 text-white p-5 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-emerald-500/20 active:scale-95 transition-all"
+          >
+            <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+              <MapIcon size={20} />
+            </div>
+            Peta Lokasi
+          </button>
+        </div>
+
         <button 
           onClick={() => navigate('/field-check')}
-          className="flex items-center justify-center gap-3 bg-emerald-600 text-white p-5 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-emerald-500/20 active:scale-95 transition-all"
+          className="flex items-center justify-center gap-3 bg-slate-800 text-white p-5 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl active:scale-95 transition-all"
         >
-          <MapIcon size={18} />
+          <Activity size={18} />
           Laporan Lapangan (GPS)
         </button>
       </div>

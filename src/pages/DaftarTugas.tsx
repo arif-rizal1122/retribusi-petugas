@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { useState, useEffect } from 'react';
 import api from '../lib/api';
 import { 
   ClipboardList, 
@@ -37,39 +36,57 @@ export default function DaftarTugas() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState<'pending' | 'completed'>('pending');
-  const { user } = useAuth();
 
   useEffect(() => {
     fetchTasks();
   }, [activeTab]);
 
+  const [uploadingId, setUploadingId] = useState<number | null>(null);
+
   const fetchTasks = async () => {
     try {
       setLoading(true);
-      const res = await api.get('/petugas-tasks', {
+      const res = await api.get('/api/petugas-tasks', {
         params: { status: activeTab }
       });
-      if (res.data?.status === 'success') {
+      if (res.data?.data) {
         setTasks(res.data.data);
       }
     } catch (err) {
-      toast.error('Gagal mengambil daftar tugas');
-      console.error(err);
+      console.error('Error fetching tasks:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  const markAsCompleted = async (id: number) => {
+  const markAsCompleted = async (id: number, photo: File | null) => {
+    if (!photo) {
+      toast.error('Gunakan Kamera untuk bukti penyelesaian!');
+      return;
+    }
+
     try {
-      const res = await api.put(`/petugas-tasks/${id}`, { status: 'completed' });
+      setUploadingId(id);
+      const formData = new FormData();
+      formData.append('status', 'completed');
+      formData.append('photo', photo);
+      // Laravel PUT with file requires _method spoofing if using POST or a proper multipart PUT (which is tricky with some PHP versions)
+      // Since our backend is PHP, we use POST + _method: PUT
+      formData.append('_method', 'PUT');
+
+      const res = await api.post(`/api/petugas-tasks/${id}`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+
       if (res.data?.status === 'success') {
-        toast.success('Tugas ditandai selesai');
+        toast.success('Tugas ditandai selesai dengan bukti foto');
         setTasks(tasks.filter(t => t.id !== id));
       }
-    } catch (err) {
-      toast.error('Gagal menyelesaikan tugas');
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Gagal menyelesaikan tugas');
       console.error(err);
+    } finally {
+      setUploadingId(null);
     }
   };
 
@@ -228,16 +245,38 @@ export default function DaftarTugas() {
               
               <div className="p-4 mt-auto bg-slate-50 dark:bg-slate-900/50">
                 {task.status === 'pending' ? (
-                  <button
-                    onClick={() => markAsCompleted(task.id)}
-                    className="w-full flex items-center justify-center gap-2 py-3 bg-[#2d5cd5] hover:bg-blue-600 text-white rounded-xl font-bold uppercase tracking-wider text-xs transition-colors shadow-lg shadow-blue-500/20"
-                  >
-                    <CheckCircle className="w-4 h-4" />
-                    Tandai Selesai
-                  </button>
+                  <div className="flex flex-col gap-2">
+                    <input
+                      type="file"
+                      id={`photo-${task.id}`}
+                      accept="image/*"
+                      capture="environment"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) markAsCompleted(task.id, file);
+                      }}
+                    />
+                    <button
+                      onClick={() => document.getElementById(`photo-${task.id}`)?.click()}
+                      disabled={uploadingId === task.id}
+                      className="w-full flex items-center justify-center gap-2 py-3 bg-[#2d5cd5] hover:bg-blue-600 disabled:bg-slate-400 text-white rounded-xl font-bold uppercase tracking-wider text-xs transition-colors shadow-lg shadow-blue-500/20"
+                    >
+                      {uploadingId === task.id ? (
+                        <>Uploading...</>
+                      ) : (
+                        <>
+                          <CheckCircle className="w-4 h-4" />
+                          Ambil Foto & Selesai
+                        </>
+                      )}
+                    </button>
+                  </div>
                 ) : (
-                  <div className="w-full flex items-center justify-center gap-2 py-3 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-xl font-bold uppercase tracking-wider text-xs cursor-default border border-slate-200 dark:border-slate-700">
-                    Selesai pada {new Date(task.completed_at || '').toLocaleDateString('id-ID')}
+                  <div className="w-full flex flex-col gap-2">
+                    <div className="w-full flex items-center justify-center gap-2 py-3 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-xl font-bold uppercase tracking-wider text-xs cursor-default border border-slate-200 dark:border-slate-700">
+                      Selesai {new Date(task.completed_at || '').toLocaleDateString('id-ID')}
+                    </div>
                   </div>
                 )}
               </div>

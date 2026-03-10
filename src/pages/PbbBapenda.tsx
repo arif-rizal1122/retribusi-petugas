@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { Search, Loader2, Receipt, CheckCircle2, XCircle, CreditCard, Building2, FileText } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Search, Loader2, CheckCircle2, XCircle, CreditCard, Building2, FileText, Printer } from 'lucide-react';
+import { thermalPrintService } from '../services/ThermalPrintService';
 import { api } from '../lib/api';
 
 interface InquiryResult {
@@ -33,6 +34,12 @@ interface Transaction {
   payment_status: string;
   wp_name: string;
   created_at: string;
+  // Add other fields that might be needed for printing if they are not already in InquiryResult
+  nama_wp?: string;
+  alamat_wp?: string;
+  pbb_pokok?: number;
+  denda?: number;
+  total_harus_dibayar?: number;
 }
 
 export default function PbbBapenda() {
@@ -52,8 +59,15 @@ export default function PbbBapenda() {
 
   // History
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [loadingHistory, setLoadingHistory] = useState(false);
+  const [txLoading, setTxLoading] = useState(false);
   const [searchNop, setSearchNop] = useState('');
+  const [printing, setPrinting] = useState<number | string | null>(null);
+
+  useEffect(() => {
+    if (activeTab === 'history') {
+      loadHistory();
+    }
+  }, [activeTab]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -100,7 +114,7 @@ export default function PbbBapenda() {
       });
       setPaymentResult(res.data);
       setSuccess('Pembayaran PBB berhasil!');
-      setInquiryResult(null);
+      // Do not set inquiryResult to null immediately, it's needed for printing
     } catch (err: any) {
       setError(err.message || 'Pembayaran gagal.');
     } finally {
@@ -109,7 +123,7 @@ export default function PbbBapenda() {
   };
 
   const loadHistory = async () => {
-    setLoadingHistory(true);
+    setTxLoading(true);
     try {
       const params: Record<string, any> = {};
       if (searchNop) params.nop = searchNop;
@@ -118,7 +132,30 @@ export default function PbbBapenda() {
     } catch (err: any) {
       setError(err.message || 'Gagal memuat riwayat.');
     } finally {
-      setLoadingHistory(false);
+      setTxLoading(false);
+    }
+  };
+
+  const handlePrint = async (tx: any) => {
+    try {
+      const ntpd = tx.ntpd || (paymentResult ? paymentResult.ntpd : '-');
+      setPrinting(tx.id || ntpd);
+      
+      await thermalPrintService.print({
+        nop: tx.nop,
+        tahun: tx.tahun,
+        namaWp: tx.wp_name || tx.nama_wp || (paymentResult ? paymentResult.wp_name : ''),
+        alamatOp: tx.alamat_wp || '',
+        amount: parseFloat(String(tx.pbb_pokok || 0)),
+        penalty: parseFloat(String(tx.denda || 0)),
+        total: parseFloat(String(tx.total_bayar || tx.total_harus_dibayar || 0)),
+        ntpd: ntpd,
+        date: new Date(tx.created_at || new Date()).toLocaleDateString('id-ID')
+      });
+    } catch (err: any) {
+      alert("Gagal mencetak: " + (err.message || "Pastikan printer Bluetooth terhubung"));
+    } finally {
+      setPrinting(null);
     }
   };
 
@@ -229,7 +266,7 @@ export default function PbbBapenda() {
           </div>
 
           {/* Inquiry Result */}
-          {inquiryResult && (
+          {inquiryResult && !paymentResult && (
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
               <div className="p-5">
                 <div className="flex items-center justify-between mb-4">
@@ -283,24 +320,35 @@ export default function PbbBapenda() {
           )}
 
           {/* Payment Success */}
-          {paymentResult && (
-            <div className="bg-white dark:bg-gray-800 rounded-xl border-2 border-green-300 dark:border-green-700 overflow-hidden">
-              <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 p-4 text-center">
-                <CheckCircle2 className="w-12 h-12 text-white mx-auto mb-2" />
-                <h3 className="text-white font-bold text-lg">Pembayaran Berhasil</h3>
+          {paymentResult && inquiryResult && (
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 text-center space-y-3 border border-green-200 dark:border-green-700 animate-in zoom-in-95 duration-300">
+              <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto" />
+              <h3 className="text-lg font-bold text-green-700 dark:text-green-400">Pembayaran Berhasil</h3>
+              <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-3 border border-green-200 dark:border-green-800">
+                <p className="text-xs text-gray-500 mb-1">NTPD (Bukti Bayar)</p>
+                <p className="text-xl font-bold font-mono text-gray-900 dark:text-white tracking-widest leading-none py-1">
+                  {paymentResult.ntpd}
+                </p>
               </div>
-              <div className="p-5 space-y-3">
-                <DetailRow label="NTPD (Bukti Bayar)" value={paymentResult.ntpd} mono highlight />
-                <DetailRow label="NOP" value={paymentResult.nop} mono />
-                <DetailRow label="Tahun" value={paymentResult.tahun} />
-                <DetailRow label="Nama WP" value={paymentResult.wp_name} />
-                <DetailRow label="Total Bayar" value={formatCurrency(paymentResult.total_bayar)} highlight />
-                <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 mt-4">
-                  <p className="text-xs text-blue-700 dark:text-blue-400 text-center">
-                    <Receipt className="w-4 h-4 inline mr-1" />
-                    Berikan NTPD kepada wajib pajak sebagai bukti pembayaran resmi.
-                  </p>
-                </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handlePrint({ ...inquiryResult, ntpd: paymentResult.ntpd, wp_name: paymentResult.wp_name, total_bayar: paymentResult.total_bayar })}
+                  disabled={printing === paymentResult.ntpd}
+                  className="flex-1 py-3 bg-baubau-blue text-white rounded-xl font-bold flex items-center justify-center gap-2"
+                >
+                  {printing === paymentResult.ntpd ? <Loader2 className="w-4 h-4 animate-spin" /> : <Printer size={18} />}
+                  Cetak Struk
+                </button>
+                <button
+                  onClick={() => {
+                    setPaymentResult(null);
+                    setInquiryResult(null);
+                    setNop('');
+                  }}
+                  className="flex-1 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-bold"
+                >
+                  Selesai
+                </button>
               </div>
             </div>
           )}
@@ -320,15 +368,15 @@ export default function PbbBapenda() {
             />
             <button
               onClick={loadHistory}
-              disabled={loadingHistory}
+              disabled={txLoading}
               className="px-4 py-2.5 bg-baubau-blue text-white rounded-lg text-sm font-medium flex items-center gap-2 disabled:opacity-50"
             >
-              {loadingHistory ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+              {txLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
               Cari
             </button>
           </div>
 
-          {loadingHistory ? (
+          {txLoading ? (
             <div className="flex justify-center py-12">
               <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
             </div>
@@ -350,6 +398,7 @@ export default function PbbBapenda() {
                       <th className="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-300">NTPD</th>
                       <th className="text-center px-4 py-3 font-medium text-gray-600 dark:text-gray-300">Status</th>
                       <th className="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-300">Tanggal</th>
+                      <th className="text-center px-4 py-3 font-medium text-gray-600 dark:text-gray-300">Aksi</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
@@ -366,6 +415,18 @@ export default function PbbBapenda() {
                           </span>
                         </td>
                         <td className="px-4 py-3 text-xs text-gray-500">{new Date(tx.created_at).toLocaleDateString('id-ID')}</td>
+                        <td className="px-4 py-3 text-center">
+                          {tx.payment_status === 'success' && (
+                            <button
+                              onClick={() => handlePrint(tx)}
+                              disabled={printing === tx.id}
+                              className="p-2 bg-baubau-blue/10 text-baubau-blue rounded-lg hover:bg-baubau-blue/20 transition-all"
+                              title="Cetak Struk"
+                            >
+                              {printing === tx.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Printer size={14} />}
+                            </button>
+                          )}
+                        </td>
                       </tr>
                     ))}
                   </tbody>

@@ -82,3 +82,5 @@ export const api = {
     },
     delete: (endpoint: string, options: RequestInit & { params?: Record<string, any> } = {}) => apiFetch(endpoint, { method: 'DELETE', ...options }),
 };
+
+export default api;
