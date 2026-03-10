@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
 import { useNavigate } from 'react-router-dom';
+import { QRScannerService } from '../services/QRScannerService';
 import { 
   ArrowLeft, 
   Zap, 
@@ -18,6 +19,7 @@ export default function FieldScanner() {
   const [torchOn, setTorchOn] = useState(false);
   const [activeCamera, setActiveCamera] = useState<string | null>(null);
   const [cameras, setCameras] = useState<any[]>([]);
+  const [detectionHint, setDetectionHint] = useState<string | null>(null);
   
   const qrScannerRef = useRef<Html5Qrcode | null>(null);
   const containerId = "reader";
@@ -71,26 +73,29 @@ export default function FieldScanner() {
           aspectRatio: 1.0,
         },
         (decodedText) => {
-          setScanResult(decodedText);
           setIsScanning(false);
-          if (navigator.vibrate) navigator.vibrate(200);
+          if (navigator.vibrate) navigator.vibrate([100, 50, 100]); // Triple pulse for success
           
-          let targetUrl = `/billing?search=${encodeURIComponent(decodedText)}`;
+          const result = QRScannerService.parse(decodedText);
+          setScanResult(result.value);
+          setDetectionHint(result.actionHint || 'Data Terdeteksi');
+
+          let targetUrl = `/billing?search=${encodeURIComponent(result.value)}`;
           
-          try {
-            const data = JSON.parse(decodedText);
-            if (data.type === 'bill_payment' && data.ids) {
-                // If it's a digital bill, redirect to a confirmation page or bulk billing
-                targetUrl = `/billing?ids=${data.ids.join(',')}`;
+          if (result.type === 'json' && result.metadata?.ids) {
+            targetUrl = `/billing?ids=${result.metadata.ids.join(',')}`;
+          } else if (result.type === 'url') {
+            if (result.metadata?.isPbbSppt) {
+              targetUrl = `/pbb-bapenda?nop=${encodeURIComponent(result.value)}&autoplay=true`;
+            } else {
+              targetUrl = `/billing?search=${encodeURIComponent(result.value)}&autoplay=true`;
             }
-          } catch (e) {
-            // Not JSON, use default search behavior
           }
 
           setTimeout(() => {
             stopScanner();
             navigate(targetUrl);
-          }, 1200);
+          }, 1500);
         },
         () => {}
       );
@@ -227,7 +232,9 @@ export default function FieldScanner() {
           <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center mb-6 shadow-2xl">
             <Loader2 className="w-12 h-12 animate-spin text-white" />
           </div>
-          <h3 className="text-3xl font-black mb-2 tracking-tighter">DATA DITEMUKAN</h3>
+          <h3 className="text-3xl font-black mb-2 tracking-tighter">
+            {detectionHint || "DATA DITEMUKAN"}
+          </h3>
           <p className="text-sm font-bold opacity-80 uppercase tracking-widest">{scanResult}</p>
         </div>
       )}

@@ -66,6 +66,7 @@ export default function Billing() {
           createdAt: b.created_at,
           taxObjectId: b.tax_object_id,
           period: b.period,
+          metadata: b.latest_payment?.metadata || b.metadata,
         }));
 
         setBillings(mappedBills);
@@ -223,6 +224,25 @@ export default function Billing() {
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
 
+  // Auto-Modal logic for QR Scanning efficiency
+  useEffect(() => {
+    if (!loading && searchParams.get('autoplay') === 'true') {
+      // Find the one that matches
+      if (filteredBillings.length === 1) {
+        const bill = filteredBillings[0];
+        if (bill.status === 'pending' && !showPaymentModal) {
+          setSelectedBill(bill);
+          setShowPaymentModal(true);
+          
+          // Clean up URL to prevent loops or unwanted re-opens
+          const newParams = new URLSearchParams(searchParams);
+          newParams.delete('autoplay');
+          navigate({ search: newParams.toString() }, { replace: true });
+        }
+      }
+    }
+  }, [loading, filteredBillings.length, searchParams, navigate, showPaymentModal]);
+
   const summary = {
     total: billings.length,
     lunas: billings.filter((b) => b.status === 'lunas').length,
@@ -366,6 +386,16 @@ export default function Billing() {
                       }`}>
                         {billing.status}
                       </span>
+                      {billing.status === 'lunas' && billing.metadata?.settlement_status === 'pending' && (
+                        <div className="mt-1 text-[8px] font-black text-amber-600 uppercase tracking-tighter">
+                          Menunggu Setoran
+                        </div>
+                      )}
+                      {billing.status === 'lunas' && billing.metadata?.settlement_status === 'settled' && (
+                        <div className="mt-1 text-[8px] font-black text-blue-600 uppercase tracking-tighter">
+                          Sudah Disetor
+                        </div>
+                      )}
                     </td>
                     <td className="px-6 py-4 text-right">
                       {billing.status === 'pending' && (
@@ -410,12 +440,20 @@ export default function Billing() {
                     <p className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest leading-none mb-1">{billing.invoiceNumber}</p>
                     <h4 className="text-sm font-black text-gray-900 dark:text-white truncate">{billing.taxpayerName}</h4>
                   </div>
-                  <span className={`px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest ${
-                    billing.status === 'lunas' ? 'bg-emerald-50 text-emerald-600' : 
-                    billing.status === 'pending' ? 'bg-amber-50 text-amber-600' : 'bg-rose-50 text-rose-600'
-                  }`}>
-                    {billing.status}
-                  </span>
+                  <div className="text-right">
+                    <span className={`px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest ${
+                      billing.status === 'lunas' ? 'bg-emerald-50 text-emerald-600' : 
+                      billing.status === 'pending' ? 'bg-amber-50 text-amber-600' : 'bg-rose-50 text-rose-600'
+                    }`}>
+                      {billing.status}
+                    </span>
+                    {billing.status === 'lunas' && billing.metadata?.settlement_status === 'pending' && (
+                      <p className="text-[8px] font-black text-amber-600 uppercase mt-1">Pending Setoran</p>
+                    )}
+                    {billing.status === 'lunas' && billing.metadata?.settlement_status === 'settled' && (
+                      <p className="text-[8px] font-black text-blue-600 uppercase mt-1">Sudah Disetor</p>
+                    )}
+                  </div>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-3 mb-4">

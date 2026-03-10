@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Search, Loader2, CheckCircle2, XCircle, CreditCard, Building2, FileText, Printer } from 'lucide-react';
 import { thermalPrintService } from '../services/ThermalPrintService';
 import { api } from '../lib/api';
@@ -43,13 +44,15 @@ interface Transaction {
 }
 
 export default function PbbBapenda() {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'inquiry' | 'history'>('inquiry');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
   // Inquiry
-  const [nop, setNop] = useState('');
+  const [nop, setNop] = useState(searchParams.get('nop') || '');
   const [tahun, setTahun] = useState(new Date().getFullYear().toString());
   const [inquiryResult, setInquiryResult] = useState<InquiryResult | null>(null);
 
@@ -79,7 +82,7 @@ export default function PbbBapenda() {
 
   const formatNop = (value: string) => value.replace(/[^0-9]/g, '').slice(0, 18);
 
-  const handleInquiry = async () => {
+  const handleInquiry = useCallback(async () => {
     if (nop.length !== 18) {
       setError('NOP harus 18 digit.');
       return;
@@ -97,7 +100,19 @@ export default function PbbBapenda() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [nop, tahun]);
+
+  // Auto-inquiry logic for QR scan
+  useEffect(() => {
+    if (searchParams.get('autoplay') === 'true' && nop.length === 18 && !inquiryResult && !loading) {
+      handleInquiry();
+      
+      // Clean up URL
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete('autoplay');
+      navigate({ search: newParams.toString() }, { replace: true });
+    }
+  }, [loading, nop, searchParams, navigate, inquiryResult, handleInquiry]);
 
   const handlePay = async () => {
     if (!inquiryResult) return;
