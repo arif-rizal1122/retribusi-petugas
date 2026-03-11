@@ -1,4 +1,8 @@
-const API_URL = import.meta.env.VITE_API_URL || 'https://api.sipanda.online';
+const API_URL = import.meta.env.VITE_API_URL;
+
+if (!API_URL) {
+    console.warn('VITE_API_URL is not defined in environment variables');
+}
 
 export async function apiFetch(endpoint: string, options: RequestInit & { params?: Record<string, any> } = {}) {
     const token = localStorage.getItem('token');
