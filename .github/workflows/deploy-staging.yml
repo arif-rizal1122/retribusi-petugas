@@ -32,5 +32,5 @@ jobs:
         username: ${{ secrets.VPS_USERNAME }}
         password: ${{ secrets.VPS_PASSWORD }}
         source: "dist/*"
-        target: "/home/sipanda/retribusi-petugas-staging"
+        target: "/home/sipanda/retribusi-petugas-staging/dist"
         strip_components: 1
