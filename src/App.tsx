@@ -25,6 +25,7 @@ import PbbBapenda from './pages/PbbBapenda';
 import DownloadApp from './pages/DownloadApp';
 import PaymentVerification from './pages/PaymentVerification';
 import DaftarTugas from './pages/DaftarTugas';
+import CreateSKPD from './pages/CreateSKPD';
 
 
 function HomeRoute() {
@@ -183,6 +184,17 @@ function App() {
                 <ProtectedRoute allowedRoles={['super_admin', 'opd', 'verifikator', 'petugas', 'viewer']}>
                   <Layout>
                     <MasterData />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/skpd/create"
+              element={
+                <ProtectedRoute allowedRoles={['super_admin', 'opd', 'petugas']}>
+                  <Layout>
+                    <CreateSKPD />
                   </Layout>
                 </ProtectedRoute>
               }

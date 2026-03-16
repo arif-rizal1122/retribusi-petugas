@@ -137,11 +137,12 @@ export default function TaxpayerDetail() {
           <button
             onClick={() => {
               const taxObject = taxpayer.tax_objects?.[0] || taxpayer;
-              navigate('/calculator', {
+              navigate('/skpd/create', {
                 state: {
                   taxObjectId: taxObject.id,
                   classificationId: taxObject.retribution_classification_id || '',
-                  defaultVars: taxObject.metadata || {}
+                  defaultVars: taxObject.metadata || {},
+                  
                 }
               });
             }}
@@ -487,11 +488,12 @@ export default function TaxpayerDetail() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        navigate('/calculator', {
+                        navigate('/skpd/create', {
                           state: {
                             taxObjectId: asset.id,
                             classificationId: asset.retribution_classifications?.[0]?.id || '',
-                            defaultVars: asset.metadata || {}
+                            defaultVars: asset.metadata || {},
+                            
                           }
                         });
                       }}
