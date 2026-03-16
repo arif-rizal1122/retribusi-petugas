@@ -26,11 +26,12 @@ jobs:
       run: npm run build:staging
 
     - name: Deploy to VPS
-      uses: appleboy/scp-action@master
+      uses: appleboy/scp-action@v0.1.7
       with:
         host: ${{ secrets.VPS_HOST }}
         username: ${{ secrets.VPS_USERNAME }}
         password: ${{ secrets.VPS_PASSWORD }}
+        port: ${{ secrets.VPS_PORT }}
         source: "dist/*"
         target: "/home/sipanda/retribusi-petugas-staging/dist"
         strip_components: 1
