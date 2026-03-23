@@ -50,9 +50,9 @@ jobs:
           username: ${{ secrets.VPS_USERNAME }}
           password: ${{ secrets.VPS_PASSWORD }}
           port: ${{ secrets.VPS_PORT }}
-          source: "dist/"
+          source: "dist/*"
           target: ${{ steps.vars.outputs.target_dir }}
-          strip_components: 0
+          strip_components: 1
 
       - name: Post-deploy Success
         uses: appleboy/ssh-action@v1.2.0
