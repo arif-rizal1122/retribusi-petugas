@@ -85,14 +85,15 @@ export default function TaxCalculator() {
     setError('');
     
     try {
-      const numericVars: Record<string, number> = {};
+      const vars: Record<string, any> = {};
       Object.entries(variables).forEach(([key, val]) => {
-        numericVars[key] = parseFloat(val) || 0;
+        // Keep as number if numeric, else keep as string
+        vars[key] = !isNaN(Number(val)) && val !== '' ? parseFloat(val) : val;
       });
 
       const resp = await api.post('/api/simulate-tax', {
         classification_id: selectedId,
-        variables: numericVars,
+        variables: vars,
       });
       
       setResult(resp.data);
@@ -209,28 +210,58 @@ export default function TaxCalculator() {
 
                   {Object.keys(variables).length > 0 && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {Object.keys(variables).map(key => {
-                        const isDuration = key.toLowerCase().includes('bulan') || key.toLowerCase().includes('hari') || key.toLowerCase().includes('tahun') || key.toLowerCase().includes('durasi');
-                        return (
-                          <div key={key} className="group">
-                            <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">
-                              {getVariableLabel(key)}
-                            </label>
-                            <div className="relative">
-                              <input
-                                type="number"
-                                placeholder="0"
-                                value={variables[key]}
-                                onChange={e => setVariables({ ...variables, [key]: e.target.value })}
-                                className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-800 rounded-2xl font-bold text-slate-900 dark:text-white focus:border-blue-500/50 transition-all pr-20"
-                              />
-                              <div className="absolute right-6 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-300 uppercase tracking-widest">
-                                {isDuration ? 'Durasi' : 'Nilai'}
+                      {(() => {
+                        const schemaFields = selected.form_schema || [];
+                        const keysToShow = schemaFields.length > 0 
+                          ? schemaFields.map(f => f.key) 
+                          : Object.keys(variables);
+
+                        return keysToShow.map(key => {
+                          const field = schemaFields.find(f => f.key === key);
+                          const isDuration = key.toLowerCase().includes('bulan') || key.toLowerCase().includes('hari') || key.toLowerCase().includes('tahun') || key.toLowerCase().includes('durasi');
+                          const type = field?.type || 'number';
+                          
+                          return (
+                            <div key={key} className="group">
+                              <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">
+                                {field?.label || getVariableLabel(key)}
+                              </label>
+                              <div className="relative">
+                                {type === 'select' ? (
+                                  <div className="relative">
+                                    <select
+                                      value={variables[key]}
+                                      onChange={e => setVariables({ ...variables, [key]: e.target.value })}
+                                      className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-800 rounded-2xl font-bold text-slate-900 dark:text-white appearance-none cursor-pointer focus:border-blue-500/50 transition-all text-base"
+                                    >
+                                      <option value="">Pilih...</option>
+                                      {(field.options || []).map((opt: any, idx: number) => (
+                                        <option key={idx} value={typeof opt === 'object' ? opt.value : opt}>
+                                          {typeof opt === 'object' ? opt.label : opt}
+                                        </option>
+                                      ))}
+                                    </select>
+                                    <ChevronDown className="absolute right-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
+                                  </div>
+                                ) : (
+                                  <>
+                                    <input
+                                      type="number"
+                                      placeholder="0"
+                                      value={variables[key]}
+                                      onChange={e => setVariables({ ...variables, [key]: e.target.value })}
+                                      className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-800 rounded-2xl font-bold text-slate-900 dark:text-white focus:border-blue-500/50 transition-all pr-20"
+                                    />
+                                    <div className="absolute right-6 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-300 uppercase tracking-widest">
+                                      {isDuration ? 'Durasi' : 'Nilai'}
+                                    </div>
+                                  </>
+                                )}
                               </div>
                             </div>
-                          </div>
-                        );
-                      })}
+                          );
+                        });
+                      })()}
                     </div>
                   )}
 
