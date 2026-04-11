@@ -28,33 +28,7 @@ jobs:
             echo "build_cmd=build:staging" >> $GITHUB_OUTPUT
           fi
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install Dependencies
-        run: npm install
-
-      - name: Build Application
-        run: npm run ${{ steps.vars.outputs.build_cmd }}
-        env:
-          VITE_API_URL: ${{ steps.vars.outputs.api_url }}
-          VITE_APP_ENV: ${{ github.ref_name == 'main' && 'production' || 'development' }}
-
-      - name: Deploy via SSH/SCP
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USERNAME }}
-          password: ${{ secrets.VPS_PASSWORD }}
-          port: ${{ secrets.VPS_PORT }}
-          source: "dist/"
-          target: ${{ steps.vars.outputs.target_dir }}
-          strip_components: 0
-
-      - name: Post-deploy Success
+      - name: Deploy and Build on VPS
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -62,4 +36,31 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           port: ${{ secrets.VPS_PORT }}
           script: |
-            echo "✅ Petugas Deploy to ${{ github.ref_name }} completed successfully!"
+            TARGET_DIR=${{ steps.vars.outputs.target_dir }}
+            API_URL=${{ steps.vars.outputs.api_url }}
+            BUILD_CMD=${{ steps.vars.outputs.build_cmd }}
+            BRANCH=${{ github.ref_name }}
+
+            echo "🚀 Starting Deployment on VPS for $BRANCH..."
+            
+            # Ensure target directory exists and is a git repo
+            if [ ! -d "$TARGET_DIR" ]; then
+              echo "❌ Target directory $TARGET_DIR does not exist. Please check VPS setup."
+              exit 1
+            fi
+
+            cd $TARGET_DIR
+            
+            # Pull latest code
+            echo "📥 Pulling latest code from $BRANCH..."
+            git pull origin $BRANCH
+
+            # Install dependencies
+            echo "📦 Installing npm dependencies..."
+            npm install --no-audit --no-fund
+
+            # Build application on VPS
+            echo "🏗️ Building application with API_URL=$API_URL..."
+            VITE_API_URL=$API_URL npm run $BUILD_CMD
+
+            echo "✅ Petugas Deploy to $BRANCH completed successfully!"
