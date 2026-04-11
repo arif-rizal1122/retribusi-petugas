@@ -71,7 +71,7 @@ const menuItems: MenuItem[] = [
     label: 'Verifikasi Bayar',
     path: '/verification',
     icon: <CheckCircle className="w-5 h-5" />,
-    roles: ['super_admin', 'opd', 'petugas'],
+    roles: ['super_admin', 'opd'],
   },
   {
     label: 'Reporting',

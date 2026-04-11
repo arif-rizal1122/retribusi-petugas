@@ -159,7 +159,7 @@ function App() {
             <Route
               path="/verification"
               element={
-                <ProtectedRoute allowedRoles={['super_admin', 'opd', 'petugas']}>
+                <ProtectedRoute allowedRoles={['super_admin', 'opd']}>
                   <Layout>
                     <PaymentVerification />
                   </Layout>

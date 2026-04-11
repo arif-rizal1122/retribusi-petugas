@@ -38,6 +38,20 @@ const BAUBAU_DATA = {
   "Wolio": ["Bataraguru", "Tomba", "Wangkanapi", "Wale", "Batulo", "Bukit Wolio Indah", "Kadolokatapi"]
 };
 
+const ensureArray = (val: any) => {
+  if (!val) return [];
+  if (Array.isArray(val)) return val;
+  if (typeof val === 'string') {
+    try {
+      const parsed = JSON.parse(val);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+};
+
 export default function TaxpayerManagement() {
   const { user } = useAuth();
   const [taxpayers, setTaxpayers] = useState<Taxpayer[]>([]);
@@ -406,7 +420,7 @@ export default function TaxpayerManagement() {
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Semua OPD</option>
-                {opds.map((opd) => (
+                {opds?.map((opd) => (
                   <option key={opd.id} value={opd.id}>{opd.name}</option>
                 ))}
               </select>
@@ -440,7 +454,7 @@ export default function TaxpayerManagement() {
                   </td>
                 </tr>
               ) : (
-                taxpayers.map((tp) => (
+                taxpayers?.map((tp) => (
                   <tr key={tp.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                     <td className="px-6 py-4">
                       <div className="text-sm font-bold text-gray-900 dark:text-white">{tp.name}</div>
@@ -505,7 +519,7 @@ export default function TaxpayerManagement() {
               Tidak ada data ditemukan
             </div>
           ) : (
-            taxpayers.map((tp) => (
+            taxpayers?.map((tp) => (
               <div key={tp.id} className="bg-white dark:bg-gray-800/50 p-4 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm active:scale-[0.98] transition-all">
                 <div className="flex justify-between items-start mb-3">
                   <div className="min-w-0 flex-1">
@@ -695,7 +709,7 @@ export default function TaxpayerManagement() {
                             className="w-full px-4 md:px-6 py-3 md:py-4 bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-800 rounded-2xl font-bold appearance-none cursor-pointer text-sm md:text-base"
                           >
                             <option value="">Pilih Dinas Pengelola</option>
-                            {opds.map(opd => <option key={opd.id} value={opd.id}>{opd.name}</option>)}
+                            {opds?.map(opd => <option key={opd.id} value={opd.id}>{opd.name}</option>)}
                           </select>
                         </div>
                       ) : (
@@ -739,7 +753,7 @@ export default function TaxpayerManagement() {
                                 </div>
                               </div>
                               <div className="space-y-2">
-                                {foundAssets.map((asset, idx) => (
+                                {foundAssets?.map((asset, idx) => (
                                   <div key={idx} className="flex items-center justify-between p-2.5 bg-white dark:bg-gray-800 rounded-xl border border-gray-50 dark:border-gray-700/50 shadow-sm">
                                     <div className="flex flex-col">
                                       <span className="text-[11px] font-black text-gray-900 dark:text-white leading-tight">
@@ -849,7 +863,7 @@ export default function TaxpayerManagement() {
                           disabled={!form.district}
                         >
                           <option value="">Pilih Kelurahan</option>
-                          {form.district && (BAUBAU_DATA as any)[form.district].map((kel: string) => <option key={kel} value={kel}>{kel}</option>)}
+                          {form.district && (BAUBAU_DATA as any)[form.district]?.map((kel: string) => <option key={kel} value={kel}>{kel}</option>)}
                         </select>
                       </div>
                       <div className="group col-span-1 md:col-span-2">
@@ -878,13 +892,13 @@ export default function TaxpayerManagement() {
                         </div>
                       ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 max-h-[400px] overflow-y-auto px-1 custom-scrollbar">
-                          {filteredRetributionTypes.map(type => (
+                          {filteredRetributionTypes?.map(type => (
                             <div key={type.id} className="space-y-4">
                               <h5 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] border-l-4 border-blue-500 pl-3">{type.name}</h5>
                               <div className="space-y-2">
                                 {classifications
-                                  .filter(c => c.retribution_type_id === type.id)
-                                  .map(cls => (
+                                  ?.filter(c => c.retribution_type_id === type.id)
+                                  ?.map(cls => (
                                     <div 
                                       key={cls.id}
                                       onClick={() => toggleClassification(cls.id, type.id)}
@@ -923,8 +937,8 @@ export default function TaxpayerManagement() {
                     </div>
 
                     {classifications
-                      .filter(c => form.retribution_classification_ids.includes(c.id))
-                      .map((cls) => (
+                      ?.filter(c => form.retribution_classification_ids.includes(c.id))
+                      ?.map((cls) => (
                         <div key={cls.id} className="space-y-6">
                           <div className="flex items-center gap-4">
                             <div className="h-[2px] flex-1 bg-gray-100 dark:bg-gray-800"></div>
@@ -935,9 +949,9 @@ export default function TaxpayerManagement() {
                           </div>
 
                           {/* Technical Fields Group */}
-                          {cls.form_schema && cls.form_schema.length > 0 && (
+                          {ensureArray(cls.form_schema).length > 0 && (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 p-6 md:p-8 bg-slate-50 dark:bg-gray-800/30 rounded-[2rem] md:rounded-[2.5rem] border-2 border-gray-100 dark:border-gray-800">
-                              {cls.form_schema.map((field: any) => (
+                              {ensureArray(cls.form_schema).map((field: any) => (
                                 <div key={field.key} className={`${field.type === 'google_map' ? 'col-span-1 md:col-span-2' : 'col-span-1'} group`}>
                                   <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">{field.label}</label>
                                   {field.type === 'select' ? (
@@ -1001,9 +1015,9 @@ export default function TaxpayerManagement() {
                           )}
 
                           {/* Requirements Group */}
-                          {cls.requirements && cls.requirements.length > 0 && (
+                          {ensureArray(cls.requirements).length > 0 && (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                              {cls.requirements.map((req: any, idx: number) => (
+                              {ensureArray(cls.requirements).map((req: any, idx: number) => (
                                 <label key={req.key} className="block group cursor-pointer">
                                   <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-1">{req.label}</div>
                                   <div className={`p-6 md:p-8 rounded-[1.5rem] md:rounded-[2rem] border-2 border-dashed flex flex-col items-center justify-center gap-4 transition-all ${
@@ -1112,8 +1126,8 @@ export default function TaxpayerManagement() {
                         <div className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 sm:mb-2">Klasifikasi Terpilih</div>
                         <div className="flex flex-wrap gap-2">
                           {classifications
-                            .filter(c => form.retribution_classification_ids.includes(c.id))
-                            .map(c => (
+                            ?.filter(c => form.retribution_classification_ids.includes(c.id))
+                            ?.map(c => (
                               <span key={c.id} className="px-2.5 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-[9px] sm:text-[10px] font-black rounded-lg uppercase tracking-wider">
                                 {c.name}
                               </span>
