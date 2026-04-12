@@ -38,6 +38,91 @@ const BAUBAU_DATA = {
   "Wolio": ["Bataraguru", "Tomba", "Wangkanapi", "Wale", "Batulo", "Bukit Wolio Indah", "Kadolokatapi"]
 };
 
+const ensureArray = (val: any) => {
+  if (!val) return [];
+  if (Array.isArray(val)) return val;
+  if (typeof val === 'string') {
+    try {
+      const parsed = JSON.parse(val);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+};
+
+const CompletionBar = ({ percentage }: { percentage: number }) => {
+  return (
+    <div className="w-full mt-2 group cursor-help relative">
+      <div className="flex items-center justify-between mb-1">
+        <span className="text-[8px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Integritas Data</span>
+      </div>
+      <div className="w-full h-3 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden border border-gray-200/50 dark:border-gray-700/50 relative shadow-inner">
+        <div 
+          className="h-full bg-blue-600 shadow-[2px_0_8px_rgba(37,99,235,0.4)] transition-all duration-1000 ease-out relative flex items-center justify-center"
+          style={{ width: `${percentage}%` }}
+        >
+          {percentage >= 20 && (
+            <span className="text-[7px] font-black text-white uppercase tracking-tighter drop-shadow-sm">
+              {percentage}%
+            </span>
+          )}
+        </div>
+      </div>
+      
+      {/* Hover Tooltip */}
+      <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-[9px] px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10 font-black uppercase tracking-widest shadow-xl">
+        Kualitas Input: {percentage}%
+      </div>
+    </div>
+  );
+};
+
+const StatusIndicator = ({ tp }: { tp: Taxpayer }) => {
+  const hasPersonal = !!(tp.nik && tp.name && tp.phone);
+  const hasTax = !!(tp.retribution_types && tp.retribution_types.length > 0 && Object.keys(tp.metadata || {}).length > 0);
+  
+  const isDefaultLoc = (lat: any, lng: any) => {
+    const dLat = -5.4632;
+    const dLng = 122.6075;
+    if (!lat || !lng) return true;
+    return Math.abs(parseFloat(lat) - dLat) < 0.0001 && Math.abs(parseFloat(lng) - dLng) < 0.0001;
+  };
+  
+  const hasLocation = !isDefaultLoc((tp as any).latitude, (tp as any).longitude);
+  const isActive = !!tp.is_active;
+
+  return (
+    <div className="flex items-center gap-3">
+      <div className="group relative">
+        <User size={16} className={hasPersonal ? 'text-emerald-500 drop-shadow-[0_0_5px_rgba(16,185,129,0.3)]' : 'text-gray-300 dark:text-gray-600'} />
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-[9px] font-black uppercase tracking-widest rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-20 shadow-xl border border-white/10">
+          Identitas: {hasPersonal ? 'SUDAH LENGKAP' : 'BELUM LENGKAP'}
+        </div>
+      </div>
+      <div className="group relative">
+        <CreditCard size={16} className={hasTax ? 'text-blue-500 drop-shadow-[0_0_5px_rgba(59,130,246,0.3)]' : 'text-gray-300 dark:text-gray-600'} />
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-[9px] font-black uppercase tracking-widest rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-20 shadow-xl border border-white/10">
+          Data Pajak: {hasTax ? 'SUDAH LENGKAP' : 'BELUM LENGKAP'}
+        </div>
+      </div>
+      <div className="group relative">
+        <MapPin size={16} className={hasLocation ? 'text-rose-500 drop-shadow-[0_0_5px_rgba(244,63,94,0.3)]' : 'text-gray-300 dark:text-gray-600'} />
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-[9px] font-black uppercase tracking-widest rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-20 shadow-xl border border-white/10">
+          Lokasi: {hasLocation ? 'SUDAH LENGKAP' : 'BELUM LENGKAP'}
+        </div>
+      </div>
+      <div className="group relative">
+        <CheckCircle2 size={16} className={isActive ? 'text-emerald-500' : 'text-gray-300 dark:text-gray-600'} />
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-[9px] font-black uppercase tracking-widest rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-20 shadow-xl border border-white/10">
+          Status: {isActive ? 'SUDAH AKTIF' : 'NON-AKTIF'}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function TaxpayerManagement() {
   const { user } = useAuth();
   const [taxpayers, setTaxpayers] = useState<Taxpayer[]>([]);
@@ -49,6 +134,9 @@ export default function TaxpayerManagement() {
   const [opdFilter, setOpdFilter] = useState('');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [completionFilter, setCompletionFilter] = useState('all');
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
 
   // Modal State
   const [showModal, setShowModal] = useState(false);
@@ -363,6 +451,72 @@ export default function TaxpayerManagement() {
     return null;
   }
 
+  const calculateCompletion = (tp: Taxpayer) => {
+    let score = 0;
+    const fields = [
+      tp.nik, tp.name, tp.phone, tp.address, tp.npwpd, 
+      tp.object_name, tp.object_address, (tp as any).district, (tp as any).sub_district,
+      (tp as any).latitude, (tp as any).longitude
+    ];
+    
+    fields.forEach(f => { if (f && f !== '' && f !== 0) score += 8; });
+    
+    if (tp.metadata && Object.keys(tp.metadata).length > 0) {
+      const metaKeys = Object.keys(tp.metadata).length;
+      score += Math.min(metaKeys * 4, 12);
+    }
+
+    return Math.min(score, 100);
+  };
+
+  const isFilterActive = statusFilter !== 'all' || completionFilter !== 'all' || sortConfig !== null;
+
+  const clearFilters = () => {
+    setStatusFilter('all');
+    setCompletionFilter('all');
+    setSortConfig(null);
+  };
+
+  const processedTaxpayers = useMemo(() => {
+    let result = [...taxpayers];
+
+    if (statusFilter !== 'all') {
+      const isActive = statusFilter === 'active';
+      result = result.filter(tp => tp.is_active === isActive);
+    }
+
+    if (completionFilter !== 'all') {
+      result = result.filter(tp => {
+        const score = calculateCompletion(tp);
+        if (completionFilter === 'critical') return score < 50;
+        if (completionFilter === 'needs_review') return score >= 50 && score < 90;
+        if (completionFilter === 'ready') return score >= 90;
+        return true;
+      });
+    }
+
+    if (sortConfig) {
+      result.sort((a, b) => {
+        let aValue: any;
+        let bValue: any;
+
+        if (sortConfig.key === 'completion') {
+          aValue = calculateCompletion(a);
+          bValue = calculateCompletion(b);
+        } else {
+          aValue = (a as any)[sortConfig.key] || '';
+          bValue = (b as any)[sortConfig.key] || '';
+        }
+
+        if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+
+    return result;
+  }, [taxpayers, statusFilter, completionFilter, sortConfig]);
+
   const filteredRetributionTypes = useMemo(() => {
     const selectedOpdId = parseInt(form.opd_id);
     if (!selectedOpdId) return [];
@@ -398,20 +552,43 @@ export default function TaxpayerManagement() {
             />
           </div>
           
-          {user?.role === 'super_admin' && (
-            <div className="w-full md:w-64">
-              <select
-                value={opdFilter}
-                onChange={(e) => setOpdFilter(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Semua OPD</option>
-                {opds.map((opd) => (
-                  <option key={opd.id} value={opd.id}>{opd.name}</option>
-                ))}
-              </select>
-            </div>
-          )}
+          <div className="flex flex-wrap items-center gap-2 md:gap-3">
+             <div className="relative w-full md:w-36">
+                <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 text-[10px] font-black uppercase tracking-widest appearance-none"
+                >
+                  <option value="all">Status: Semua</option>
+                  <option value="active">Aktif</option>
+                  <option value="inactive">Non-Aktif</option>
+                </select>
+             </div>
+
+             <div className="relative w-full md:w-44">
+                <FileCheck className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <select
+                  value={completionFilter}
+                  onChange={(e) => setCompletionFilter(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 text-[10px] font-black uppercase tracking-widest appearance-none"
+                >
+                  <option value="all">Integritas: Semua</option>
+                  <option value="critical">Kritis (&lt; 50%)</option>
+                  <option value="needs_review">Review</option>
+                  <option value="ready">Siap (90%+)</option>
+                </select>
+             </div>
+
+             {isFilterActive && (
+               <button 
+                onClick={clearFilters}
+                className="flex items-center gap-2 px-3 py-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-lg transition-colors text-[10px] font-black uppercase tracking-widest"
+               >
+                 <XCircle className="w-4 h-4" /> Reset
+               </button>
+             )}
+          </div>
         </div>
 
         {/* Desktop Table */}
@@ -440,12 +617,18 @@ export default function TaxpayerManagement() {
                   </td>
                 </tr>
               ) : (
-                taxpayers.map((tp) => (
+                processedTaxpayers?.map((tp) => (
                   <tr key={tp.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                     <td className="px-6 py-4">
-                      <div className="text-sm font-bold text-gray-900 dark:text-white">{tp.name}</div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400">NIK: {tp.nik}</div>
-                      {tp.npwpd && <div className="text-xs text-blue-600 dark:text-blue-400">NPWPD: {tp.npwpd}</div>}
+                      <div className="flex flex-col">
+                        <div className="text-sm font-bold text-gray-900 dark:text-white leading-tight">{tp.name}</div>
+                        <div className="text-[10px] text-gray-400 dark:text-gray-500 font-bold mt-0.5">NIK: {tp.nik}</div>
+                        {tp.npwpd && <div className="text-[10px] text-blue-600 dark:text-blue-400 uppercase font-black tracking-tighter mt-0.5">NPWPD: {tp.npwpd}</div>}
+                        
+                        <div className="max-w-[180px]">
+                          <CompletionBar percentage={calculateCompletion(tp)} />
+                        </div>
+                      </div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-sm text-gray-900 dark:text-white">{tp.phone || '-'}</div>
@@ -458,13 +641,7 @@ export default function TaxpayerManagement() {
                       <div className="text-xs text-gray-500">{tp.opd?.name}</div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        tp.is_active 
-                          ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' 
-                          : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
-                      }`}>
-                        {tp.is_active ? 'Aktif' : 'Non-Aktif'}
-                      </span>
+                      <StatusIndicator tp={tp} />
                     </td>
                     <td className="px-6 py-4 text-right space-x-2">
                       <button 
@@ -505,20 +682,17 @@ export default function TaxpayerManagement() {
               Tidak ada data ditemukan
             </div>
           ) : (
-            taxpayers.map((tp) => (
+            taxpayers?.map((tp) => (
               <div key={tp.id} className="bg-white dark:bg-gray-800/50 p-4 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm active:scale-[0.98] transition-all">
                 <div className="flex justify-between items-start mb-3">
                   <div className="min-w-0 flex-1">
                     <h4 className="text-sm font-black text-gray-900 dark:text-white truncate">{tp.name}</h4>
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">NIK: {tp.nik}</p>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">NIK: {tp.nik}</p>
+                    <div className="max-w-[150px]">
+                      <CompletionBar percentage={calculateCompletion(tp)} />
+                    </div>
                   </div>
-                  <span className={`px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest ${
-                    tp.is_active 
-                      ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' 
-                      : 'bg-rose-50 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400'
-                  }`}>
-                    {tp.is_active ? 'Aktif' : 'Non-Aktif'}
-                  </span>
+                  <StatusIndicator tp={tp} />
                 </div>
                 
                 <div className="grid grid-cols-2 gap-3 mb-4">
@@ -695,7 +869,7 @@ export default function TaxpayerManagement() {
                             className="w-full px-4 md:px-6 py-3 md:py-4 bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-800 rounded-2xl font-bold appearance-none cursor-pointer text-sm md:text-base"
                           >
                             <option value="">Pilih Dinas Pengelola</option>
-                            {opds.map(opd => <option key={opd.id} value={opd.id}>{opd.name}</option>)}
+                            {opds?.map(opd => <option key={opd.id} value={opd.id}>{opd.name}</option>)}
                           </select>
                         </div>
                       ) : (
@@ -739,7 +913,7 @@ export default function TaxpayerManagement() {
                                 </div>
                               </div>
                               <div className="space-y-2">
-                                {foundAssets.map((asset, idx) => (
+                                {foundAssets?.map((asset, idx) => (
                                   <div key={idx} className="flex items-center justify-between p-2.5 bg-white dark:bg-gray-800 rounded-xl border border-gray-50 dark:border-gray-700/50 shadow-sm">
                                     <div className="flex flex-col">
                                       <span className="text-[11px] font-black text-gray-900 dark:text-white leading-tight">
@@ -849,7 +1023,7 @@ export default function TaxpayerManagement() {
                           disabled={!form.district}
                         >
                           <option value="">Pilih Kelurahan</option>
-                          {form.district && (BAUBAU_DATA as any)[form.district].map((kel: string) => <option key={kel} value={kel}>{kel}</option>)}
+                          {form.district && (BAUBAU_DATA as any)[form.district]?.map((kel: string) => <option key={kel} value={kel}>{kel}</option>)}
                         </select>
                       </div>
                       <div className="group col-span-1 md:col-span-2">
@@ -878,13 +1052,13 @@ export default function TaxpayerManagement() {
                         </div>
                       ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 max-h-[400px] overflow-y-auto px-1 custom-scrollbar">
-                          {filteredRetributionTypes.map(type => (
+                          {filteredRetributionTypes?.map(type => (
                             <div key={type.id} className="space-y-4">
                               <h5 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] border-l-4 border-blue-500 pl-3">{type.name}</h5>
                               <div className="space-y-2">
                                 {classifications
-                                  .filter(c => c.retribution_type_id === type.id)
-                                  .map(cls => (
+                                  ?.filter(c => c.retribution_type_id === type.id)
+                                  ?.map(cls => (
                                     <div 
                                       key={cls.id}
                                       onClick={() => toggleClassification(cls.id, type.id)}
@@ -923,8 +1097,8 @@ export default function TaxpayerManagement() {
                     </div>
 
                     {classifications
-                      .filter(c => form.retribution_classification_ids.includes(c.id))
-                      .map((cls) => (
+                      ?.filter(c => form.retribution_classification_ids.includes(c.id))
+                      ?.map((cls) => (
                         <div key={cls.id} className="space-y-6">
                           <div className="flex items-center gap-4">
                             <div className="h-[2px] flex-1 bg-gray-100 dark:bg-gray-800"></div>
@@ -935,9 +1109,9 @@ export default function TaxpayerManagement() {
                           </div>
 
                           {/* Technical Fields Group */}
-                          {cls.form_schema && cls.form_schema.length > 0 && (
+                          {ensureArray(cls.form_schema).length > 0 && (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 p-6 md:p-8 bg-slate-50 dark:bg-gray-800/30 rounded-[2rem] md:rounded-[2.5rem] border-2 border-gray-100 dark:border-gray-800">
-                              {cls.form_schema.map((field: any) => (
+                              {ensureArray(cls.form_schema).map((field: any) => (
                                 <div key={field.key} className={`${field.type === 'google_map' ? 'col-span-1 md:col-span-2' : 'col-span-1'} group`}>
                                   <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">{field.label}</label>
                                   {field.type === 'select' ? (
@@ -1001,9 +1175,9 @@ export default function TaxpayerManagement() {
                           )}
 
                           {/* Requirements Group */}
-                          {cls.requirements && cls.requirements.length > 0 && (
+                          {ensureArray(cls.requirements).length > 0 && (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                              {cls.requirements.map((req: any, idx: number) => (
+                              {ensureArray(cls.requirements).map((req: any, idx: number) => (
                                 <label key={req.key} className="block group cursor-pointer">
                                   <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-1">{req.label}</div>
                                   <div className={`p-6 md:p-8 rounded-[1.5rem] md:rounded-[2rem] border-2 border-dashed flex flex-col items-center justify-center gap-4 transition-all ${
@@ -1112,8 +1286,8 @@ export default function TaxpayerManagement() {
                         <div className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 sm:mb-2">Klasifikasi Terpilih</div>
                         <div className="flex flex-wrap gap-2">
                           {classifications
-                            .filter(c => form.retribution_classification_ids.includes(c.id))
-                            .map(c => (
+                            ?.filter(c => form.retribution_classification_ids.includes(c.id))
+                            ?.map(c => (
                               <span key={c.id} className="px-2.5 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-[9px] sm:text-[10px] font-black rounded-lg uppercase tracking-wider">
                                 {c.name}
                               </span>
