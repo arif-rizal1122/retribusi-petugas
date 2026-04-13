@@ -42,36 +42,6 @@ jobs:
         env:
           VITE_API_URL: ${{ steps.vars.outputs.api_url }}
 
-      - name: Master Infrastructure Audit
-        run: |
-          echo "--- COMPREHENSIVE INFRA AUDIT --- v2" > dist/master_audit.txt
-          echo "Build Timestamp: $(date)" >> dist/master_audit.txt
-          echo "Configured API URL: ${{ steps.vars.outputs.api_url }}" >> dist/master_audit.txt
-          # The following will be run remotely via SSH to audit the VPS
-
-      - name: Master Infrastructure Audit
-        uses: appleboy/ssh-action@v1.2.0
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USERNAME }}
-          password: ${{ secrets.VPS_PASSWORD }}
-          port: ${{ secrets.VPS_PORT }}
-          script: |
-            TARGET_DIR=${{ steps.vars.outputs.target_dir }}
-            echo "--- COMPREHENSIVE INFRA AUDIT ---" > $TARGET_DIR/audit_vps.txt
-            echo "1. NGINX MAP:" >> $TARGET_DIR/audit_vps.txt
-            grep -r "server_name" /etc/nginx/sites-enabled/ >> $TARGET_DIR/audit_vps.txt
-            echo "2. ROOT SEARCH:" >> $TARGET_DIR/audit_vps.txt
-            grep -r "root" /etc/nginx/sites-enabled/ >> $TARGET_DIR/audit_vps.txt
-            echo "3. USER HOMES:" >> $TARGET_DIR/audit_vps.txt
-            ls -ld /home/* >> $TARGET_DIR/audit_vps.txt
-            echo "4. MPAD FOLDERS:" >> $TARGET_DIR/audit_vps.txt
-            ls -la /home/sipanda/ >> $TARGET_DIR/audit_vps.txt
-            ls -la /home/mpad/ 2>/dev/null >> $TARGET_DIR/audit_vps.txt || echo "No mpad home" >> $TARGET_DIR/audit_vps.txt
-            
-            # Ensure the audit file is also in the webroot dist folder if it exists
-            [ -d "$TARGET_DIR/dist" ] && cp $TARGET_DIR/audit_vps.txt $TARGET_DIR/dist/audit_vps.txt || echo "No dist folder yet"
-
       - name: Deploy via SCP
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -92,25 +62,17 @@ jobs:
           port: ${{ secrets.VPS_PORT }}
           script: |
             TARGET_DIR=${{ steps.vars.outputs.target_dir }}
-            echo "🧹 Cleaning up old assets..."
-            # Optional: Add any post-deploy logic here
+            echo "🚀 Finalizing Petugas deployment in $TARGET_DIR..."
+            cd $TARGET_DIR
             
+            # If assets are nested in dist, pull them up
+            if [ -d "dist" ]; then
+              cp -r dist/* .
+              echo "✅ Assets pulled from nested dist."
+            fi
+            
+            # Diagnostic for neighbor paths
             echo "--- NEIGHBOR AUDIT ---"
-            ls -ld /home/sipanda/retribusi-admin*
-            ls -F /home/sipanda/retribusi-admin/ 2>/dev/null | head -n 5
-            echo "--- PUBLIC AUDIT (API) ---"
-            ls -ld /home/sipanda/retribusi-api*
-            ls -F /home/sipanda/retribusi-api/public/ 2>/dev/null | head -n 5
+            ls -ld /home/sipanda/retribusi-*
             
-            echo "--- COMPREHENSIVE INFRA AUDIT ---"
-            echo "1. NGINX MAP:"
-            grep -r "server_name" /etc/nginx/sites-enabled/
-            echo "2. ROOT SEARCH:"
-            grep -r "root" /etc/nginx/sites-enabled/
-            echo "3. USER HOMES:"
-            ls -ld /home/*
-            echo "4. MPAD FOLDERS:"
-            ls -la /home/sipanda/
-            ls -la /home/mpad/ 2>/dev/null || echo "No mpad home"
-
             echo "✅ Petugas Deploy to ${{ github.ref_name }} completed successfully!"
