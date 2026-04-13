@@ -64,36 +64,37 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           port: ${{ secrets.VPS_PORT }}
           script: |
-            TARGET_DIR=${{ steps.vars.outputs.target_dir }}
-            echo "🚀 Finalizing Petugas deployment in $TARGET_DIR..."
+            # 1. Temukan webroot yang aktif dengan mencari asset lama yang sedang running
+            # Site saat ini menggunakan assets/index-C3aX-mhe.js
+            REAL_ROOT=$(find /home/sipanda /var/www -name "index-C3aX-mhe.js" -exec dirname {} \; -exec dirname {} \; 2>/dev/null | head -n 1)
             
-            # FORENSIC AUDIT START
-            {
-              echo "--- DEPLOY TIME: $(date) ---"
-              echo "--- GITHUB RUN ID: ${{ github.run_id }} ---"
-              echo "--- FOLDER AUDIT ---"
-              ls -la $TARGET_DIR
-              echo "--- NGINX CONFIGS FOR PETUGAS ---"
-              grep -r "petugasmpad" /etc/nginx/sites-enabled/ || echo "No direct match for petugasmpad"
-              echo "--- ROOT DEFINITIONS ---"
-              grep -r "root" /etc/nginx/sites-enabled/ | grep -v "api"
-              echo "--- SEARCHING FOR OLD ASSET ---"
-              # Cari di mana file index-BJw3Z_ZF.css (broken asset) berada
-              find /home/sipanda /var/www -name "index-BJw3Z_ZF.css" 2>/dev/null
-            } > $TARGET_DIR/forensic_audit.txt
-            
-            cd $TARGET_DIR
-            
-            # If assets were accidentally nested in a dist/ folder by scp, pull them up
-            if [ -d "dist" ]; then
-              cp -r dist/* .
-              rm -rf dist
-              echo "✅ Assets pulled from nested dist folder."
+            if [ -z "$REAL_ROOT" ]; then
+              echo "⚠️ Could not find index-C3aX-mhe.js, searching for petugasmpad in nginx configs..."
+              REAL_ROOT=$(grep -r "root" /etc/nginx/sites-enabled/ | grep "petugasmpad" | awk '{print $2}' | tr -d ';' | head -n 1)
             fi
 
-            # Basic verification
-            echo "--- DIRECTORY STATUS ---"
-            ls -la index.html
-            ls -la assets/ | head -n 5
+            if [ -n "$REAL_ROOT" ]; then
+              echo "🎯 Detected active webroot: $REAL_ROOT"
+              # Sync files from the GitHub-provided target_dir to the REAL_ROOT
+              cp -r ${{ steps.vars.outputs.target_dir }}/* $REAL_ROOT/
+              echo "✅ Files synchronized to active webroot."
+              TARGET_DIR=$REAL_ROOT
+            else
+              echo "❌ Could not detect real root. Using default."
+              TARGET_DIR=${{ steps.vars.outputs.target_dir }}
+            fi
+
+            echo "🚀 Finalizing Petugas deployment in $TARGET_DIR..."
+            cd $TARGET_DIR
+            
+            # Additional cleanup/audit
+            {
+              echo "--- DEPLOY TIME: $(date) ---"
+              echo "--- REAL ROOT: $TARGET_DIR ---"
+              ls -la index.html
+            } > $TARGET_DIR/forensic_audit_v2.txt
+
+            # Ensure assets are properly placed
+            [ -d "dist" ] && cp -r dist/* . && rm -rf dist
             
             echo "✅ Petugas Deploy to ${{ github.ref_name }} completed successfully!"
