@@ -65,34 +65,36 @@ jobs:
           port: ${{ secrets.VPS_PORT }}
           script: |
             TARGET_DIR=${{ steps.vars.outputs.target_dir }}
-            echo "🚀 Finalizing Petugas deployment..."
-            echo "📡 Remote IP: $(curl -s ifconfig.me || hostname -I)"
+            echo "🔎 Starting forensic diagnosis..."
 
-            # 🎯 FORENSIC MISSION: Global Nginx and Path Search
-            # 1. Search for the domain in ALL nginx configs
-            ACTIVE_ROOT=$(grep -r "petugasmpad" /etc/nginx/ 2>/dev/null | grep "root" | awk '{print $NF}' | tr -d ';' | head -n 1)
+            # 📡 1. Check Remote IP
+            REMOTE_IP=$(curl -s ifconfig.me || hostname -I | awk '{print $1}')
+            echo "📡 Remote Public IP: $REMOTE_IP"
+
+            # 📂 2. Search for the domain in all of /etc/nginx
+            echo "📂 Searching for petugasmpad in Nginx configs..."
+            REAL_ROOT=$(grep -r "root" /etc/nginx/ | grep "petugasmpad" | awk '{print $NF}' | tr -d ';' | head -n 1)
             
-            # 2. If not found, search the whole disk for the broken asset hash
-            if [ -z "$ACTIVE_ROOT" ]; then
-                echo "⚠️ Domain not found in nginx configs. Searching filesystem for index-C3aX-mhe.js..."
-                ACTIVE_ROOT=$(find /var/www /home/sipanda /var/html -name "index-C3aX-mhe.js" -exec dirname {} \; -exec dirname {} \; 2>/dev/null | head -n 1)
-            fi
-
-            if [ -n "$ACTIVE_ROOT" ]; then
-              echo "🎯 SUCCESS: Active webroot identified at $ACTIVE_ROOT"
-              cp -r "$TARGET_DIR"/* "$ACTIVE_ROOT"/
-              TARGET_DIR=$ACTIVE_ROOT
-            else
-              echo "❌ FAILURE: Active webroot not found. Staying in $TARGET_DIR"
+            # 📜 3. Create diagnostic file in both default and potentially discovered root
+            {
+              echo "--- PETUGAS DIAGNOSTIC ---"
+              echo "Deploy Time: $(date)"
+              echo "Remote IP: $REMOTE_IP"
+              echo "Target Dir: $TARGET_DIR"
+              echo "Discovered Webroot: $REAL_ROOT"
+              echo "Expected Public IP: 157.10.252.74"
+            } > deploy_diagnostic.txt
+            
+            if [ -n "$REAL_ROOT" ] && [ "$REAL_ROOT" != "$TARGET_DIR" ]; then
+                echo "🎯 Match! Active webroot detected at: $REAL_ROOT"
+                mkdir -p "$REAL_ROOT"
+                cp -r $TARGET_DIR/* "$REAL_ROOT"/
+                cp deploy_diagnostic.txt "$REAL_ROOT"/
+                TARGET_DIR=$REAL_ROOT
             fi
 
             cd "$TARGET_DIR"
-            
-            # Build ID Audit
-            echo "Build: ${{ github.run_id }}" > deploy_verify.txt
-            echo "Real Path: $(pwd)" >> deploy_verify.txt
-
             # Asset normalization
             [ -d "dist" ] && cp -r dist/* . && rm -rf dist
             
-            echo "✅ Petugas Deploy to ${{ github.ref_name }} completed in $(pwd)!"
+            echo "✅ Diagnostic deployment complete in $(pwd)"
