@@ -64,4 +64,8 @@ jobs:
             rm -rf dist
             VITE_API_URL=$API_URL npm run $BUILD_CMD
 
-            echo "✅ Petugas Deploy to $BRANCH completed successfully!"
+            # Sync dist to root (webroot compatibility)
+            echo "🧹 Syncing dist to root folder..."
+            cp -r dist/* .
+
+            echo "test" > test_vps.txt; echo "✅ Petugas Deploy to $BRANCH completed successfully!"
