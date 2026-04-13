@@ -28,37 +28,7 @@ jobs:
             echo "build_cmd=build:staging" >> $GITHUB_OUTPUT
           fi
 
-<<<<<<< HEAD
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install Dependencies
-        run: npm install
-
-      - name: Build Application
-        run: npm run ${{ steps.vars.outputs.build_cmd }}
-        env:
-          VITE_API_URL: ${{ steps.vars.outputs.api_url }}
-          VITE_APP_ENV: ${{ github.ref_name == 'main' && 'production' || 'development' }}
-
-      - name: Deploy via SSH/SCP
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USERNAME }}
-          password: ${{ secrets.VPS_PASSWORD }}
-          port: ${{ secrets.VPS_PORT }}
-          source: "dist/*"
-          target: ${{ steps.vars.outputs.target_dir }}
-          strip_components: 1
-
-      - name: Post-deploy Success
-=======
       - name: Deploy and Build on VPS
->>>>>>> dev
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.VPS_HOST }}
