@@ -93,6 +93,19 @@ jobs:
             
             echo "✅ Nginx Audit logged to master_nginx_audit.txt"
 
+      - name: Database Parity Audit
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
+            echo "--- DATABASE PARITY AUDIT (sipanda.online) ---" > /home/sipanda/retribusi-petugas/db_parity.txt
+            cd /home/sipanda/api.sipanda.online || exit 1
+            php artisan migrate:status >> /home/sipanda/retribusi-petugas/db_parity.txt
+            echo "✅ Parity Audit logged to db_parity.txt"
+
       - name: Finalize Webroot (SSH)
         uses: appleboy/ssh-action@v1.2.0
         with:
