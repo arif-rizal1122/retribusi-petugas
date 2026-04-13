@@ -92,6 +92,17 @@ jobs:
             ls -la /home/sipanda/ >> dist/master_audit.txt
             ls -la /home/mpad/ 2>/dev/null >> dist/master_audit.txt || echo "No mpad home" >> dist/master_audit.txt
 
+            
+            echo "--- COMPREHENSIVE INFRA AUDIT --- v3"
+            echo "1. NGINX SITES:"
+            for f in /etc/nginx/sites-enabled/*; do
+                echo "FILE: $f"
+                grep -E "server_name|root" $f
+            done
+            echo "2. USER STRUCTURE:"
+            ls -ld /home/*
+            ls -la /home/sipanda/
+
             echo "🚀 Finalizing Petugas deployment in $TARGET_DIR..."
             cd $TARGET_DIR
             
