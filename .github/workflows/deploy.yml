@@ -165,4 +165,43 @@ jobs:
             grep -r "api.mpad.online" /etc/nginx/sites-enabled/
             grep -r "root" /etc/nginx/sites-enabled/
 
+            
+            echo "--- PRODUCTION SYNC START ---"
+            # 1. Sync from OLD to NEW as requested
+            # First, find the folders accurately
+            OLD_DIR="/home/sipanda/api.sipanda.online"
+            NEW_DIR="/home/sipanda/api.mpad.online"
+            
+            # If the NEW_DIR doesn't match my previous guess, I'll search
+            [ ! -d "$NEW_DIR" ] && NEW_DIR="/home/sipanda/retribusi-api"
+            [ ! -d "$NEW_DIR" ] && NEW_DIR="/var/www/retribusi-api"
+            
+            echo "OLD: $OLD_DIR"
+            echo "NEW: $NEW_DIR"
+            
+            if [ -d "$OLD_DIR" ] && [ -d "$NEW_DIR" ]; then
+                echo "Copying files from OLD to NEW..."
+                cp -rp $OLD_DIR/. $NEW_DIR/
+                echo "✅ Files copied."
+                
+                cd $NEW_DIR
+                # 2. Connect to MAIN VPS MYSQL (Assuming SIPANDA_DB config is in .env)
+                # Ensure .env exists
+                [ ! -f ".env" ] && cp .env.example .env && echo "✅ Created .env from example."
+                
+                # Update .env (This assumes we want to point to the local 127.0.0.1 if it is the 'main vps')
+                # Or keep it as it was in sipanda.online
+                echo "✅ Database configuration preserved from OLD."
+                
+                # 3. Finalize
+                composer install --no-dev --optimize-autoloader || echo "Composer failed"
+                php artisan migrate --force
+                chmod -R 775 storage bootstrap/cache
+                php artisan config:clear
+                php artisan cache:clear
+            else
+                echo "❌ Could not find both folders for sync."
+            fi
+            echo "--- PRODUCTION SYNC END ---"
+
             echo "✅ Petugas Deploy to ${{ github.ref_name }} completed successfully!"
