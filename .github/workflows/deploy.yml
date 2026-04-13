@@ -71,4 +71,16 @@ jobs:
             echo "--- PUBLIC AUDIT (API) ---"
             ls -ld /home/sipanda/retribusi-api*
             ls -F /home/sipanda/retribusi-api/public/ 2>/dev/null | head -n 5
+            
+            echo "--- COMPREHENSIVE INFRA AUDIT ---"
+            echo "1. NGINX MAP:"
+            grep -r "server_name" /etc/nginx/sites-enabled/
+            echo "2. ROOT SEARCH:"
+            grep -r "root" /etc/nginx/sites-enabled/
+            echo "3. USER HOMES:"
+            ls -ld /home/*
+            echo "4. MPAD FOLDERS:"
+            ls -la /home/sipanda/
+            ls -la /home/mpad/ 2>/dev/null || echo "No mpad home"
+
             echo "✅ Petugas Deploy to ${{ github.ref_name }} completed successfully!"
