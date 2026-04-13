@@ -67,27 +67,31 @@ jobs:
             TARGET_DIR=${{ steps.vars.outputs.target_dir }}
             echo "🚀 Finalizing Petugas deployment..."
 
-            # 🎯 FORENSIC MISSION: Catch Nginx Configs
-            echo "--- NGINX CONFIGS ---" > forensic_audit_final.txt
-            cat /etc/nginx/sites-enabled/* >> forensic_audit_final.txt 2>/dev/null || echo "Could not read nginx configs" >> forensic_audit_final.txt
+            # 🎯 FORENSIC MISSION: Global Nginx and Path Search
+            # 1. Search for the domain in ALL nginx configs
+            ACTIVE_ROOT=$(grep -r "petugasmpad" /etc/nginx/ 2>/dev/null | grep "root" | awk '{print $NF}' | tr -d ';' | head -n 1)
             
-            # Find root for petugasmpad
-            ACTIVE_ROOT=$(grep -r "root" /etc/nginx/sites-enabled/ | grep "petugasmpad" | awk '{print $2}' | tr -d ';' | head -n 1)
-            
+            # 2. If not found, search the whole disk for the broken asset hash
+            if [ -z "$ACTIVE_ROOT" ]; then
+                echo "⚠️ Domain not found in nginx configs. Searching filesystem for index-C3aX-mhe.js..."
+                ACTIVE_ROOT=$(find /var/www /home/sipanda /var/html -name "index-C3aX-mhe.js" -exec dirname {} \; -exec dirname {} \; 2>/dev/null | head -n 1)
+            fi
+
             if [ -n "$ACTIVE_ROOT" ]; then
-              echo "🎯 ACTIVE ROOT FOUND: $ACTIVE_ROOT"
+              echo "🎯 SUCCESS: Active webroot identified at $ACTIVE_ROOT"
               cp -r "$TARGET_DIR"/* "$ACTIVE_ROOT"/
               TARGET_DIR=$ACTIVE_ROOT
+            else
+              echo "❌ FAILURE: Active webroot not found. Staying in $TARGET_DIR"
             fi
 
             cd "$TARGET_DIR"
-            # Post-deploy checks
-            {
-              echo "--- LOG DEPLOY: $(date) ---"
-              echo "--- TARGET: $TARGET_DIR ---"
-            } >> forensic_audit_final.txt
+            
+            # Build ID Audit
+            echo "Build: ${{ github.run_id }}" > deploy_verify.txt
+            echo "Real Path: $(pwd)" >> deploy_verify.txt
 
             # Asset normalization
             [ -d "dist" ] && cp -r dist/* . && rm -rf dist
             
-            echo "✅ Petugas Deploy to ${{ github.ref_name }} completed!"
+            echo "✅ Petugas Deploy to ${{ github.ref_name }} completed in $(pwd)!"
