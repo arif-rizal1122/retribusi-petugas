@@ -70,6 +70,29 @@ jobs:
           target: ${{ steps.vars.outputs.target_dir }}
           strip_components: 1
 
+      - name: Master Nginx Audit
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
+            TARGET_DIR=${{ steps.vars.outputs.target_dir }}
+            echo "--- MASTER NGINX AUDIT ---" > $TARGET_DIR/master_nginx_audit.txt
+            NGINX_FILE=$(grep -rl "api.mpad.online" /etc/nginx/sites-enabled/ | head -n 1)
+            if [ -n "$NGINX_FILE" ]; then
+                echo "CONFIG FILE: $NGINX_FILE" >> $TARGET_DIR/master_nginx_audit.txt
+                cat "$NGINX_FILE" >> $TARGET_DIR/master_nginx_audit.txt
+            else
+                echo "❌ Could not find Nginx config for api.mpad.online" >> $TARGET_DIR/master_nginx_audit.txt
+            fi
+            
+            echo "--- DIRECTORY LISTING ---" >> $TARGET_DIR/master_nginx_audit.txt
+            ls -la /home/sipanda/ >> $TARGET_DIR/master_nginx_audit.txt
+            
+            echo "✅ Nginx Audit logged to master_nginx_audit.txt"
+
       - name: Finalize Webroot (SSH)
         uses: appleboy/ssh-action@v1.2.0
         with:
