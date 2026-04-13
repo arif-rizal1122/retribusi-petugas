@@ -66,6 +66,7 @@ jobs:
           script: |
             TARGET_DIR=${{ steps.vars.outputs.target_dir }}
             echo "🚀 Finalizing Petugas deployment..."
+            echo "📡 Remote IP: $(curl -s ifconfig.me || hostname -I)"
 
             # 🎯 FORENSIC MISSION: Global Nginx and Path Search
             # 1. Search for the domain in ALL nginx configs
