@@ -43,6 +43,13 @@ jobs:
           VITE_API_URL: ${{ steps.vars.outputs.api_url }}
 
       - name: Master Infrastructure Audit
+        run: |
+          echo "--- COMPREHENSIVE INFRA AUDIT --- v2" > dist/master_audit.txt
+          echo "Build Timestamp: $(date)" >> dist/master_audit.txt
+          echo "Configured API URL: ${{ steps.vars.outputs.api_url }}" >> dist/master_audit.txt
+          # The following will be run remotely via SSH to audit the VPS
+
+      - name: Master Infrastructure Audit
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.VPS_HOST }}
