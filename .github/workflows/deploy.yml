@@ -23,8 +23,8 @@ jobs:
             echo "api_url=https://api.sipanda.online" >> $GITHUB_OUTPUT
             echo "build_cmd=build" >> $GITHUB_OUTPUT
           else
-            echo "target_dir=/home/sipanda/retribusi-petugas-dev" >> $GITHUB_OUTPUT
-            echo "api_url=https://api-dev.sipanda.online" >> $GITHUB_OUTPUT
+            echo "target_dir=/home/sipanda/retribusi-petugas-staging" >> $GITHUB_OUTPUT
+            echo "api_url=https://api.sipanda.online" >> $GITHUB_OUTPUT
             echo "build_cmd=build:staging" >> $GITHUB_OUTPUT
           fi
 
@@ -43,25 +43,24 @@ jobs:
 
             echo "🚀 Starting Deployment on VPS for $BRANCH..."
             
-            # Ensure target directory exists and is a git repo
-            if [ ! -d "$TARGET_DIR" ]; then
-              echo "❌ Target directory $TARGET_DIR does not exist. Please check VPS setup."
-              exit 1
-            fi
-
-            cd $TARGET_DIR
+            echo "Home Folders: $(ls /home)" >> $AUDIT_LOG
+            echo "Current User Home Content: $(ls -F /home/$(whoami))" >> $AUDIT_LOG
+            echo "Checking likely webroots:" >> $AUDIT_LOG
+            [ -d "/home/sipanda/retribusi-petugas-staging" ] && echo "FOUND: /home/sipanda/retribusi-petugas-staging" || echo "MISSING: /home/sipanda/retribusi-petugas-staging" >> $AUDIT_LOG
+            [ -d "/home/sipanda/retribusi-petugas-dev" ] && echo "FOUND: /home/sipanda/retribusi-petugas-dev" || echo "MISSING: /home/sipanda/retribusi-petugas-dev" >> $AUDIT_LOG
+            [ -d "/home/mpad/retribusi-petugas-dev" ] && echo "FOUND: /home/mpad/retribusi-petugas-dev" || echo "MISSING: /home/mpad/retribusi-petugas-dev" >> $AUDIT_LOG
             
-            # Pull latest code
-            echo "📥 Pulling latest code from $BRANCH..."
-            git pull origin $BRANCH
-
-            # Install dependencies
-            echo "📦 Installing npm dependencies..."
-            npm install --no-audit --no-fund
+            # Allow the build to continue if possible, but the audit is priority
 
             # Build application on VPS
             echo "🏗️ Building application with API_URL=$API_URL..."
             rm -rf dist
             VITE_API_URL=$API_URL npm run $BUILD_CMD
 
-            echo "✅ Petugas Deploy to $BRANCH completed successfully!"
+            find /home -maxdepth 3 -name "*retribusi-*" -type dassets/ 2>/dev/null | head -n 5 >> $AUDIT_LOG
+            echo "--- Env Status ---" >> $AUDIT_LOG
+            [ -f .env ] && echo ".env exists" || echo ".env MISSING" >> $AUDIT_LOG
+            echo "--- Git Status ---" >> $AUDIT_LOG
+            git branch >> $AUDIT_LOG
+            
+            echo "✅ Audit completed. Log: $AUDIT_LOG"
