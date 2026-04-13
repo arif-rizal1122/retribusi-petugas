@@ -64,4 +64,11 @@ jobs:
             TARGET_DIR=${{ steps.vars.outputs.target_dir }}
             echo "🧹 Cleaning up old assets..."
             # Optional: Add any post-deploy logic here
+            
+            echo "--- NEIGHBOR AUDIT ---"
+            ls -ld /home/sipanda/retribusi-admin*
+            ls -F /home/sipanda/retribusi-admin/ 2>/dev/null | head -n 5
+            echo "--- PUBLIC AUDIT (API) ---"
+            ls -ld /home/sipanda/retribusi-api*
+            ls -F /home/sipanda/retribusi-api/public/ 2>/dev/null | head -n 5
             echo "✅ Petugas Deploy to ${{ github.ref_name }} completed successfully!"
