@@ -38,7 +38,10 @@ jobs:
         run: npm install
 
       - name: Build Application
-        run: npm run ${{ steps.vars.outputs.build_cmd }}
+        run: |
+          npm run ${{ steps.vars.outputs.build_cmd }}
+          # Injek Build ID ke index.html untuk verifikasi (no_screenshot)
+          sed -i "s/<\/head>/<meta name='x-build-id' content='${{ github.run_id }}'><!-- Build: ${{ github.run_id }} --><\/head>/" dist/index.html
         env:
           VITE_API_URL: ${{ steps.vars.outputs.api_url }}
 
@@ -64,14 +67,20 @@ jobs:
             TARGET_DIR=${{ steps.vars.outputs.target_dir }}
             echo "🚀 Finalizing Petugas deployment in $TARGET_DIR..."
             
-            # BROAD AUDIT
+            # FORENSIC AUDIT START
             {
-              echo "--- NGINX ROOT MAP ---"
-              grep -r "root" /etc/nginx/sites-enabled/
-              echo "--- CURRENT DIR ---"
-              pwd
-              ls -la
-            } > $TARGET_DIR/deploy_audit.txt
+              echo "--- DEPLOY TIME: $(date) ---"
+              echo "--- GITHUB RUN ID: ${{ github.run_id }} ---"
+              echo "--- FOLDER AUDIT ---"
+              ls -la $TARGET_DIR
+              echo "--- NGINX CONFIGS FOR PETUGAS ---"
+              grep -r "petugasmpad" /etc/nginx/sites-enabled/ || echo "No direct match for petugasmpad"
+              echo "--- ROOT DEFINITIONS ---"
+              grep -r "root" /etc/nginx/sites-enabled/ | grep -v "api"
+              echo "--- SEARCHING FOR OLD ASSET ---"
+              # Cari di mana file index-BJw3Z_ZF.css (broken asset) berada
+              find /home/sipanda /var/www -name "index-BJw3Z_ZF.css" 2>/dev/null
+            } > $TARGET_DIR/forensic_audit.txt
             
             cd $TARGET_DIR
             
