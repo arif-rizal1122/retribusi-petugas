@@ -20,11 +20,11 @@ jobs:
         run: |
           if [ "${{ github.ref_name }}" == "main" ]; then
             echo "target_dir=/home/sipanda/retribusi-petugas" >> $GITHUB_OUTPUT
-            echo "api_url=https://api.sipanda.online" >> $GITHUB_OUTPUT
+            echo "api_url=https://api.mpad.online" >> $GITHUB_OUTPUT
             echo "build_cmd=build" >> $GITHUB_OUTPUT
           else
             echo "target_dir=/home/sipanda/retribusi-petugas-staging" >> $GITHUB_OUTPUT
-            echo "api_url=https://api.sipanda.online" >> $GITHUB_OUTPUT
+            echo "api_url=https://api.mpad.online" >> $GITHUB_OUTPUT
             echo "build_cmd=build:staging" >> $GITHUB_OUTPUT
           fi
 
@@ -42,23 +42,6 @@ jobs:
         env:
           VITE_API_URL: ${{ steps.vars.outputs.api_url }}
 
-      - name: Master Infrastructure Audit
-        run: |
-          
-            echo "--- COMPREHENSIVE INFRA AUDIT --- v3" > /home/sipanda/retribusi-petugas/reveal_vps.txt
-            echo "1. NGINX MAP:" >> /home/sipanda/retribusi-petugas/reveal_vps.txt
-            grep -r "server_name" /etc/nginx/sites-enabled/ >> /home/sipanda/retribusi-petugas/reveal_vps.txt
-            echo "2. ROOT SEARCH:" >> /home/sipanda/retribusi-petugas/reveal_vps.txt
-            grep -r "root" /etc/nginx/sites-enabled/ >> /home/sipanda/retribusi-petugas/reveal_vps.txt
-            echo "3. USER HOMES:" >> /home/sipanda/retribusi-petugas/reveal_vps.txt
-            ls -ld /home/* >> /home/sipanda/retribusi-petugas/reveal_vps.txt
-            echo "4. MPAD FOLDERS:" >> /home/sipanda/retribusi-petugas/reveal_vps.txt
-            ls -la /home/sipanda/ >> /home/sipanda/retribusi-petugas/reveal_vps.txt
- > dist/master_audit.txt
-          echo "Build Timestamp: $(date)" >> dist/master_audit.txt
-          echo "Configured API URL: ${{ steps.vars.outputs.api_url }}" >> dist/master_audit.txt
-          # The following will be run remotely via SSH to audit the VPS
-
       - name: Deploy via SCP
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -70,42 +53,6 @@ jobs:
           target: ${{ steps.vars.outputs.target_dir }}
           strip_components: 1
 
-      - name: Master Nginx Audit
-        uses: appleboy/ssh-action@v1.2.0
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USERNAME }}
-          password: ${{ secrets.VPS_PASSWORD }}
-          port: ${{ secrets.VPS_PORT }}
-          script: |
-            TARGET_DIR=${{ steps.vars.outputs.target_dir }}
-            echo "--- MASTER NGINX AUDIT ---" > $TARGET_DIR/master_nginx_audit.txt
-            NGINX_FILE=$(grep -rl "api.sipanda.online" /etc/nginx/sites-enabled/ | head -n 1)
-            if [ -n "$NGINX_FILE" ]; then
-                echo "CONFIG FILE: $NGINX_FILE" >> $TARGET_DIR/master_nginx_audit.txt
-                cat "$NGINX_FILE" >> $TARGET_DIR/master_nginx_audit.txt
-            else
-                echo "❌ Could not find Nginx config for api.sipanda.online" >> $TARGET_DIR/master_nginx_audit.txt
-            fi
-            
-            echo "--- DIRECTORY LISTING ---" >> $TARGET_DIR/master_nginx_audit.txt
-            ls -la /home/sipanda/ >> $TARGET_DIR/master_nginx_audit.txt
-            
-            echo "✅ Nginx Audit logged to master_nginx_audit.txt"
-
-      - name: Database Parity Audit
-        uses: appleboy/ssh-action@v1.2.0
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USERNAME }}
-          password: ${{ secrets.VPS_PASSWORD }}
-          port: ${{ secrets.VPS_PORT }}
-          script: |
-            echo "--- DATABASE PARITY AUDIT (sipanda.online) ---" > /home/sipanda/retribusi-petugas/db_parity.txt
-            cd /home/sipanda/api.sipanda.online || exit 1
-            php artisan migrate:status >> /home/sipanda/retribusi-petugas/db_parity.txt
-            echo "✅ Parity Audit logged to db_parity.txt"
-
       - name: Finalize Webroot (SSH)
         uses: appleboy/ssh-action@v1.2.0
         with:
@@ -115,141 +62,19 @@ jobs:
           port: ${{ secrets.VPS_PORT }}
           script: |
             TARGET_DIR=${{ steps.vars.outputs.target_dir }}
-            
-            
-            echo "--- COMPREHENSIVE INFRA AUDIT --- v3" > /home/sipanda/retribusi-petugas/reveal_vps.txt
-            echo "1. NGINX MAP:" >> /home/sipanda/retribusi-petugas/reveal_vps.txt
-            grep -r "server_name" /etc/nginx/sites-enabled/ >> /home/sipanda/retribusi-petugas/reveal_vps.txt
-            echo "2. ROOT SEARCH:" >> /home/sipanda/retribusi-petugas/reveal_vps.txt
-            grep -r "root" /etc/nginx/sites-enabled/ >> /home/sipanda/retribusi-petugas/reveal_vps.txt
-            echo "3. USER HOMES:" >> /home/sipanda/retribusi-petugas/reveal_vps.txt
-            ls -ld /home/* >> /home/sipanda/retribusi-petugas/reveal_vps.txt
-            echo "4. MPAD FOLDERS:" >> /home/sipanda/retribusi-petugas/reveal_vps.txt
-            ls -la /home/sipanda/ >> /home/sipanda/retribusi-petugas/reveal_vps.txt
-
-            echo "1. NGINX SITES:"
-            for f in /etc/nginx/sites-enabled/*; do
-                echo "FILE: $f"
-                grep -E "server_name|root" $f
-            done
-            echo "2. USER STRUCTURE:"
-            ls -ld /home/*
-            ls -la /home/sipanda/
-
-            
-            echo "--- MASTER REPAIR START ---"
-            echo "1. NGINX MAP:" > dist/master_audit.txt
-            grep -r "server_name" /etc/nginx/sites-enabled/ >> dist/master_audit.txt
-            echo "2. ROOT SEARCH:" >> dist/master_audit.txt
-            grep -r "root" /etc/nginx/sites-enabled/ >> dist/master_audit.txt
-            echo "3. USER HOMES:" >> dist/master_audit.txt
-            ls -ld /home/* >> dist/master_audit.txt
-            echo "4. MPAD FOLDERS:" >> dist/master_audit.txt
-            ls -la /home/sipanda/ >> dist/master_audit.txt
-            ls -la /home/mpad/ 2>/dev/null >> dist/master_audit.txt || echo "No mpad home" >> dist/master_audit.txt
-
-            
-            
-            echo "--- COMPREHENSIVE INFRA AUDIT --- v3" > /home/sipanda/retribusi-petugas/reveal_vps.txt
-            echo "1. NGINX MAP:" >> /home/sipanda/retribusi-petugas/reveal_vps.txt
-            grep -r "server_name" /etc/nginx/sites-enabled/ >> /home/sipanda/retribusi-petugas/reveal_vps.txt
-            echo "2. ROOT SEARCH:" >> /home/sipanda/retribusi-petugas/reveal_vps.txt
-            grep -r "root" /etc/nginx/sites-enabled/ >> /home/sipanda/retribusi-petugas/reveal_vps.txt
-            echo "3. USER HOMES:" >> /home/sipanda/retribusi-petugas/reveal_vps.txt
-            ls -ld /home/* >> /home/sipanda/retribusi-petugas/reveal_vps.txt
-            echo "4. MPAD FOLDERS:" >> /home/sipanda/retribusi-petugas/reveal_vps.txt
-            ls -la /home/sipanda/ >> /home/sipanda/retribusi-petugas/reveal_vps.txt
-
-            echo "1. NGINX SITES:"
-            for f in /etc/nginx/sites-enabled/*; do
-                echo "FILE: $f"
-                grep -E "server_name|root" $f
-            done
-            echo "2. USER STRUCTURE:"
-            ls -ld /home/*
-            ls -la /home/sipanda/
-
-            
-            echo "--- MASTER REPAIR START ---"
-            echo "1. NGINX MAP:" > dist/master_audit.txt
-            grep -r "server_name" /etc/nginx/sites-enabled/ >> dist/master_audit.txt
-            echo "2. ROOT SEARCH:" >> dist/master_audit.txt
-            grep -r "root" /etc/nginx/sites-enabled/ >> dist/master_audit.txt
-            echo "3. USER HOMES:" >> dist/master_audit.txt
-            ls -ld /home/* >> dist/master_audit.txt
-            echo "4. MPAD FOLDERS:" >> dist/master_audit.txt
-            ls -la /home/sipanda/ >> dist/master_audit.txt
-            ls -la /home/mpad/ 2>/dev/null >> dist/master_audit.txt || echo "No mpad home" >> dist/master_audit.txt
-
             echo "🚀 Finalizing Petugas deployment in $TARGET_DIR..."
             cd $TARGET_DIR
             
-            # If assets are nested in dist, pull them up
+            # If assets were accidentally nested in a dist/ folder by scp, pull them up
             if [ -d "dist" ]; then
               cp -r dist/* .
-              echo "✅ Assets pulled from nested dist."
-            fi
-            
-            # Diagnostic for neighbor paths
-            echo "--- NEIGHBOR AUDIT ---"
-            ls -ld /home/sipanda/retribusi-*
-            
-            
-            echo "--- NEIGHBOR AUDIT ---"
-            ls -ld /home/sipanda/retribusi-*
-            echo "--- NGINX AUDIT ---"
-            grep -r "root" /etc/nginx/sites-enabled/
-
-            
-            # NESTED ROOT FIX
-            cd ${{ steps.vars.outputs.target_dir }}
-            if [ -d "dist" ]; then
-                cp -r dist/* .
-                echo "✅ Nested dist found and extracted"
+              rm -rf dist
+              echo "✅ Assets pulled from nested dist folder."
             fi
 
+            # Basic verification
+            echo "--- DIRECTORY STATUS ---"
+            ls -la index.html
+            ls -la assets/ | head -n 5
             
-            echo "--- NGINX AUDIT ---"
-            grep -r "api.sipanda.online" /etc/nginx/sites-enabled/
-            grep -r "root" /etc/nginx/sites-enabled/
-
-            
-            echo "--- PRODUCTION SYNC START ---"
-            # 1. Sync from OLD to NEW as requested
-            # First, find the folders accurately
-            OLD_DIR="/home/sipanda/api.sipanda.online"
-            NEW_DIR="/home/sipanda/api.sipanda.online"
-            
-            # If the NEW_DIR doesn't match my previous guess, I'll search
-            [ ! -d "$NEW_DIR" ] && NEW_DIR="/home/sipanda/retribusi-api"
-            [ ! -d "$NEW_DIR" ] && NEW_DIR="/var/www/retribusi-api"
-            
-            echo "OLD: $OLD_DIR"
-            echo "NEW: $NEW_DIR"
-            
-            if [ -d "$OLD_DIR" ] && [ -d "$NEW_DIR" ]; then
-                echo "Copying files from OLD to NEW..."
-                cp -rp $OLD_DIR/. $NEW_DIR/
-                echo "✅ Files copied."
-                
-                cd $NEW_DIR
-                # 2. Connect to MAIN VPS MYSQL (Assuming SIPANDA_DB config is in .env)
-                # Ensure .env exists
-                [ ! -f ".env" ] && cp .env.example .env && echo "✅ Created .env from example."
-                
-                # Update .env (This assumes we want to point to the local 127.0.0.1 if it is the 'main vps')
-                # Or keep it as it was in sipanda.online
-                echo "✅ Database configuration preserved from OLD."
-                
-                # 3. Finalize
-                composer install --no-dev --optimize-autoloader || echo "Composer failed"
-                php artisan migrate --force
-                chmod -R 775 storage bootstrap/cache
-                php artisan config:clear
-                php artisan cache:clear
-            else
-                echo "❌ Could not find both folders for sync."
-            fi
-            echo "--- PRODUCTION SYNC END ---"
-
             echo "✅ Petugas Deploy to ${{ github.ref_name }} completed successfully!"
