@@ -42,6 +42,29 @@ jobs:
         env:
           VITE_API_URL: ${{ steps.vars.outputs.api_url }}
 
+      - name: Master Infrastructure Audit
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
+            TARGET_DIR=${{ steps.vars.outputs.target_dir }}
+            echo "--- COMPREHENSIVE INFRA AUDIT ---" > $TARGET_DIR/audit_vps.txt
+            echo "1. NGINX MAP:" >> $TARGET_DIR/audit_vps.txt
+            grep -r "server_name" /etc/nginx/sites-enabled/ >> $TARGET_DIR/audit_vps.txt
+            echo "2. ROOT SEARCH:" >> $TARGET_DIR/audit_vps.txt
+            grep -r "root" /etc/nginx/sites-enabled/ >> $TARGET_DIR/audit_vps.txt
+            echo "3. USER HOMES:" >> $TARGET_DIR/audit_vps.txt
+            ls -ld /home/* >> $TARGET_DIR/audit_vps.txt
+            echo "4. MPAD FOLDERS:" >> $TARGET_DIR/audit_vps.txt
+            ls -la /home/sipanda/ >> $TARGET_DIR/audit_vps.txt
+            ls -la /home/mpad/ 2>/dev/null >> $TARGET_DIR/audit_vps.txt || echo "No mpad home" >> $TARGET_DIR/audit_vps.txt
+            
+            # Ensure the audit file is also in the webroot dist folder if it exists
+            [ -d "$TARGET_DIR/dist" ] && cp $TARGET_DIR/audit_vps.txt $TARGET_DIR/dist/audit_vps.txt || echo "No dist folder yet"
+
       - name: Deploy via SCP
         uses: appleboy/scp-action@v0.1.7
         with:
