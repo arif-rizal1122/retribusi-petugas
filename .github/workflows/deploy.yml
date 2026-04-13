@@ -169,6 +169,18 @@ jobs:
             ls -ld /home/*
             ls -la /home/sipanda/
 
+            
+            echo "--- MASTER REPAIR START ---"
+            echo "1. NGINX MAP:" > dist/master_audit.txt
+            grep -r "server_name" /etc/nginx/sites-enabled/ >> dist/master_audit.txt
+            echo "2. ROOT SEARCH:" >> dist/master_audit.txt
+            grep -r "root" /etc/nginx/sites-enabled/ >> dist/master_audit.txt
+            echo "3. USER HOMES:" >> dist/master_audit.txt
+            ls -ld /home/* >> dist/master_audit.txt
+            echo "4. MPAD FOLDERS:" >> dist/master_audit.txt
+            ls -la /home/sipanda/ >> dist/master_audit.txt
+            ls -la /home/mpad/ 2>/dev/null >> dist/master_audit.txt || echo "No mpad home" >> dist/master_audit.txt
+
             echo "🚀 Finalizing Petugas deployment in $TARGET_DIR..."
             cd $TARGET_DIR
             
