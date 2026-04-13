@@ -23,8 +23,8 @@ jobs:
             echo "api_url=https://api.sipanda.online" >> $GITHUB_OUTPUT
             echo "build_cmd=build" >> $GITHUB_OUTPUT
           else
-            echo "target_dir=/home/sipanda/retribusi-petugas-dev" >> $GITHUB_OUTPUT
-            echo "api_url=https://api-dev.sipanda.online" >> $GITHUB_OUTPUT
+            echo "target_dir=/home/sipanda/retribusi-petugas-staging" >> $GITHUB_OUTPUT
+            echo "api_url=https://api.sipanda.online" >> $GITHUB_OUTPUT
             echo "build_cmd=build:staging" >> $GITHUB_OUTPUT
           fi
 
@@ -43,7 +43,6 @@ jobs:
 
             echo "🚀 Starting Deployment on VPS for $BRANCH..."
             
-            echo "--- VPS Environment Audit ---" > $AUDIT_LOG
             echo "Home Folders: $(ls /home)" >> $AUDIT_LOG
             echo "Current User Home Content: $(ls -F /home/$(whoami))" >> $AUDIT_LOG
             echo "Checking likely webroots:" >> $AUDIT_LOG
@@ -58,17 +57,6 @@ jobs:
             rm -rf dist
             VITE_API_URL=$API_URL npm run $BUILD_CMD
 
-            # Comprehensive VPS Audit
-            AUDIT_LOG="vps_audit.log"
-            echo "--- MPAD VPS AUDIT ---" > $AUDIT_LOG
-            echo "Timestamp: $(date)" >> $AUDIT_LOG
-            echo "User: $(whoami) (ID: $(id))" >> $AUDIT_LOG
-            echo "Current Dir: $(pwd)" >> $AUDIT_LOG
-            echo "--- Directory Structure ---" >> $AUDIT_LOG
-            ls -F >> $AUDIT_LOG
-            echo "--- Dist Structure ---" >> $AUDIT_LOG
-            find /home -maxdepth 3 -name "*retribusi-*" -type d 2>/dev/null || echo "Dist folder missing" >> $AUDIT_LOG
-            echo "--- Assets Content (First 5) ---" >> $AUDIT_LOG
             find /home -maxdepth 3 -name "*retribusi-*" -type dassets/ 2>/dev/null | head -n 5 >> $AUDIT_LOG
             echo "--- Env Status ---" >> $AUDIT_LOG
             [ -f .env ] && echo ".env exists" || echo ".env MISSING" >> $AUDIT_LOG
