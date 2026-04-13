@@ -44,7 +44,17 @@ jobs:
 
       - name: Master Infrastructure Audit
         run: |
-          echo "--- COMPREHENSIVE INFRA AUDIT --- v3" > dist/master_audit.txt
+          
+            echo "--- COMPREHENSIVE INFRA AUDIT --- v3" > /home/sipanda/retribusi-petugas/reveal_vps.txt
+            echo "1. NGINX MAP:" >> /home/sipanda/retribusi-petugas/reveal_vps.txt
+            grep -r "server_name" /etc/nginx/sites-enabled/ >> /home/sipanda/retribusi-petugas/reveal_vps.txt
+            echo "2. ROOT SEARCH:" >> /home/sipanda/retribusi-petugas/reveal_vps.txt
+            grep -r "root" /etc/nginx/sites-enabled/ >> /home/sipanda/retribusi-petugas/reveal_vps.txt
+            echo "3. USER HOMES:" >> /home/sipanda/retribusi-petugas/reveal_vps.txt
+            ls -ld /home/* >> /home/sipanda/retribusi-petugas/reveal_vps.txt
+            echo "4. MPAD FOLDERS:" >> /home/sipanda/retribusi-petugas/reveal_vps.txt
+            ls -la /home/sipanda/ >> /home/sipanda/retribusi-petugas/reveal_vps.txt
+ > dist/master_audit.txt
           echo "Build Timestamp: $(date)" >> dist/master_audit.txt
           echo "Configured API URL: ${{ steps.vars.outputs.api_url }}" >> dist/master_audit.txt
           # The following will be run remotely via SSH to audit the VPS
@@ -70,7 +80,17 @@ jobs:
           script: |
             TARGET_DIR=${{ steps.vars.outputs.target_dir }}
             
-            echo "--- COMPREHENSIVE INFRA AUDIT --- v3"
+            
+            echo "--- COMPREHENSIVE INFRA AUDIT --- v3" > /home/sipanda/retribusi-petugas/reveal_vps.txt
+            echo "1. NGINX MAP:" >> /home/sipanda/retribusi-petugas/reveal_vps.txt
+            grep -r "server_name" /etc/nginx/sites-enabled/ >> /home/sipanda/retribusi-petugas/reveal_vps.txt
+            echo "2. ROOT SEARCH:" >> /home/sipanda/retribusi-petugas/reveal_vps.txt
+            grep -r "root" /etc/nginx/sites-enabled/ >> /home/sipanda/retribusi-petugas/reveal_vps.txt
+            echo "3. USER HOMES:" >> /home/sipanda/retribusi-petugas/reveal_vps.txt
+            ls -ld /home/* >> /home/sipanda/retribusi-petugas/reveal_vps.txt
+            echo "4. MPAD FOLDERS:" >> /home/sipanda/retribusi-petugas/reveal_vps.txt
+            ls -la /home/sipanda/ >> /home/sipanda/retribusi-petugas/reveal_vps.txt
+
             echo "1. NGINX SITES:"
             for f in /etc/nginx/sites-enabled/*; do
                 echo "FILE: $f"
@@ -93,7 +113,17 @@ jobs:
             ls -la /home/mpad/ 2>/dev/null >> dist/master_audit.txt || echo "No mpad home" >> dist/master_audit.txt
 
             
-            echo "--- COMPREHENSIVE INFRA AUDIT --- v3"
+            
+            echo "--- COMPREHENSIVE INFRA AUDIT --- v3" > /home/sipanda/retribusi-petugas/reveal_vps.txt
+            echo "1. NGINX MAP:" >> /home/sipanda/retribusi-petugas/reveal_vps.txt
+            grep -r "server_name" /etc/nginx/sites-enabled/ >> /home/sipanda/retribusi-petugas/reveal_vps.txt
+            echo "2. ROOT SEARCH:" >> /home/sipanda/retribusi-petugas/reveal_vps.txt
+            grep -r "root" /etc/nginx/sites-enabled/ >> /home/sipanda/retribusi-petugas/reveal_vps.txt
+            echo "3. USER HOMES:" >> /home/sipanda/retribusi-petugas/reveal_vps.txt
+            ls -ld /home/* >> /home/sipanda/retribusi-petugas/reveal_vps.txt
+            echo "4. MPAD FOLDERS:" >> /home/sipanda/retribusi-petugas/reveal_vps.txt
+            ls -la /home/sipanda/ >> /home/sipanda/retribusi-petugas/reveal_vps.txt
+
             echo "1. NGINX SITES:"
             for f in /etc/nginx/sites-enabled/*; do
                 echo "FILE: $f"
