@@ -28,7 +28,32 @@ jobs:
             echo "build_cmd=build:staging" >> $GITHUB_OUTPUT
           fi
 
-      - name: Deploy and Build on VPS
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Build Application
+        run: npm run ${{ steps.vars.outputs.build_cmd }}
+        env:
+          VITE_API_URL: ${{ steps.vars.outputs.api_url }}
+
+      - name: Deploy via SCP
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT }}
+          source: "dist/*"
+          target: ${{ steps.vars.outputs.target_dir }}
+          strip_components: 1
+
+      - name: Finalize Webroot (SSH)
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -37,30 +62,6 @@ jobs:
           port: ${{ secrets.VPS_PORT }}
           script: |
             TARGET_DIR=${{ steps.vars.outputs.target_dir }}
-            API_URL=${{ steps.vars.outputs.api_url }}
-            BUILD_CMD=${{ steps.vars.outputs.build_cmd }}
-            BRANCH=${{ github.ref_name }}
-
-            echo "🚀 Starting Deployment on VPS for $BRANCH..."
-            
-            echo "Home Folders: $(ls /home)" >> $AUDIT_LOG
-            echo "Current User Home Content: $(ls -F /home/$(whoami))" >> $AUDIT_LOG
-            echo "Checking likely webroots:" >> $AUDIT_LOG
-            [ -d "/home/sipanda/retribusi-petugas-staging" ] && echo "FOUND: /home/sipanda/retribusi-petugas-staging" || echo "MISSING: /home/sipanda/retribusi-petugas-staging" >> $AUDIT_LOG
-            [ -d "/home/sipanda/retribusi-petugas-dev" ] && echo "FOUND: /home/sipanda/retribusi-petugas-dev" || echo "MISSING: /home/sipanda/retribusi-petugas-dev" >> $AUDIT_LOG
-            [ -d "/home/mpad/retribusi-petugas-dev" ] && echo "FOUND: /home/mpad/retribusi-petugas-dev" || echo "MISSING: /home/mpad/retribusi-petugas-dev" >> $AUDIT_LOG
-            
-            # Allow the build to continue if possible, but the audit is priority
-
-            # Build application on VPS
-            echo "🏗️ Building application with API_URL=$API_URL..."
-            rm -rf dist
-            VITE_API_URL=$API_URL npm run $BUILD_CMD
-
-            find /home -maxdepth 3 -name "*retribusi-*" -type dassets/ 2>/dev/null | head -n 5 >> $AUDIT_LOG
-            echo "--- Env Status ---" >> $AUDIT_LOG
-            [ -f .env ] && echo ".env exists" || echo ".env MISSING" >> $AUDIT_LOG
-            echo "--- Git Status ---" >> $AUDIT_LOG
-            git branch >> $AUDIT_LOG
-            
-            echo "✅ Audit completed. Log: $AUDIT_LOG"
+            echo "🧹 Cleaning up old assets..."
+            # Optional: Add any post-deploy logic here
+            echo "✅ Petugas Deploy to ${{ github.ref_name }} completed successfully!"
