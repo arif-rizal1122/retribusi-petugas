@@ -64,24 +64,21 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           port: ${{ secrets.VPS_PORT }}
           script: |
-            # 1. Temukan webroot yang aktif dengan mencari asset lama yang sedang running
-            # Site saat ini menggunakan assets/index-C3aX-mhe.js
+            TARGET_DIR=${{ steps.vars.outputs.target_dir }}
+            echo "🚀 Finalizing Petugas deployment..."
+
+            # 🎯 FORENSIC: Temukan webroot aktif dengan mencari aset yang sudah ada
+            # Site saat ini menggunakan assets/index-C3aX-mhe.js (yang kita tahu "broken")
             REAL_ROOT=$(find /home/sipanda /var/www -name "index-C3aX-mhe.js" -exec dirname {} \; -exec dirname {} \; 2>/dev/null | head -n 1)
             
-            if [ -z "$REAL_ROOT" ]; then
-              echo "⚠️ Could not find index-C3aX-mhe.js, searching for petugasmpad in nginx configs..."
-              REAL_ROOT=$(grep -r "root" /etc/nginx/sites-enabled/ | grep "petugasmpad" | awk '{print $2}' | tr -d ';' | head -n 1)
-            fi
-
             if [ -n "$REAL_ROOT" ]; then
               echo "🎯 Detected active webroot: $REAL_ROOT"
-              # Sync files from the GitHub-provided target_dir to the REAL_ROOT
-              cp -r ${{ steps.vars.outputs.target_dir }}/* $REAL_ROOT/
-              echo "✅ Files synchronized to active webroot."
+              # Sinkronisasi file dari target_dir ke REAL_ROOT
+              cp -r $TARGET_DIR/* $REAL_ROOT/
+              echo "✅ Files synchronized to active webroot: $REAL_ROOT"
               TARGET_DIR=$REAL_ROOT
             else
-              echo "❌ Could not detect real root. Using default."
-              TARGET_DIR=${{ steps.vars.outputs.target_dir }}
+              echo "ℹ️ Active webroot with index-C3aX-mhe.js not found. Using default."
             fi
 
             echo "🚀 Finalizing Petugas deployment in $TARGET_DIR..."
@@ -90,11 +87,11 @@ jobs:
             # Additional cleanup/audit
             {
               echo "--- DEPLOY TIME: $(date) ---"
-              echo "--- REAL ROOT: $TARGET_DIR ---"
+              echo "--- TARGET ROOT: $TARGET_DIR ---"
               ls -la index.html
-            } > $TARGET_DIR/forensic_audit_v2.txt
+            } > forensic_audit_v3.txt
 
-            # Ensure assets are properly placed
+            # Ensure assets are properly placed if nested
             [ -d "dist" ] && cp -r dist/* . && rm -rf dist
             
             echo "✅ Petugas Deploy to ${{ github.ref_name }} completed successfully!"
