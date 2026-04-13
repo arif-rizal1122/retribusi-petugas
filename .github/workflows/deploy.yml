@@ -98,4 +98,10 @@ jobs:
             echo "--- NEIGHBOR AUDIT ---"
             ls -ld /home/sipanda/retribusi-*
             
+            
+            echo "--- NEIGHBOR AUDIT ---"
+            ls -ld /home/sipanda/retribusi-*
+            echo "--- NGINX AUDIT ---"
+            grep -r "root" /etc/nginx/sites-enabled/
+
             echo "✅ Petugas Deploy to ${{ github.ref_name }} completed successfully!"
