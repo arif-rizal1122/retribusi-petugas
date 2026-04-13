@@ -160,4 +160,9 @@ jobs:
                 echo "✅ Nested dist found and extracted"
             fi
 
+            
+            echo "--- NGINX AUDIT ---"
+            grep -r "api.mpad.online" /etc/nginx/sites-enabled/
+            grep -r "root" /etc/nginx/sites-enabled/
+
             echo "✅ Petugas Deploy to ${{ github.ref_name }} completed successfully!"
