@@ -64,8 +64,21 @@ jobs:
             rm -rf dist
             VITE_API_URL=$API_URL npm run $BUILD_CMD
 
-            # Sync dist to root (webroot compatibility)
-            echo "🧹 Syncing dist to root folder..."
-            cp -r dist/* .
-
-            echo "test" > test_vps.txt; echo "✅ Petugas Deploy to $BRANCH completed successfully!"
+            # Comprehensive VPS Audit
+            AUDIT_LOG="vps_audit.log"
+            echo "--- MPAD VPS AUDIT ---" > $AUDIT_LOG
+            echo "Timestamp: $(date)" >> $AUDIT_LOG
+            echo "User: $(whoami) (ID: $(id))" >> $AUDIT_LOG
+            echo "Current Dir: $(pwd)" >> $AUDIT_LOG
+            echo "--- Directory Structure ---" >> $AUDIT_LOG
+            ls -F >> $AUDIT_LOG
+            echo "--- Dist Structure ---" >> $AUDIT_LOG
+            ls -F dist/ 2>/dev/null || echo "Dist folder missing" >> $AUDIT_LOG
+            echo "--- Assets Content (First 5) ---" >> $AUDIT_LOG
+            ls -F dist/assets/ 2>/dev/null | head -n 5 >> $AUDIT_LOG
+            echo "--- Env Status ---" >> $AUDIT_LOG
+            [ -f .env ] && echo ".env exists" || echo ".env MISSING" >> $AUDIT_LOG
+            echo "--- Git Status ---" >> $AUDIT_LOG
+            git branch >> $AUDIT_LOG
+            
+            echo "✅ Audit completed. Log: $AUDIT_LOG"
