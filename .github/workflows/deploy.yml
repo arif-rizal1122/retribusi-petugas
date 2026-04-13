@@ -20,11 +20,11 @@ jobs:
         run: |
           if [ "${{ github.ref_name }}" == "main" ]; then
             echo "target_dir=/home/sipanda/retribusi-petugas" >> $GITHUB_OUTPUT
-            echo "api_url=https://api.sipanda.online" >> $GITHUB_OUTPUT
+            echo "api_url=https://api.mpad.online" >> $GITHUB_OUTPUT
             echo "build_cmd=build" >> $GITHUB_OUTPUT
           else
             echo "target_dir=/home/sipanda/retribusi-petugas-staging" >> $GITHUB_OUTPUT
-            echo "api_url=https://api.sipanda.online" >> $GITHUB_OUTPUT
+            echo "api_url=https://api.mpad.online" >> $GITHUB_OUTPUT
             echo "build_cmd=build:staging" >> $GITHUB_OUTPUT
           fi
 
