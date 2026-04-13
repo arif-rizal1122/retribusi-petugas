@@ -61,6 +61,7 @@ jobs:
 
             # Build application on VPS
             echo "🏗️ Building application with API_URL=$API_URL..."
+            rm -rf dist
             VITE_API_URL=$API_URL npm run $BUILD_CMD
 
             echo "✅ Petugas Deploy to $BRANCH completed successfully!"
