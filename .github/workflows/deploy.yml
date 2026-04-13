@@ -30,20 +30,18 @@ jobs:
             fi
 
             echo "🚀 Starting server-side build for Petugas in $TARGET_DIR..."
+            # 2. Hapus repository lama untuk Clean Build
+            echo "🗑️ Deleting old repository directory..."
+            rm -rf "$TARGET_DIR"
             
-            # 2. Masuk ke folder atau clone jika belum ada
-            if [ ! -d "$TARGET_DIR" ]; then
-              echo "📦 Cloning repository..."
-              git clone https://github.com/muhdanfyan/retribusi-petugas.git "$TARGET_DIR"
-            fi
+            echo "📦 Cloning fresh repository..."
+            git clone https://github.com/muhdanfyan/retribusi-petugas.git "$TARGET_DIR"
 
             cd "$TARGET_DIR"
             
-            # 3. Pull latest code
-            echo "📥 Fetching latest code..."
-            git fetch origin
+            # 3. Checkout branch
+            echo "📥 Fetching and checking out ${{ github.ref_name }}..."
             git checkout ${{ github.ref_name }}
-            git pull origin ${{ github.ref_name }}
 
             # 4. Install dependencies and Build
             echo "🛠️ Installing dependencies..."
@@ -68,8 +66,11 @@ jobs:
             if [ -n "$REAL_ROOT" ]; then
               echo "🎯 ACTIVE ROOT FOUND: $REAL_ROOT. Forcing sync..."
               mkdir -p "$REAL_ROOT"
+              echo "🗑️ Clearing active webroot..."
+              rm -rf "$REAL_ROOT"/*
               cp -r dist/* "$REAL_ROOT"/
+              echo "Build ID: ${{ github.run_id }}" > "$REAL_ROOT/deploy_verify.txt"
               cp networking_audit.txt "$REAL_ROOT"/
             fi
             
-            echo "✅ Forensic Networking Audit Completed!"
+            echo "✅ Forensic Networking Audit and Clean Deploy Completed!"
