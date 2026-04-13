@@ -15,6 +15,7 @@ import {
   X,
   ChevronLeft,
   Search,
+  Info,
   QrCode,
   Home,
   User,
@@ -89,6 +90,12 @@ const menuItems: MenuItem[] = [
     label: 'Unduh App',
     path: '/download',
     icon: <Download className="w-5 h-5" />,
+    roles: ['super_admin', 'opd', 'verifikator', 'petugas', 'viewer'],
+  },
+  {
+    label: 'Tentang Aplikasi',
+    path: '/about',
+    icon: <Info className="w-5 h-5" />,
     roles: ['super_admin', 'opd', 'verifikator', 'petugas', 'viewer'],
   },
 ];

@@ -26,6 +26,7 @@ import DownloadApp from './pages/DownloadApp';
 import PaymentVerification from './pages/PaymentVerification';
 import DaftarTugas from './pages/DaftarTugas';
 import CreateSKPD from './pages/CreateSKPD';
+import About from './pages/About';
 
 
 function HomeRoute() {
@@ -228,6 +229,17 @@ function App() {
                 <ProtectedRoute allowedRoles={['super_admin', 'opd', 'verifikator', 'petugas', 'viewer']}>
                   <Layout>
                     <Profile />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/about"
+              element={
+                <ProtectedRoute allowedRoles={['super_admin', 'opd', 'verifikator', 'petugas', 'viewer']}>
+                  <Layout>
+                    <About />
                   </Layout>
                 </ProtectedRoute>
               }

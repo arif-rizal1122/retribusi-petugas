@@ -1,10 +1,16 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
+import { execSync } from 'child_process';
+
+const commitHash = execSync('git rev-parse --short HEAD').toString().trim();
 
 export default defineConfig({
   server: {
     port: 3003,
+  },
+  define: {
+    __APP_COMMIT_ID__: JSON.stringify(commitHash),
   },
   plugins: [
     react(),
