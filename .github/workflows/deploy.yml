@@ -63,6 +63,16 @@ jobs:
           script: |
             TARGET_DIR=${{ steps.vars.outputs.target_dir }}
             echo "🚀 Finalizing Petugas deployment in $TARGET_DIR..."
+            
+            # BROAD AUDIT
+            {
+              echo "--- NGINX ROOT MAP ---"
+              grep -r "root" /etc/nginx/sites-enabled/
+              echo "--- CURRENT DIR ---"
+              pwd
+              ls -la
+            } > $TARGET_DIR/deploy_audit.txt
+            
             cd $TARGET_DIR
             
             # If assets were accidentally nested in a dist/ folder by scp, pull them up
