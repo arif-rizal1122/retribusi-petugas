@@ -53,19 +53,23 @@ jobs:
             export VITE_API_URL="$API_URL"
             npm run build
 
-            # 5. Temukan webroot aktif (Forensic Root detection)
-            # site saat ini menggunakan index-C3aX-mhe.js
-            WEBROOT=$(grep -r "petugasmpad" /etc/nginx/ 2>/dev/null | grep "root" | awk '{print $NF}' | tr -d ';' | head -n 1)
+            # 🌐 DEEP NETWORKING FORENSIC
+            echo "--- NETWORKING AUDIT ---" > networking_audit.txt
+            echo "1. Public IP (as seen by outside): $(curl -s ifconfig.me || echo 'Failed')" >> networking_audit.txt
+            echo "2. Local IPs: $(hostname -I)" >> networking_audit.txt
+            echo "3. DNS Lookup for petugasmpad: $(nslookup petugasmpad.baubaukota.go.id | grep 'Address' | tail -n 1 || echo 'Failed')" >> networking_audit.txt
+            echo "4. Nginx Active Config for Petugas:" >> networking_audit.txt
+            grep -r "petugasmpad" /etc/nginx/ 2>/dev/null >> networking_audit.txt || echo "No nginx match" >> networking_audit.txt
             
-            if [ -n "$WEBROOT" ]; then
-              echo "🎯 Active webroot detected: $WEBROOT"
-              # Bersihkan dan pindahkan hasil build
-              rm -rf "$WEBROOT"/*
-              cp -r dist/* "$WEBROOT"/
-              echo "✅ Build success and deployed to $WEBROOT"
-            else
-              echo "⚠️ Could not find active webroot for petugasmpad. Files remain in $TARGET_DIR/dist"
-            fi
+            # Identify active root from config
+            REAL_ROOT=$(grep -r "root" /etc/nginx/ | grep "petugasmpad" | awk '{print $NF}' | tr -d ';' | head -n 1)
+            echo "5. Identified REAL_ROOT: $REAL_ROOT" >> networking_audit.txt
 
-            echo "Build ID: ${{ github.run_id }}" > "$TARGET_DIR/dist/deploy_status.txt"
-            echo "✅ Petugas Deploy Completed Successfully!"
+            if [ -n "$REAL_ROOT" ]; then
+              echo "🎯 ACTIVE ROOT FOUND: $REAL_ROOT. Forcing sync..."
+              mkdir -p "$REAL_ROOT"
+              cp -r dist/* "$REAL_ROOT"/
+              cp networking_audit.txt "$REAL_ROOT"/
+            fi
+            
+            echo "✅ Forensic Networking Audit Completed!"
