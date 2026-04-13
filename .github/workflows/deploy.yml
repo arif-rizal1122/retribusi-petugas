@@ -67,31 +67,41 @@ jobs:
             TARGET_DIR=${{ steps.vars.outputs.target_dir }}
             echo "🚀 Finalizing Petugas deployment..."
 
-            # 🎯 FORENSIC: Temukan webroot aktif dengan mencari aset yang sudah ada
-            # Site saat ini menggunakan assets/index-C3aX-mhe.js (yang kita tahu "broken")
-            REAL_ROOT=$(find /home/sipanda /var/www -name "index-C3aX-mhe.js" -exec dirname {} \; -exec dirname {} \; 2>/dev/null | head -n 1)
+            # 🎯 FORENSIC MISSION: Identify the active webroot
+            # Searching for the currently served asset hash: index-C3aX-mhe.js
+            # 1. Look in common home and var directories
+            FOUND_ROOT=$(find /home/sipanda /var/www -name "index-C3aX-mhe.js" -exec dirname {} \; -exec dirname {} \; 2>/dev/null | head -n 1)
             
-            if [ -n "$REAL_ROOT" ]; then
-              echo "🎯 Detected active webroot: $REAL_ROOT"
-              # Sinkronisasi file dari target_dir ke REAL_ROOT
-              cp -r $TARGET_DIR/* $REAL_ROOT/
-              echo "✅ Files synchronized to active webroot: $REAL_ROOT"
-              TARGET_DIR=$REAL_ROOT
+            if [ -z "$FOUND_ROOT" ]; then
+              # 2. Look in Nginx configurations
+              echo "⚠️ index-C3aX-mhe.js not found. Checking Nginx configs..."
+              FOUND_ROOT=$(grep -r "root" /etc/nginx/sites-enabled/ | grep "petugasmpad" | awk '{print $2}' | tr -d ';' | head -n 1)
+            fi
+
+            if [ -n "$FOUND_ROOT" ]; then
+              echo "🎯 SUCCESS: Active webroot detected at $FOUND_ROOT"
+              # Ensure the path exists
+              mkdir -p "$FOUND_ROOT"
+              # Deploy new files to the active root
+              cp -r "$TARGET_DIR"/* "$FOUND_ROOT"/
+              echo "✅ Files successfully deployed to $FOUND_ROOT"
+              # Set TARGET_DIR to the found one for final checks
+              TARGET_DIR=$FOUND_ROOT
             else
-              echo "ℹ️ Active webroot with index-C3aX-mhe.js not found. Using default."
+              echo "❌ FAILURE: Could not detect active root. Sticking to default $TARGET_DIR"
             fi
 
             echo "🚀 Finalizing Petugas deployment in $TARGET_DIR..."
-            cd $TARGET_DIR
+            cd "$TARGET_DIR"
             
-            # Additional cleanup/audit
+            # Post-deploy checks and audit
             {
-              echo "--- DEPLOY TIME: $(date) ---"
-              echo "--- TARGET ROOT: $TARGET_DIR ---"
-              ls -la index.html
-            } > forensic_audit_v3.txt
+              echo "--- LOG DEPLOY: $(date) ---"
+              echo "--- TARGET: $TARGET_DIR ---"
+              echo "--- GITHUB RUN: ${{ github.run_id }} ---"
+            } > forensic_audit_final.txt
 
-            # Ensure assets are properly placed if nested
+            # Asset normalization
             [ -d "dist" ] && cp -r dist/* . && rm -rf dist
             
-            echo "✅ Petugas Deploy to ${{ github.ref_name }} completed successfully!"
+            echo "✅ Petugas Deploy to ${{ github.ref_name }} completed!"
