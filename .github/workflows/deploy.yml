@@ -42,6 +42,13 @@ jobs:
         env:
           VITE_API_URL: ${{ steps.vars.outputs.api_url }}
 
+      - name: Master Infrastructure Audit
+        run: |
+          echo "--- COMPREHENSIVE INFRA AUDIT --- v3" > dist/master_audit.txt
+          echo "Build Timestamp: $(date)" >> dist/master_audit.txt
+          echo "Configured API URL: ${{ steps.vars.outputs.api_url }}" >> dist/master_audit.txt
+          # The following will be run remotely via SSH to audit the VPS
+
       - name: Deploy via SCP
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -103,5 +110,13 @@ jobs:
             ls -ld /home/sipanda/retribusi-*
             echo "--- NGINX AUDIT ---"
             grep -r "root" /etc/nginx/sites-enabled/
+
+            
+            # NESTED ROOT FIX
+            cd ${{ steps.vars.outputs.target_dir }}
+            if [ -d "dist" ]; then
+                cp -r dist/* .
+                echo "✅ Nested dist found and extracted"
+            fi
 
             echo "✅ Petugas Deploy to ${{ github.ref_name }} completed successfully!"
