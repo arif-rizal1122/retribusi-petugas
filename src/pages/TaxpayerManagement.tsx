@@ -137,6 +137,7 @@ export default function TaxpayerManagement() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [completionFilter, setCompletionFilter] = useState('all');
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
+  const [showOrphansOnly, setShowOrphansOnly] = useState(false);
 
   // Modal State
   const [showModal, setShowModal] = useState(false);
@@ -514,6 +515,11 @@ export default function TaxpayerManagement() {
       });
     }
 
+    // Client-side orphan filter
+    if (showOrphansOnly) {
+      result = result.filter(tp => !tp.tax_objects || tp.tax_objects.length === 0);
+    }
+
     return result;
   }, [taxpayers, statusFilter, completionFilter, sortConfig]);
 
@@ -582,12 +588,29 @@ export default function TaxpayerManagement() {
 
              {isFilterActive && (
                <button 
-                onClick={clearFilters}
+                onClick={() => {
+                  clearFilters();
+                  setShowOrphansOnly(false);
+                }}
                 className="flex items-center gap-2 px-3 py-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-lg transition-colors text-[10px] font-black uppercase tracking-widest"
                >
                  <XCircle className="w-4 h-4" /> Reset
                </button>
              )}
+
+             <div className="flex items-center gap-2 ml-auto">
+               <button
+                onClick={() => setShowOrphansOnly(!showOrphansOnly)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${
+                  showOrphansOnly 
+                    ? 'bg-amber-100 text-amber-700 border border-amber-200 shadow-sm' 
+                    : 'bg-white dark:bg-gray-800 text-gray-400 border border-gray-200 dark:border-gray-700'
+                }`}
+               >
+                 <Info size={14} className={showOrphansOnly ? 'text-amber-600' : ''} />
+                 {showOrphansOnly ? 'Tanpa Objek' : 'Filter Tanpa Objek'}
+               </button>
+             </div>
           </div>
         </div>
 
@@ -637,8 +660,19 @@ export default function TaxpayerManagement() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="text-sm font-medium text-gray-900 dark:text-white">{tp.object_name || 'Tidak ada objek'}</div>
-                      <div className="text-xs text-gray-500">{tp.opd?.name}</div>
+                      <div className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
+                        {tp.tax_objects && tp.tax_objects.length > 0 
+                          ? (tp.tax_objects.length === 1 ? tp.tax_objects[0].name : `Memiliki ${tp.tax_objects.length} Objek`) 
+                          : (
+                            <div className="flex flex-col">
+                              <span className="text-amber-600 dark:text-amber-400 font-bold flex items-center gap-1">
+                                <Info size={12} /> Tanpa Objek
+                              </span>
+                              <span className="text-[10px] text-gray-400 italic font-medium uppercase tracking-tight">Butuh Aksi</span>
+                            </div>
+                          )}
+                      </div>
+                      <div className="text-xs text-gray-500">{tp.opd?.name || 'No Department'}</div>
                     </td>
                     <td className="px-6 py-4">
                       <StatusIndicator tp={tp} />
