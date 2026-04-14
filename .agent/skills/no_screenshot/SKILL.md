@@ -7,7 +7,9 @@ description: Instruksi untuk TIDAK menggunakan screenshot atau rekaman dari Anti
 
 ## Aturan Utama
 
-**DILARANG** menggunakan screenshot atau rekaman (recording) dari Antigravity browser subagent sebagai alat verifikasi halaman web.
+1. **DILARANG** menggunakan screenshot atau rekaman (recording) dari Antigravity browser subagent sebagai alat verifikasi halaman web.
+2. **WAJIB** menggunakan CLI (Command Line Interface) seperti `curl`, `git`, `bash`, atau `artisan` untuk semua proses pengerjaan dan verifikasi teknis.
+3. Seluruh interaksi dengan server (VPS) harus terdokumentasi via output terminal, bukan melalui visual browser.
 
 ## Alasan
 
