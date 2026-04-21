@@ -13,6 +13,7 @@ import { MapContainer, TileLayer, Marker, useMapEvents, Popup } from 'react-leaf
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { MapPicker } from '../components/MapPicker';
+import { formatNPWPD, ensureArray } from '../lib/formatUtils';
 
 // Fix for default marker icon in Leaflet
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
@@ -38,19 +39,7 @@ const BAUBAU_DATA = {
   "Wolio": ["Bataraguru", "Tomba", "Wangkanapi", "Wale", "Batulo", "Bukit Wolio Indah", "Kadolokatapi"]
 };
 
-const ensureArray = (val: any) => {
-  if (!val) return [];
-  if (Array.isArray(val)) return val;
-  if (typeof val === 'string') {
-    try {
-      const parsed = JSON.parse(val);
-      return Array.isArray(parsed) ? parsed : [];
-    } catch {
-      return [];
-    }
-  }
-  return [];
-};
+// ensureArray moved to formatUtils.ts
 
 const CompletionBar = ({ percentage }: { percentage: number }) => {
   return (
@@ -997,7 +986,7 @@ export default function TaxpayerManagement() {
                           <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">NPWPD (Opsional)</label>
                           <input
                             type="text"
-                            placeholder="Nomor Pokok Wajib Pajak Daerah"
+                            placeholder="Input NPWPD..."
                             value={form.npwpd}
                             onChange={(e) => setForm({ ...form, npwpd: e.target.value })}
                             className="w-full px-4 md:px-6 py-3 md:py-4 bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-800 rounded-2xl font-bold text-sm md:text-base"
@@ -1192,7 +1181,15 @@ export default function TaxpayerManagement() {
                                     <MapPicker
                                       label={field.label}
                                       value={form.metadata[field.key] || ''}
-                                      onChange={(val) => setForm({ ...form, metadata: { ...form.metadata, [field.key]: val } })}
+                                      onChange={(val) => {
+                                        const [lat, lng] = val.split(',').map(Number);
+                                        setForm({ 
+                                          ...form, 
+                                          latitude: lat || form.latitude,
+                                          longitude: lng || form.longitude,
+                                          metadata: { ...form.metadata, [field.key]: val } 
+                                        });
+                                      }}
                                     />
                                   ) : (
                                     <input
@@ -1262,7 +1259,32 @@ export default function TaxpayerManagement() {
                           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                         />
                         <MapEvents />
-                        <Marker position={[form.latitude, form.longitude]}>
+                        <Marker 
+                          position={[form.latitude, form.longitude]}
+                          draggable={true}
+                          eventHandlers={{
+                            dragend: (e) => {
+                              const marker = e.target;
+                              const position = marker.getLatLng();
+                              const newLat = position.lat;
+                              const newLng = position.lng;
+
+                              const newMetadata = { ...form.metadata };
+                              Object.keys(newMetadata).forEach(key => {
+                                if (key.includes('map') || key.includes('lokasi')) {
+                                  newMetadata[key] = `${newLat},${newLng}`;
+                                }
+                              });
+
+                              setForm(prev => ({ 
+                                ...prev, 
+                                latitude: newLat, 
+                                longitude: newLng, 
+                                metadata: newMetadata 
+                              }));
+                            }
+                          }}
+                        >
                           <Popup>
                             <div className="p-2 font-sans text-center">
                               <p className="text-[10px] font-black text-slate-900 uppercase tracking-widest mb-1">Lokasi Terpilih</p>

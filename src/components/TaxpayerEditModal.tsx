@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, useMapEvents, Popup } from 'react-leaflet';
 import { MapPicker } from '../components/MapPicker';
+import { formatNPWPD } from '../lib/formatUtils';
 import 'leaflet/dist/leaflet.css';
 
 const BAUBAU_DATA: Record<string, string[]> = {
@@ -275,7 +276,8 @@ export default function TaxpayerEditModal({ isOpen, taxpayer, onClose, onSaved }
                     </div>
                     <div>
                       <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">NPWPD</label>
-                      <input type="text" placeholder="Opsional" value={form.npwpd} onChange={e => setForm({...form, npwpd: e.target.value})}
+                      <input type="text" placeholder="Input NPWPD..." value={form.npwpd} 
+                        onChange={e => setForm({...form, npwpd: e.target.value})}
                         className="w-full px-6 py-4 bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-800 rounded-2xl font-bold" />
                     </div>
                   </div>
@@ -413,8 +415,19 @@ export default function TaxpayerEditModal({ isOpen, taxpayer, onClose, onSaved }
                                 <span className="text-sm font-bold text-gray-900 dark:text-white">{form.metadata[field.key] === 'Ya' ? 'Ya' : 'Tidak'}</span>
                               </label>
                             ) : field.type === 'google_map' ? (
-                              <MapPicker label={field.label} value={form.metadata[field.key] || ''}
-                                onChange={(val: string) => setForm({...form, metadata: {...form.metadata, [field.key]: val}})} />
+                              <MapPicker 
+                                label={field.label} 
+                                value={form.metadata[field.key] || ''}
+                                onChange={(val: string) => {
+                                  const [lat, lng] = val.split(',').map(Number);
+                                  setForm({
+                                    ...form,
+                                    latitude: lat || form.latitude,
+                                    longitude: lng || form.longitude,
+                                    metadata: { ...form.metadata, [field.key]: val }
+                                  });
+                                }} 
+                              />
                             ) : (
                               <input type={field.type} value={form.metadata[field.key] || ''} onChange={e => setForm({...form, metadata: {...form.metadata, [field.key]: e.target.value}})}
                                 className="w-full px-6 py-4 bg-white dark:bg-gray-900 border-2 border-gray-100 dark:border-gray-800 rounded-2xl font-bold text-sm" placeholder={field.label} />
@@ -468,8 +481,34 @@ export default function TaxpayerEditModal({ isOpen, taxpayer, onClose, onSaved }
                   <MapContainer center={[form.latitude, form.longitude]} zoom={15} style={{height:'100%',width:'100%'}} scrollWheelZoom={true}>
                     <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                     <MapEvents />
-                    <Marker position={[form.latitude, form.longitude]}>
-                      <Popup>Lokasi: {form.latitude.toFixed(6)}, {form.longitude.toFixed(6)}</Popup>
+                    <Marker 
+                      position={[form.latitude, form.longitude]}
+                      draggable={true}
+                      eventHandlers={{
+                        dragend: (e) => {
+                          const marker = e.target;
+                          const position = marker.getLatLng();
+                          const newLat = position.lat;
+                          const newLng = position.lng;
+
+                          // Sync back to metadata if google_map exists
+                          const newMetadata = { ...form.metadata };
+                          Object.keys(newMetadata).forEach(key => {
+                            if (key.includes('map') || key.includes('lokasi')) {
+                              newMetadata[key] = `${newLat},${newLng}`;
+                            }
+                          });
+
+                          setForm(prev => ({ 
+                            ...prev, 
+                            latitude: newLat, 
+                            longitude: newLng, 
+                            metadata: newMetadata 
+                          }));
+                        }
+                      }}
+                    >
+                      <Popup>Lokasi Utama Objek: {form.latitude.toFixed(6)}, {form.longitude.toFixed(6)}</Popup>
                     </Marker>
                   </MapContainer>
                 </div>

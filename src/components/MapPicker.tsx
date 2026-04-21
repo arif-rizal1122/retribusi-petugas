@@ -111,27 +111,39 @@ export function MapPicker({ value, onChange, label }: MapPickerProps) {
         className="w-full px-6 py-4 bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-800 rounded-2xl flex items-center justify-between cursor-pointer hover:bg-white dark:hover:bg-gray-700 transition-all shadow-sm group"
       >
         <div className="flex items-center gap-3 min-w-0 flex-1">
-          <MapPin className="text-blue-500 shrink-0" size={18} />
-          <span className={`text-sm font-bold truncate ${value ? 'text-gray-900 dark:text-gray-100' : 'text-gray-400'}`}>
-            {value ? value : `Pilih Lokasi ${label || ''}`}
-          </span>
+          <MapPin className={value ? "text-emerald-500" : "text-blue-500"} size={18} />
+          <div className="flex flex-col min-w-0">
+            <span className={`text-[10px] font-black uppercase tracking-widest ${value ? 'text-emerald-600' : 'text-blue-600'}`}>
+              {value ? 'Lokasi Tersimpan' : 'Titik Lokasi'}
+            </span>
+            <span className={`text-sm font-bold truncate ${value ? 'text-gray-900 dark:text-gray-100' : 'text-gray-400'}`}>
+              {value ? value : `Pilih Lokasi ${label || ''}`}
+            </span>
+          </div>
         </div>
-        <div className="text-[10px] font-black uppercase text-blue-600 dark:text-blue-400 tracking-widest bg-blue-50 dark:bg-blue-900/30 px-3 py-2 rounded-xl shrink-0 ml-2 group-hover:bg-blue-600 group-hover:text-white transition-all">
-          Buka Peta
+        <div className="flex flex-col items-end gap-1">
+          <div className="text-[9px] font-black uppercase text-blue-600 dark:text-blue-400 tracking-widest bg-blue-50 dark:bg-blue-900/30 px-3 py-1.5 rounded-lg group-hover:bg-blue-600 group-hover:text-white transition-all">
+            {value ? 'Ubah Titik' : 'Pilih'}
+          </div>
+          {value && (
+            <span className="text-[8px] font-bold text-gray-400 italic">Klik untuk menyesuaikan</span>
+          )}
         </div>
       </div>
 
       {showModal && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="bg-white dark:bg-gray-900 w-full max-w-2xl rounded-[2.5rem] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-500 flex flex-col max-h-[90vh]">
-            <div className="p-8 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center">
+            <div className="p-8 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-blue-50/30 dark:bg-blue-900/10">
               <div>
-                <h3 className="text-xl font-black text-gray-900 dark:text-white leading-tight">Pilih Lokasi</h3>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Klik pada peta untuk menandai titik koordinat</p>
+                <h3 className="text-xl font-black text-gray-900 dark:text-white leading-tight">Pilih Lokasi Objek</h3>
+                <p className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest mt-1">
+                  {value ? 'Apakah Anda ingin mengubah titik lokasi ini?' : 'Klik pada peta untuk menentukan koordinat'}
+                </p>
               </div>
               <button 
                 onClick={() => setShowModal(false)}
-                className="p-3 bg-gray-50 dark:bg-gray-800 hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-400 hover:text-red-500 rounded-2xl transition-all"
+                className="p-3 bg-white dark:bg-gray-800 hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-400 hover:text-red-500 rounded-2xl transition-all shadow-sm"
               >
                 <X size={20} />
               </button>
