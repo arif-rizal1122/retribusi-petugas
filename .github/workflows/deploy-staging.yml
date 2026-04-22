@@ -1,37 +1,47 @@
-name: Deploy Staging Environment
+name: Deploy Petugas to Staging
 
 on:
   push:
     branches:
-      - staging
+      - main
 
 jobs:
   deploy:
+    name: 🚀 Build & Deploy Petugas to Staging
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-    - name: Use Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-        cache: 'npm'
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
 
-    - name: Install Dependencies
-      run: npm ci
+      - name: Install & Build
+        run: |
+          npm ci
+          npm run build
+        env:
+          VITE_API_URL: https://api.sipanda.online
 
-    - name: Build Project
-      run: npm run build:staging
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
+            cd /home/sipanda/retribusi-petugas-staging
+            git fetch origin && git reset --hard origin/main
+            npm ci && npm run build
+            sudo systemctl reload nginx
+            echo "✅ Petugas Staging deployed!"
 
-    - name: Deploy to VPS
-      uses: appleboy/scp-action@v0.1.7
-      with:
-        host: ${{ secrets.VPS_HOST }}
-        username: ${{ secrets.VPS_USERNAME }}
-        password: ${{ secrets.VPS_PASSWORD }}
-        port: ${{ secrets.VPS_PORT }}
-        source: "dist/*"
-        target: "/home/sipanda/retribusi-petugas-staging/dist"
-        strip_components: 1
+      - name: Health Check
+        run: |
+          sleep 5
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://petugas.sipanda.online)
+          echo "Petugas Staging: HTTP $STATUS"
