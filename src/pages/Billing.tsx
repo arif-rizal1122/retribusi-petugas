@@ -202,7 +202,9 @@ export default function Billing() {
   };
 
   const billIdsParam = searchParams.get('ids');
-  const idsToFilter = billIdsParam ? billIdsParam.split(',') : [];
+  const idsToFilter = billIdsParam
+    ? billIdsParam.split(',').map(id => id.trim()).filter(Boolean)
+    : [];
 
   const filteredBillings = billings
     .filter((billing) => {

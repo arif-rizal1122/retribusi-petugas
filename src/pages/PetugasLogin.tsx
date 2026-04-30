@@ -53,8 +53,8 @@ export default function PetugasLogin() {
   };
 
   const demoAccounts = [
-    { email: 'superadmin@sipanda.online', password: 'password', label: 'Super Admin' },
-    { email: 'admin@bapenda.go.id', password: 'password123', label: 'Admin Bapenda' },
+    { email: 'superadmin@sipanda.online', password: 'Mpad123#', label: 'Super Admin' },
+    { email: 'bapenda@baubaukota.go.id', password: 'password123', label: 'Admin Bapenda' },
     { email: 'petugas@bapenda.go.id', password: 'password123', label: 'Petugas Bapenda' },
   ];
 

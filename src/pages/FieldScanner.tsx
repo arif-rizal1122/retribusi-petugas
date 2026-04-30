@@ -8,7 +8,8 @@ import {
   ShieldCheck, 
   Loader2, 
   RotateCw, 
-  AlertCircle
+  AlertCircle,
+  ImagePlus
 } from 'lucide-react';
 
 export default function FieldScanner() {
@@ -20,8 +21,11 @@ export default function FieldScanner() {
   const [activeCamera, setActiveCamera] = useState<string | null>(null);
   const [cameras, setCameras] = useState<any[]>([]);
   const [detectionHint, setDetectionHint] = useState<string | null>(null);
+  const [errorTitle, setErrorTitle] = useState('Akses Kamera Gagal');
   
   const qrScannerRef = useRef<Html5Qrcode | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const hasHandledScanRef = useRef(false);
   const containerId = "reader";
 
   useEffect(() => {
@@ -38,11 +42,13 @@ export default function FieldScanner() {
         setActiveCamera(backCamera.id);
         startScanner(backCamera.id);
       } else {
+        setErrorTitle("Akses Kamera Gagal");
         setError("Kamera tidak ditemukan pada perangkat ini.");
       }
     }).catch(err => {
       if (!isMounted) return;
       console.error(err);
+      setErrorTitle("Akses Kamera Gagal");
       setError("Izin kamera ditolak atau terjadi kesalahan.");
     });
 
@@ -62,6 +68,7 @@ export default function FieldScanner() {
 
       const scanner = new Html5Qrcode(containerId);
       qrScannerRef.current = scanner;
+      hasHandledScanRef.current = false;
       setIsScanning(true);
       setError(null);
 
@@ -73,29 +80,7 @@ export default function FieldScanner() {
           aspectRatio: 1.0,
         },
         (decodedText) => {
-          setIsScanning(false);
-          if (navigator.vibrate) navigator.vibrate([100, 50, 100]); // Triple pulse for success
-          
-          const result = QRScannerService.parse(decodedText);
-          setScanResult(result.value);
-          setDetectionHint(result.actionHint || 'Data Terdeteksi');
-
-          let targetUrl = `/billing?search=${encodeURIComponent(result.value)}`;
-          
-          if (result.type === 'json' && result.metadata?.ids) {
-            targetUrl = `/billing?ids=${result.metadata.ids.join(',')}`;
-          } else if (result.type === 'url') {
-            if (result.metadata?.isPbbSppt) {
-              targetUrl = `/pbb-bapenda?nop=${encodeURIComponent(result.value)}&autoplay=true`;
-            } else {
-              targetUrl = `/billing?search=${encodeURIComponent(result.value)}&autoplay=true`;
-            }
-          }
-
-          setTimeout(() => {
-            stopScanner();
-            navigate(targetUrl);
-          }, 1500);
+          handleDecodedText(decodedText);
         },
         () => {}
       );
@@ -109,21 +94,103 @@ export default function FieldScanner() {
       }
     } catch (err) {
       console.error(err);
+      setErrorTitle("Akses Kamera Gagal");
       setError("Gagal mengakses kamera. Pastikan browser memiliki izin.");
       setIsScanning(false);
     }
   };
 
   const stopScanner = async () => {
-    if (qrScannerRef.current && qrScannerRef.current.isScanning) {
+    if (qrScannerRef.current) {
+      const scanner = qrScannerRef.current;
       try {
-        await qrScannerRef.current.stop();
+        if (scanner.isScanning) {
+          await scanner.stop();
+        }
+        await scanner.clear();
+      } catch (err) {
+        console.error("Error stopping scanner", err);
+      } finally {
         qrScannerRef.current = null;
         setTorchSupported(false);
         setTorchOn(false);
-      } catch (err) {
-        console.error("Error stopping scanner", err);
       }
+    }
+  };
+
+  const handleDecodedText = (decodedText: string) => {
+    if (hasHandledScanRef.current) return;
+    hasHandledScanRef.current = true;
+
+    setIsScanning(false);
+    setError(null);
+    if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+    
+    const result = QRScannerService.parse(decodedText);
+    setScanResult(result.value);
+    setDetectionHint(result.actionHint || 'Data Terdeteksi');
+
+    let targetUrl = `/billing?search=${encodeURIComponent(result.value)}`;
+    
+    if (result.type === 'json' && Array.isArray(result.metadata?.ids)) {
+      const ids = result.metadata.ids.map((id: unknown) => String(id).trim()).filter(Boolean);
+      const billNumbers = Array.isArray(result.metadata?.bill_numbers)
+        ? result.metadata.bill_numbers.map((number: unknown) => String(number).trim()).filter(Boolean)
+        : [];
+
+      if (ids.length > 0) {
+        targetUrl = `/billing?ids=${ids.join(',')}`;
+      } else if (billNumbers.length > 0) {
+        targetUrl = `/billing?search=${encodeURIComponent(billNumbers[0])}&autoplay=true`;
+      } else {
+        setScanResult(null);
+        setDetectionHint(null);
+        setErrorTitle("QR Tagihan Kosong");
+        setError("QR ini tidak berisi ID tagihan. Buat ulang QR dari halaman pembayaran setelah tagihan terpilih.");
+        hasHandledScanRef.current = false;
+        return;
+      }
+    } else if (result.type === 'url') {
+      if (result.metadata?.isPbbSppt) {
+        targetUrl = `/pbb-bapenda?nop=${encodeURIComponent(result.value)}&autoplay=true`;
+      } else {
+        targetUrl = `/billing?search=${encodeURIComponent(result.value)}&autoplay=true`;
+      }
+    }
+
+    setTimeout(() => {
+      stopScanner();
+      navigate(targetUrl);
+    }, 1500);
+  };
+
+  const handleFileScan = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+
+    try {
+      setError(null);
+      setScanResult(null);
+      setDetectionHint('Membaca File QR');
+      hasHandledScanRef.current = false;
+      await stopScanner();
+
+      const scanner = new Html5Qrcode(containerId);
+      qrScannerRef.current = scanner;
+      const decodedText = await scanner.scanFile(file, false);
+      await scanner.clear();
+      qrScannerRef.current = null;
+      handleDecodedText(decodedText);
+    } catch (err) {
+      console.error("Error scanning file", err);
+      try {
+        await qrScannerRef.current?.clear();
+      } catch {}
+      qrScannerRef.current = null;
+      setIsScanning(false);
+      setErrorTitle("QR Tidak Terbaca");
+      setError("File gambar tidak berisi QR yang valid atau resolusinya terlalu rendah.");
     }
   };
 
@@ -155,6 +222,14 @@ export default function FieldScanner() {
 
   return (
     <div className="min-h-screen bg-black flex flex-col items-center justify-center p-0 m-0 fixed inset-0 z-[100] animate-in fade-in duration-500 overflow-hidden">
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleFileScan}
+      />
+
       {/* Immersive Camera Feed */}
       <div id={containerId} className="absolute inset-0 w-full h-full object-cover"></div>
 
@@ -217,6 +292,13 @@ export default function FieldScanner() {
             >
               <RotateCw className="w-6 h-6" />
             </button>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="w-14 h-14 bg-white/10 flex items-center justify-center rounded-2xl text-white active:bg-white/20 transition-all font-black text-xs"
+              aria-label="Pilih file QR"
+            >
+              <ImagePlus className="w-6 h-6" />
+            </button>
           </div>
 
           <div className="w-full flex items-center justify-center gap-3 py-4">
@@ -245,14 +327,22 @@ export default function FieldScanner() {
           <div className="w-20 h-20 bg-rose-500/20 rounded-full flex items-center justify-center mb-6">
             <AlertCircle className="w-10 h-10 text-rose-500" />
           </div>
-          <h2 className="text-2xl font-black text-white mb-2">Akses Kamera Gagal</h2>
+          <h2 className="text-2xl font-black text-white mb-2">{errorTitle}</h2>
           <p className="text-slate-400 mb-8 max-w-xs">{error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="px-8 py-4 bg-blue-600 text-white rounded-2xl font-black uppercase text-xs tracking-widest active:scale-95 transition-all"
-          >
-            COBA LAGI
-          </button>
+          <div className="flex flex-col gap-3 w-full max-w-xs">
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="px-8 py-4 bg-blue-600 text-white rounded-2xl font-black uppercase text-xs tracking-widest active:scale-95 transition-all"
+            >
+              Pilih File QR
+            </button>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-8 py-4 bg-white/10 text-white rounded-2xl font-black uppercase text-xs tracking-widest active:scale-95 transition-all border border-white/10"
+            >
+              Coba Lagi Kamera
+            </button>
+          </div>
         </div>
       )}
 
