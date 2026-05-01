@@ -1,4 +1,6 @@
 import { ReactNode, useState } from 'react';
+import ZoomControl from './ZoomControl';
+import { InstallPWA } from './InstallPWA';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -153,6 +155,7 @@ export default function Layout({ children }: LayoutProps) {
 
           {/* Right: User Actions */}
           <div className="flex items-center gap-4">
+            <ZoomControl />
             <div className="flex items-center bg-slate-50 dark:bg-slate-800 p-1 rounded-2xl border border-slate-100 dark:border-slate-800/50">
               <button
                 onClick={toggleTheme}
@@ -411,6 +414,8 @@ export default function Layout({ children }: LayoutProps) {
           );
         })}
       </nav>
+
+      <InstallPWA />
     </div>
   );
 }

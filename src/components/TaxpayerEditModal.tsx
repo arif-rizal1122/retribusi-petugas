@@ -275,10 +275,12 @@ export default function TaxpayerEditModal({ isOpen, taxpayer, onClose, onSaved }
                         className="w-full px-6 py-4 bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-800 rounded-2xl font-bold" />
                     </div>
                     <div>
-                      <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">NPWPD</label>
-                      <input type="text" placeholder="Input NPWPD..." value={form.npwpd} 
-                        onChange={e => setForm({...form, npwpd: e.target.value})}
-                        className="w-full px-6 py-4 bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-800 rounded-2xl font-bold" />
+                      <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">
+                        NPWPD <span className="text-emerald-500">(Otomatis)</span>
+                      </label>
+                      <input type="text" placeholder="Terisi otomatis..." value={form.npwpd} 
+                        readOnly
+                        className="w-full px-6 py-4 bg-gray-100 dark:bg-gray-800/50 border-2 border-gray-100 dark:border-gray-800 rounded-2xl font-bold text-gray-400 cursor-not-allowed" />
                     </div>
                   </div>
                   <div>

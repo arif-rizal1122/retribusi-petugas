@@ -22,6 +22,7 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { api } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
+import ZoomControl from '../components/ZoomControl';
 
 // Fix for default marker icon
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -403,7 +404,10 @@ export default function Dashboard() {
       {/* Mobile Title & Navigator */}
       <div className="lg:hidden flex flex-col gap-5">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight shrink-0">Dashboard</h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight shrink-0">Dashboard</h2>
+            <ZoomControl variant="inline" />
+          </div>
           <div className="flex items-center gap-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm overflow-hidden">
             <button onClick={handlePrev} className="p-2 text-[#2d5cd5] active:bg-slate-50 transition-colors"><ChevronLeft size={16} /></button>
             <span className="text-[10px] font-black uppercase tracking-widest text-[#2d5cd5] px-1 whitespace-nowrap">{getDisplayDate(true)}</span>
