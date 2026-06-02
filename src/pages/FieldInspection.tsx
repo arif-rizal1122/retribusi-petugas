@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Camera, MapPin, CheckCircle, ArrowLeft, Loader2, AlertCircle } from 'lucide-react';
+import { Camera, MapPin, CheckCircle, ArrowLeft, Loader2, AlertCircle, Search } from 'lucide-react';
 import { api } from '../lib/api';
 
 export default function FieldInspection() {
@@ -16,6 +16,17 @@ export default function FieldInspection() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const [notices, setNotices] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  const filteredNotices = notices.filter((n: any) => {
+    if (!searchQuery) return true;
+    const term = searchQuery.toLowerCase();
+    const nameMatch = n.tax_object?.name?.toLowerCase().includes(term);
+    const addressMatch = n.tax_object?.address?.toLowerCase().includes(term);
+    const numberMatch = n.number?.toLowerCase().includes(term);
+    return nameMatch || addressMatch || numberMatch;
+  });
 
   useEffect(() => {
     fetchNotices();
@@ -184,9 +195,59 @@ export default function FieldInspection() {
             <p className="text-blue-100 text-xs font-medium opacity-80">Pilih surat perintah untuk memulai inspeksi lapangan</p>
           </div>
 
+          <div className="relative z-20">
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <Search size={18} className="text-slate-400" />
+              </div>
+              <input
+                type="text"
+                placeholder="Cari WP, nomor surat, atau alamat..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => setIsDropdownOpen(true)}
+                className="w-full pl-11 pr-4 py-4 bg-white dark:bg-gray-800 border-2 border-slate-100 dark:border-gray-700 rounded-2xl text-sm font-bold text-slate-800 dark:text-white focus:outline-none focus:border-blue-500 transition-all shadow-sm"
+              />
+            </div>
+            
+            {searchQuery && isDropdownOpen && (
+              <div className="absolute z-30 w-full mt-2 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-slate-100 dark:border-gray-700 max-h-80 overflow-y-auto">
+                {filteredNotices.length > 0 ? (
+                  filteredNotices.map((n: any) => (
+                    <div 
+                      key={n.id}
+                      onClick={() => {
+                        setSearchQuery('');
+                        setIsDropdownOpen(false);
+                        navigate(`/field-check?noticeId=${n.id}`);
+                      }}
+                      className="p-4 border-b border-slate-50 dark:border-gray-700/50 hover:bg-slate-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors last:border-0"
+                    >
+                      <div className="flex justify-between items-start mb-1">
+                        <span className="text-[10px] font-black text-blue-600 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-lg uppercase tracking-wider">{n.number}</span>
+                        <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-lg ${n.status === 'approved' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
+                          {n.status}
+                        </span>
+                      </div>
+                      <h3 className="text-sm font-bold text-slate-900 dark:text-white">{n.tax_object?.name || 'Objek Pajak Tanpa Nama'}</h3>
+                      <p className="text-[10px] text-slate-400 font-medium uppercase tracking-widest flex items-center gap-1 mt-1">
+                        <MapPin size={10} className="text-slate-400 shrink-0" />
+                        <span className="truncate">{n.tax_object?.address || 'Alamat tidak tersedia'}</span>
+                      </p>
+                    </div>
+                  ))
+                ) : (
+                  <div className="p-8 text-center text-slate-400 text-xs font-bold uppercase tracking-widest">
+                    Tidak ada hasil ditemukan
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
           <div className="space-y-3">
-            {notices.length > 0 ? (
-              notices.map((n: any) => (
+            {filteredNotices.length > 0 ? (
+              filteredNotices.map((n: any) => (
                 <div 
                   key={n.id}
                   onClick={() => navigate(`/field-check?noticeId=${n.id}`)}
@@ -211,8 +272,8 @@ export default function FieldInspection() {
                   <CheckCircle className="w-8 h-8 text-emerald-500" />
                 </div>
                 <div>
-                  <p className="font-black text-slate-900 dark:text-white uppercase text-xs tracking-widest mb-1">Semua Selesai</p>
-                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Tidak ada tugas inspeksi pending</p>
+                  <p className="font-black text-slate-900 dark:text-white uppercase text-xs tracking-widest mb-1">Pencarian Kosong</p>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Tidak ada tugas yang sesuai</p>
                 </div>
               </div>
             )}
