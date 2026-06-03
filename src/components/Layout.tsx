@@ -202,7 +202,7 @@ export default function Layout({ children }: LayoutProps) {
       </header>
 
       {/* Mobile Top Header (Clean Style) */}
-      <div className="lg:hidden px-5 pt-6 pb-2">
+      <div className="lg:hidden px-5 pt-2 pb-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3 relative">
             <button 
