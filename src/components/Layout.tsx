@@ -369,12 +369,14 @@ export default function Layout({ children }: LayoutProps) {
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-[90] bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 w-full flex items-center justify-between px-6 pb-2 pt-2 h-20 shadow-[0_-4px_24px_rgba(0,0,0,0.04)]">
         {[
           { icon: Home, path: '/dashboard', label: 'Home' },
-          { icon: Search, path: '/billing', label: 'Search' },
-          { icon: QrCode, path: '/scanner', label: 'Scan' },
+          { icon: Users, path: '/taxpayers', label: 'WP' },
+          { icon: FileText, path: '/billing', label: 'Tagihan' },
           { icon: ClipboardList, path: '/tasks', label: 'Tugas' },
           { icon: User, path: '/profile', label: 'Account' }
         ].map((item, i) => {
-          const isActive = location.pathname === item.path || (item.path === '/billing' && location.pathname.includes('/billing'));
+          const isActive = location.pathname === item.path || 
+            (item.path === '/billing' && location.pathname.includes('/billing')) ||
+            (item.path === '/taxpayers' && location.pathname.includes('/taxpayers'));
 
           return (
             <button 

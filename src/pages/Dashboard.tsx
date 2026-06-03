@@ -516,11 +516,11 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Mobile Consolidated 2x2 Grid (No Redundancy) */}
+          {/* Mobile Consolidated 2x2 Grid — STATIC / NON-INTERACTIVE */}
           <div className="col-span-12 lg:hidden">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2.5">
               {/* Card 1: Pencapaian Saya (Rp) */}
-              <div className="bg-white dark:bg-slate-900 rounded-2xl p-3.5 border border-slate-100 dark:border-slate-800 flex flex-col justify-between shadow-sm">
+              <div className="bg-slate-50/70 dark:bg-slate-900/40 rounded-2xl p-3.5 border border-slate-100/60 dark:border-slate-800/50 flex flex-col justify-between cursor-default select-none">
                 <div className="flex items-center justify-between mb-2">
                   <div className="bg-emerald-500/10 w-8 h-8 rounded-full flex items-center justify-center text-emerald-600">
                     <Wallet size={16} />
@@ -536,7 +536,7 @@ export default function Dashboard() {
               </div>
 
               {/* Card 2: Jumlah Koleksi */}
-              <div className="bg-white dark:bg-slate-900 rounded-2xl p-3.5 border border-slate-100 dark:border-slate-800 flex flex-col justify-between shadow-sm">
+              <div className="bg-slate-50/70 dark:bg-slate-900/40 rounded-2xl p-3.5 border border-slate-100/60 dark:border-slate-800/50 flex flex-col justify-between cursor-default select-none">
                 <div className="flex items-center justify-between mb-2">
                   <div className="bg-blue-500/10 w-8 h-8 rounded-full flex items-center justify-center text-blue-600">
                     <TrendingUp size={16} />
@@ -552,7 +552,7 @@ export default function Dashboard() {
               </div>
 
               {/* Card 3: Tagihan Pending */}
-              <div className="bg-white dark:bg-slate-900 rounded-2xl p-3.5 border border-slate-100 dark:border-slate-800 flex flex-col justify-between shadow-sm">
+              <div className="bg-slate-50/70 dark:bg-slate-900/40 rounded-2xl p-3.5 border border-slate-100/60 dark:border-slate-800/50 flex flex-col justify-between cursor-default select-none">
                 <div className="flex items-center justify-between mb-2">
                   <div className="bg-amber-500/10 w-8 h-8 rounded-full flex items-center justify-center text-amber-600">
                     <FileText size={16} />
@@ -568,7 +568,7 @@ export default function Dashboard() {
               </div>
 
               {/* Card 4: Wajib Aktif */}
-              <div className="bg-white dark:bg-slate-900 rounded-2xl p-3.5 border border-slate-100 dark:border-slate-800 flex flex-col justify-between shadow-sm">
+              <div className="bg-slate-50/70 dark:bg-slate-900/40 rounded-2xl p-3.5 border border-slate-100/60 dark:border-slate-800/50 flex flex-col justify-between cursor-default select-none">
                 <div className="flex items-center justify-between mb-2">
                   <div className="bg-indigo-500/10 w-8 h-8 rounded-full flex items-center justify-center text-indigo-600">
                     <Users size={16} />
@@ -755,55 +755,26 @@ export default function Dashboard() {
         </button>
       </div>
 
-      {/* Buttons (Mobile Quick Actions - Clean & Tighter Padding) */}
-      <div className="lg:hidden grid grid-cols-1 gap-3">
-        <div className="grid grid-cols-2 gap-3">
-          <button 
-            onClick={() => navigate('/taxpayers')}
-            className="flex flex-col items-center justify-center gap-2 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-800 p-3.5 rounded-2xl shadow-sm active:scale-95 transition-all group"
-          >
-            <div className="w-10 h-10 bg-blue-50 dark:bg-blue-900/20 rounded-full flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform">
-              <Plus size={18} />
-            </div>
-            <span className="font-bold text-[11px] tracking-wide">Tambah WP</span>
-          </button>
-          <button 
-            onClick={() => navigate('/scanner')}
-            className="flex flex-col items-center justify-center gap-2 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-800 p-3.5 rounded-2xl shadow-sm active:scale-95 transition-all group"
-          >
-            <div className="w-10 h-10 bg-blue-50 dark:bg-blue-900/20 rounded-full flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform">
-              <QrCode size={18} />
-            </div>
-            <span className="font-bold text-[11px] tracking-wide">Scan QR</span>
-          </button>
-        </div>
-        
-        <div className="grid grid-cols-2 gap-3">
-          <button 
-            onClick={() => navigate('/billing')}
-            className="flex flex-col items-center justify-center gap-2 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-800 p-3.5 rounded-2xl shadow-sm active:scale-95 transition-all group"
-          >
-            <div className="w-10 h-10 bg-blue-50 dark:bg-blue-900/20 rounded-full flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform">
-              <SearchIcon size={18} />
-            </div>
-            <span className="font-bold text-[11px] tracking-wide">Cari WP</span>
-          </button>
-          <button 
-            onClick={() => navigate('/peta')}
-            className="flex flex-col items-center justify-center gap-2 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-800 p-3.5 rounded-2xl shadow-sm active:scale-95 transition-all group"
-          >
-            <div className="w-10 h-10 bg-blue-50 dark:bg-blue-900/20 rounded-full flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform">
-              <MapIcon size={18} />
-            </div>
-            <span className="font-bold text-[11px] tracking-wide">Peta Lokasi</span>
-          </button>
-        </div>
+      {/* Mobile Quick Actions */}
+      <div className="lg:hidden flex flex-col gap-3">
+        <button 
+          onClick={() => navigate('/billing')}
+          className="flex items-center gap-3 bg-gradient-to-br from-[#2b6ff3] to-blue-600 text-white p-4 rounded-2xl shadow-lg shadow-blue-500/20 active:scale-95 transition-all w-full"
+        >
+          <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center flex-shrink-0">
+            <FileText size={20} />
+          </div>
+          <div className="text-left">
+            <span className="font-black text-xs block leading-none">Cek Tagihan</span>
+            <span className="text-[9px] font-medium text-blue-100 leading-none mt-0.5 block">Cari WP & Tagihan</span>
+          </div>
+        </button>
 
         <button 
-          onClick={() => navigate('/field-check')}
-          className="flex items-center justify-center gap-2 bg-[#2b6ff3] text-white p-3.5 rounded-xl font-black text-[11px] uppercase tracking-widest shadow-xl shadow-blue-500/20 active:scale-95 transition-all w-full mt-1"
+          onClick={() => navigate('/peta')}
+          className="flex items-center justify-center gap-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 p-3 rounded-xl font-bold text-[10px] uppercase tracking-widest active:scale-95 transition-all w-full border border-slate-200 dark:border-slate-700"
         >
-          <Activity size={16} />
+          <Activity size={14} />
           Laporan Lapangan (GPS)
         </button>
       </div>
