@@ -402,7 +402,7 @@ export default function Dashboard() {
       </div>
 
       {/* Mobile Title & Navigator */}
-      <div className="lg:hidden flex flex-col gap-5">
+      <div className="lg:hidden flex flex-col gap-3">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight shrink-0">Dashboard</h2>
           <div className="flex items-center gap-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm overflow-hidden">
@@ -472,18 +472,10 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="col-span-12 lg:col-span-8">
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 h-full">
+          {/* Desktop KPI Grid */}
+          <div className="hidden lg:block lg:col-span-8">
+            <div className="grid grid-cols-3 gap-6 h-full">
               {[
-                {
-                  label: 'Total Pendapatan',
-                  value: formatLargeCurrency(stats?.total_revenue || 0),
-                  trend: 'up',
-                  icon: Wallet,
-                  bg: 'bg-blue-500/10',
-                  text: 'text-blue-600',
-                  mobileOnly: true
-                },
                 { 
                   label: 'Tingkat Penagihan', 
                   value: `${stats?.collection_rate || 0}%`, 
@@ -509,19 +501,87 @@ export default function Dashboard() {
                   text: 'text-indigo-600',
                 }
               ].map((kpi, i) => (
-                <div key={i} className={`${kpi.mobileOnly ? 'lg:hidden' : ''} bg-white dark:bg-slate-900 rounded-[1.5rem] lg:rounded-[2rem] p-4 lg:p-6 xl:p-8 shadow-[0_4px_20px_rgb(0,0,0,0.03)] lg:shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none border border-slate-100 dark:border-slate-800 transition-all group flex flex-col justify-between`}>
-                  <div className="flex items-center justify-between mb-4 lg:mb-6">
-                    <div className={`${kpi.bg} w-10 h-10 lg:w-12 lg:h-12 rounded-full flex items-center justify-center ${kpi.text} group-hover:scale-110 transition-transform shadow-sm`}>
-                      <kpi.icon size={18} className="lg:hidden" />
-                      <kpi.icon size={22} className="hidden lg:block" />
+                <div key={i} className="bg-white dark:bg-slate-900 rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 dark:border-slate-800 transition-all group flex flex-col justify-between">
+                  <div className="flex items-center justify-between mb-6">
+                    <div className={`${kpi.bg} w-12 h-12 rounded-full flex items-center justify-center ${kpi.text} group-hover:scale-110 transition-transform shadow-sm`}>
+                      <kpi.icon size={22} />
                     </div>
                   </div>
                   <div>
-                    <h4 className="text-xl lg:text-2xl font-black text-slate-900 dark:text-white tracking-tight leading-none mb-1.5">{kpi.value}</h4>
-                    <p className="text-slate-500 font-bold text-[9px] lg:text-xs leading-tight uppercase tracking-widest">{kpi.label}</p>
+                    <h4 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight leading-none mb-1.5">{kpi.value}</h4>
+                    <p className="text-slate-500 font-bold text-xs leading-tight uppercase tracking-widest">{kpi.label}</p>
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+
+          {/* Mobile Consolidated 2x2 Grid (No Redundancy) */}
+          <div className="col-span-12 lg:hidden">
+            <div className="grid grid-cols-2 gap-3">
+              {/* Card 1: Pencapaian Saya (Rp) */}
+              <div className="bg-white dark:bg-slate-900 rounded-2xl p-3.5 border border-slate-100 dark:border-slate-800 flex flex-col justify-between shadow-sm">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="bg-emerald-500/10 w-8 h-8 rounded-full flex items-center justify-center text-emerald-600">
+                    <Wallet size={16} />
+                  </div>
+                  <span className="text-[8px] font-black text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded uppercase tracking-wider">Saya</span>
+                </div>
+                <div>
+                  <h4 className="text-base font-black text-slate-900 dark:text-white leading-none mb-1">
+                    {formatCurrency(stats?.petugas_achievement?.total_amount || 0)}
+                  </h4>
+                  <p className="text-slate-400 font-bold text-[9px] uppercase tracking-wider leading-none">Pencapaian Saya</p>
+                </div>
+              </div>
+
+              {/* Card 2: Jumlah Koleksi */}
+              <div className="bg-white dark:bg-slate-900 rounded-2xl p-3.5 border border-slate-100 dark:border-slate-800 flex flex-col justify-between shadow-sm">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="bg-blue-500/10 w-8 h-8 rounded-full flex items-center justify-center text-blue-600">
+                    <TrendingUp size={16} />
+                  </div>
+                  <span className="text-[8px] font-black text-blue-500 bg-blue-500/10 px-1.5 py-0.5 rounded uppercase tracking-wider">Saya</span>
+                </div>
+                <div>
+                  <h4 className="text-base font-black text-slate-900 dark:text-white leading-none mb-1">
+                    {stats?.petugas_achievement?.collections_count || 0}
+                  </h4>
+                  <p className="text-slate-400 font-bold text-[9px] uppercase tracking-wider leading-none">Koleksi Saya</p>
+                </div>
+              </div>
+
+              {/* Card 3: Tagihan Pending */}
+              <div className="bg-white dark:bg-slate-900 rounded-2xl p-3.5 border border-slate-100 dark:border-slate-800 flex flex-col justify-between shadow-sm">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="bg-amber-500/10 w-8 h-8 rounded-full flex items-center justify-center text-amber-600">
+                    <FileText size={16} />
+                  </div>
+                  <span className="text-[8px] font-black text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded uppercase tracking-wider">Sektor</span>
+                </div>
+                <div>
+                  <h4 className="text-base font-black text-slate-900 dark:text-white leading-none mb-1">
+                    {stats?.pending_bills.toLocaleString() || '0'}
+                  </h4>
+                  <p className="text-slate-400 font-bold text-[9px] uppercase tracking-wider leading-none">Tagihan Pending</p>
+                </div>
+              </div>
+
+              {/* Card 4: Wajib Aktif */}
+              <div className="bg-white dark:bg-slate-900 rounded-2xl p-3.5 border border-slate-100 dark:border-slate-800 flex flex-col justify-between shadow-sm">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="bg-indigo-500/10 w-8 h-8 rounded-full flex items-center justify-center text-indigo-600">
+                    <Users size={16} />
+                  </div>
+                  <span className="text-[8px] font-black text-indigo-500 bg-indigo-500/10 px-1.5 py-0.5 rounded uppercase tracking-wider">Sektor</span>
+                </div>
+                <div>
+                  <h4 className="text-base font-black text-slate-900 dark:text-white leading-none mb-1">
+                    {stats?.active_taxpayers.toLocaleString() || '0'}
+                  </h4>
+                  <p className="text-slate-400 font-bold text-[9px] uppercase tracking-wider leading-none">Wajib Aktif</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -627,7 +687,7 @@ export default function Dashboard() {
           </div>
 
           {/* Pencapaian Saya - Right Side */}
-          <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-100 dark:border-slate-800 shadow-xl relative overflow-hidden group">
+          <div className="hidden lg:block bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-100 dark:border-slate-800 shadow-xl relative overflow-hidden group">
              <div className="absolute right-0 top-0 w-32 h-32 bg-emerald-500/5 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-emerald-500/10 transition-all duration-700"></div>
              <div className="relative z-10 flex items-center justify-between">
                 <div className="flex items-center gap-5">
@@ -695,45 +755,45 @@ export default function Dashboard() {
         </button>
       </div>
 
-      {/* Buttons (Mobile Quick Actions) */}
-      <div className="lg:hidden grid grid-cols-1 gap-4">
-        <div className="grid grid-cols-2 gap-4">
+      {/* Buttons (Mobile Quick Actions - Clean & Tighter Padding) */}
+      <div className="lg:hidden grid grid-cols-1 gap-3">
+        <div className="grid grid-cols-2 gap-3">
           <button 
             onClick={() => navigate('/taxpayers')}
-            className="flex flex-col items-center justify-center gap-3 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-800 p-5 rounded-[2rem] shadow-sm active:scale-95 transition-all group"
+            className="flex flex-col items-center justify-center gap-2 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-800 p-3.5 rounded-2xl shadow-sm active:scale-95 transition-all group"
           >
-            <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 rounded-full flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform">
-              <Plus size={22} />
+            <div className="w-10 h-10 bg-blue-50 dark:bg-blue-900/20 rounded-full flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform">
+              <Plus size={18} />
             </div>
             <span className="font-bold text-[11px] tracking-wide">Tambah WP</span>
           </button>
           <button 
             onClick={() => navigate('/scanner')}
-            className="flex flex-col items-center justify-center gap-3 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-800 p-5 rounded-[2rem] shadow-sm active:scale-95 transition-all group"
+            className="flex flex-col items-center justify-center gap-2 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-800 p-3.5 rounded-2xl shadow-sm active:scale-95 transition-all group"
           >
-            <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 rounded-full flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform">
-              <QrCode size={22} />
+            <div className="w-10 h-10 bg-blue-50 dark:bg-blue-900/20 rounded-full flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform">
+              <QrCode size={18} />
             </div>
             <span className="font-bold text-[11px] tracking-wide">Scan QR</span>
           </button>
         </div>
         
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-3">
           <button 
             onClick={() => navigate('/billing')}
-            className="flex flex-col items-center justify-center gap-3 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-800 p-5 rounded-[2rem] shadow-sm active:scale-95 transition-all group"
+            className="flex flex-col items-center justify-center gap-2 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-800 p-3.5 rounded-2xl shadow-sm active:scale-95 transition-all group"
           >
-            <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 rounded-full flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform">
-              <SearchIcon size={22} />
+            <div className="w-10 h-10 bg-blue-50 dark:bg-blue-900/20 rounded-full flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform">
+              <SearchIcon size={18} />
             </div>
             <span className="font-bold text-[11px] tracking-wide">Cari WP</span>
           </button>
           <button 
             onClick={() => navigate('/peta')}
-            className="flex flex-col items-center justify-center gap-3 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-800 p-5 rounded-[2rem] shadow-sm active:scale-95 transition-all group"
+            className="flex flex-col items-center justify-center gap-2 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-800 p-3.5 rounded-2xl shadow-sm active:scale-95 transition-all group"
           >
-            <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 rounded-full flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform">
-              <MapIcon size={22} />
+            <div className="w-10 h-10 bg-blue-50 dark:bg-blue-900/20 rounded-full flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform">
+              <MapIcon size={18} />
             </div>
             <span className="font-bold text-[11px] tracking-wide">Peta Lokasi</span>
           </button>
@@ -741,14 +801,14 @@ export default function Dashboard() {
 
         <button 
           onClick={() => navigate('/field-check')}
-          className="flex items-center justify-center gap-3 bg-[#2b6ff3] text-white p-5 rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-xl shadow-blue-500/20 active:scale-95 transition-all w-full mt-2"
+          className="flex items-center justify-center gap-2 bg-[#2b6ff3] text-white p-3.5 rounded-xl font-black text-[11px] uppercase tracking-widest shadow-xl shadow-blue-500/20 active:scale-95 transition-all w-full mt-1"
         >
-          <Activity size={18} />
+          <Activity size={16} />
           Laporan Lapangan (GPS)
         </button>
       </div>
 
-      <div className="space-y-4">
+      <div className="hidden lg:block space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-black text-slate-900 dark:text-white">Kategori</h2>
           <button 
@@ -782,7 +842,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="space-y-4">
+      <div className="hidden lg:block space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-black text-slate-900 dark:text-white">Aktivitas</h2>
         </div>
