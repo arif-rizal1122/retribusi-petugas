@@ -15,7 +15,8 @@ import {
   ChevronRight,
   Calendar,
   X,
-  ImagePlus
+  ImagePlus,
+  Wallet
 } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -433,84 +434,107 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-12 gap-6 lg:gap-8">
-        <div className="col-span-12 lg:col-span-4">
-          <div className="relative overflow-hidden bg-gradient-to-br from-[#2d5cd5] to-blue-500 rounded-3xl p-6 sm:p-8 text-white shadow-2xl shadow-blue-500/30 group">
-            <div className="absolute -right-10 -top-10 w-48 h-48 bg-white/10 rounded-full blur-3xl group-hover:bg-white/20 transition-all duration-700"></div>
-            <div className="absolute -left-10 -bottom-10 w-48 h-48 bg-blue-400/20 rounded-full blur-3xl group-hover:bg-blue-400/30 transition-all duration-700"></div>
-            
-            <div className="relative z-10 flex flex-col h-full justify-between gap-6 sm:gap-8">
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="text-blue-100 text-[10px] sm:text-xs font-bold uppercase tracking-widest opacity-80 mb-1">Total Pendapatan</p>
-                  <h3 className="text-2xl sm:text-3xl font-black tracking-tight">{formatLargeCurrency(stats?.total_revenue || 0)}</h3>
+      <div className="flex flex-col gap-4 lg:gap-8">
+        {/* =======================
+            SECTION 1: REVENUE + KPIs
+            Mobile: Order 2 (Below Map). Desktop: Top Grid
+            ======================= */}
+        <div className="order-2 lg:order-1 grid grid-cols-12 gap-4 lg:gap-8">
+          
+          <div className="hidden lg:block lg:col-span-4">
+            <div className="relative overflow-hidden bg-[#2b6ff3] rounded-[2rem] p-6 sm:p-8 text-white shadow-xl shadow-blue-500/30 group">
+              <div className="absolute right-0 top-0 w-48 h-48 bg-white/10 rounded-bl-full transition-all duration-700"></div>
+              <div className="absolute -left-10 -bottom-10 w-48 h-48 bg-white/5 rounded-tr-full transition-all duration-700"></div>
+              
+              <div className="relative z-10 flex flex-col h-full justify-between gap-6 sm:gap-8">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="text-3xl sm:text-4xl font-black tracking-tight mb-1">{formatLargeCurrency(stats?.total_revenue || 0)}</h3>
+                    <p className="text-blue-100 text-xs sm:text-sm font-medium opacity-90">Total Pendapatan Terkumpul</p>
+                  </div>
                 </div>
-                <button 
-                  onClick={() => navigate('/billing')}
-                  className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-xl sm:rounded-2xl flex items-center justify-center transition-all active:scale-90"
-                >
-                  <Plus className="w-5 h-5 sm:w-6 sm:h-6" />
-                </button>
-              </div>
 
-              <div className="flex items-center gap-3">
-                <div className="bg-white/20 backdrop-blur-md px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
-                  <TrendingUp className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-300" />
-                  {stats?.trends.revenue || '+0%'}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-full text-[11px] font-bold flex items-center gap-1.5">
+                      <TrendingUp className="w-3.5 h-3.5" />
+                      {stats?.trends.revenue || '+0%'} bulan ini
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => navigate('/billing')}
+                    className="bg-white text-blue-600 hover:bg-blue-50 px-5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm active:scale-95"
+                  >
+                    Lihat Detail
+                  </button>
                 </div>
-                <p className="text-blue-100 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest opacity-60">vs periode lalu</p>
               </div>
+            </div>
+          </div>
+
+          <div className="col-span-12 lg:col-span-8">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 h-full">
+              {[
+                {
+                  label: 'Total Pendapatan',
+                  value: formatLargeCurrency(stats?.total_revenue || 0),
+                  trend: 'up',
+                  icon: Wallet,
+                  bg: 'bg-blue-500/10',
+                  text: 'text-blue-600',
+                  mobileOnly: true
+                },
+                { 
+                  label: 'Tingkat Penagihan', 
+                  value: `${stats?.collection_rate || 0}%`, 
+                  trend: 'up',
+                  icon: TrendingUp, 
+                  bg: 'bg-emerald-500/10', 
+                  text: 'text-emerald-600',
+                },
+                { 
+                  label: 'Tagihan Pending', 
+                  value: stats?.pending_bills.toLocaleString() || '0', 
+                  trend: 'down',
+                  icon: FileText, 
+                  bg: 'bg-amber-500/10', 
+                  text: 'text-amber-600',
+                },
+                { 
+                  label: 'Wajib Aktif', 
+                  value: stats?.active_taxpayers.toLocaleString() || '0', 
+                  trend: 'up',
+                  icon: Users, 
+                  bg: 'bg-indigo-500/10', 
+                  text: 'text-indigo-600',
+                }
+              ].map((kpi, i) => (
+                <div key={i} className={`${kpi.mobileOnly ? 'lg:hidden' : ''} bg-white dark:bg-slate-900 rounded-[1.5rem] lg:rounded-[2rem] p-4 lg:p-6 xl:p-8 shadow-[0_4px_20px_rgb(0,0,0,0.03)] lg:shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none border border-slate-100 dark:border-slate-800 transition-all group flex flex-col justify-between`}>
+                  <div className="flex items-center justify-between mb-4 lg:mb-6">
+                    <div className={`${kpi.bg} w-10 h-10 lg:w-12 lg:h-12 rounded-full flex items-center justify-center ${kpi.text} group-hover:scale-110 transition-transform shadow-sm`}>
+                      <kpi.icon size={18} className="lg:hidden" />
+                      <kpi.icon size={22} className="hidden lg:block" />
+                    </div>
+                  </div>
+                  <div>
+                    <h4 className="text-xl lg:text-2xl font-black text-slate-900 dark:text-white tracking-tight leading-none mb-1.5">{kpi.value}</h4>
+                    <p className="text-slate-500 font-bold text-[9px] lg:text-xs leading-tight uppercase tracking-widest">{kpi.label}</p>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
 
-        <div className="col-span-12 lg:col-span-8">
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-6 h-full">
-            {[
-              { 
-                label: 'Tingkat Penagihan', 
-                value: `${stats?.collection_rate || 0}%`, 
-                trend: 'up',
-                icon: TrendingUp, 
-                bg: 'bg-emerald-500/10', 
-                text: 'text-emerald-600',
-              },
-              { 
-                label: 'Tagihan Pending', 
-                value: stats?.pending_bills.toLocaleString() || '0', 
-                trend: 'down',
-                icon: FileText, 
-                bg: 'bg-amber-500/10', 
-                text: 'text-amber-600',
-              },
-              { 
-                label: 'Wajib Retribusi Aktif', 
-                value: stats?.active_taxpayers.toLocaleString() || '0', 
-                trend: 'up',
-                icon: Users, 
-                bg: 'bg-indigo-500/10', 
-                text: 'text-indigo-600',
-              }
-            ].map((kpi, i) => (
-              <div key={i} className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-xl transition-all group flex flex-col justify-between">
-                <div className={`${kpi.bg} w-10 h-10 rounded-xl flex items-center justify-center ${kpi.text} mb-4 group-hover:scale-110 transition-transform`}>
-                  <kpi.icon size={20} />
-                </div>
-                <div>
-                  <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest mb-1">{kpi.label}</p>
-                  <h4 className="text-xl font-black text-slate-900 dark:text-white">{kpi.value}</h4>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Map + Petugas Achievement Section */}
-      {stats?.petugas_achievement && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 origin-left">
-          {/* Map - Left Side */}
-          <div className="bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-100 dark:border-slate-800 p-2 shadow-xl overflow-hidden group h-full min-h-[300px] sm:min-h-[380px]">
+      {/* =======================
+          SECTION 2: MAP + ACHIEVEMENT
+          Mobile: Order 1 (Top). Desktop: Bottom
+          ======================= */}
+      <div className="order-1 lg:order-2 w-full">
+        {stats?.petugas_achievement && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 origin-left">
+            {/* Map - Left Side */}
+            <div className="bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-100 dark:border-slate-800 p-2 shadow-xl overflow-hidden group h-full min-h-[300px] sm:min-h-[380px]">
             <div className="p-4 sm:p-5 flex items-center justify-between">
               <h3 className="text-[11px] sm:text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
                 <MapIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#2d5cd5]" />
@@ -630,9 +654,11 @@ export default function Dashboard() {
                    <p className="text-xl font-black text-slate-900 dark:text-white">{Math.round((stats.petugas_achievement.collections_count / (stats.petugas_achievement.collections_count + (stats.pending_bills / 10))) * 100) || 100}%</p>
                 </div>
               </div>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
+      </div>
 
       {/* Quick Actions Panel (Desktop & Tablet) */}
       <div className="hidden lg:grid grid-cols-2 gap-6">
@@ -674,48 +700,48 @@ export default function Dashboard() {
         <div className="grid grid-cols-2 gap-4">
           <button 
             onClick={() => navigate('/taxpayers')}
-            className="flex flex-col items-center justify-center gap-2 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-800 p-5 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-sm active:scale-95 transition-all"
+            className="flex flex-col items-center justify-center gap-3 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-800 p-5 rounded-[2rem] shadow-sm active:scale-95 transition-all group"
           >
-            <div className="w-10 h-10 bg-blue-50 dark:bg-blue-900/20 rounded-xl flex items-center justify-center text-[#2d5cd5]">
-              <Plus size={20} />
+            <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 rounded-full flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform">
+              <Plus size={22} />
             </div>
-            Tambah WP
+            <span className="font-bold text-[11px] tracking-wide">Tambah WP</span>
           </button>
           <button 
             onClick={() => navigate('/scanner')}
-            className="flex flex-col items-center justify-center gap-2 bg-[#2d5cd5] text-white p-5 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-blue-500/20 active:scale-95 transition-all"
+            className="flex flex-col items-center justify-center gap-3 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-800 p-5 rounded-[2rem] shadow-sm active:scale-95 transition-all group"
           >
-            <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-              <QrCode size={20} />
+            <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 rounded-full flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform">
+              <QrCode size={22} />
             </div>
-            Scan QR
+            <span className="font-bold text-[11px] tracking-wide">Scan QR</span>
           </button>
         </div>
         
         <div className="grid grid-cols-2 gap-4">
           <button 
             onClick={() => navigate('/billing')}
-            className="flex flex-col items-center justify-center gap-2 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-800 p-5 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-sm active:scale-95 transition-all"
+            className="flex flex-col items-center justify-center gap-3 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-800 p-5 rounded-[2rem] shadow-sm active:scale-95 transition-all group"
           >
-            <div className="w-10 h-10 bg-slate-50 dark:bg-slate-800 rounded-xl flex items-center justify-center text-slate-500">
-              <SearchIcon size={20} />
+            <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 rounded-full flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform">
+              <SearchIcon size={22} />
             </div>
-            Cari WP
+            <span className="font-bold text-[11px] tracking-wide">Cari WP</span>
           </button>
           <button 
             onClick={() => navigate('/peta')}
-            className="flex flex-col items-center justify-center gap-2 bg-emerald-600 text-white p-5 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-emerald-500/20 active:scale-95 transition-all"
+            className="flex flex-col items-center justify-center gap-3 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-800 p-5 rounded-[2rem] shadow-sm active:scale-95 transition-all group"
           >
-            <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-              <MapIcon size={20} />
+            <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 rounded-full flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform">
+              <MapIcon size={22} />
             </div>
-            Peta Lokasi
+            <span className="font-bold text-[11px] tracking-wide">Peta Lokasi</span>
           </button>
         </div>
 
         <button 
           onClick={() => navigate('/field-check')}
-          className="flex items-center justify-center gap-3 bg-slate-800 text-white p-5 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl active:scale-95 transition-all"
+          className="flex items-center justify-center gap-3 bg-[#2b6ff3] text-white p-5 rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-xl shadow-blue-500/20 active:scale-95 transition-all w-full mt-2"
         >
           <Activity size={18} />
           Laporan Lapangan (GPS)
@@ -733,24 +759,24 @@ export default function Dashboard() {
           </button>
         </div>
         
-        <div className="flex overflow-x-auto pb-4 gap-4 no-scrollbar lg:grid lg:grid-cols-6 lg:gap-6 relative">
+        <div className="flex overflow-x-auto pb-6 gap-6 no-scrollbar lg:grid lg:grid-cols-6 lg:gap-8 pt-2">
           {retributionTypes.slice(0, 6).map((type, i) => (
             <button
               key={type.id || i}
               onClick={() => navigate(`/billing?type=${type.id}`)}
-              className="flex-shrink-0 w-32 lg:w-full bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group text-center"
+              className="flex-shrink-0 flex flex-col items-center gap-3 w-[72px] lg:w-full group outline-none"
             >
-              <div className="w-16 h-16 mx-auto mb-4 bg-slate-50 dark:bg-slate-800 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform overflow-hidden">
+              <div className="w-[72px] h-[72px] lg:w-20 lg:h-20 bg-blue-50 dark:bg-blue-900/20 rounded-full flex items-center justify-center group-hover:scale-105 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/40 transition-all overflow-hidden border border-blue-100/50 dark:border-blue-800/50 shadow-sm">
                 <img 
                   src={type.icon?.startsWith('http') ? type.icon : (type.icon ? `${import.meta.env.VITE_API_URL}${type.icon.startsWith('/') ? '' : '/'}${type.icon}` : `/mitra-logo.png`)} 
                   alt={type.name} 
-                  className="w-10 h-10 object-contain"
+                  className="w-8 h-8 lg:w-10 lg:h-10 object-contain"
                   onError={(e) => {
                     (e.target as HTMLImageElement).src = `/mitra-logo.png`;
                   }}
                 />
               </div>
-              <p className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-wider line-clamp-1">{type.name}</p>
+              <p className="text-[11px] font-bold text-slate-600 dark:text-slate-300 text-center leading-tight line-clamp-2">{type.name}</p>
             </button>
           ))}
         </div>
