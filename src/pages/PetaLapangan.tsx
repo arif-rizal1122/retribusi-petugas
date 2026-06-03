@@ -423,7 +423,7 @@ export default function PetaLapangan() {
   const mapCenter: [number, number] = myPosition || [-5.47, 122.6];
 
   return (
-    <div ref={containerRef} className="relative h-[calc(100vh-6rem)] lg:h-[calc(100vh-7rem)] -m-4 sm:-m-6 lg:-m-10">
+    <div ref={containerRef} className="relative h-[calc(100vh-6rem)] lg:h-[calc(100vh-7rem)] -m-4 sm:-m-6 lg:-m-10 z-0">
       {/* Top Controls */}
       <div className="absolute top-4 left-4 right-4 z-[1000] flex items-center justify-between pointer-events-none">
         <div className="flex items-center gap-3 pointer-events-auto">
@@ -613,7 +613,7 @@ export default function PetaLapangan() {
       </MapContainer>
 
       {/* Bottom Legend */}
-      <div className="absolute bottom-6 left-4 z-[1000] bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl p-4 rounded-2xl border border-white/50 shadow-2xl space-y-2.5">
+      <div className="absolute bottom-24 sm:bottom-28 lg:bottom-6 left-4 z-[1000] bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl p-4 rounded-2xl border border-white/50 shadow-2xl space-y-2.5">
         <div className="flex items-center gap-2.5">
           <div className="w-4 h-4 bg-[#2d5cd5] rounded-full border-2 border-white shadow-sm flex items-center justify-center">
             <User size={8} className="text-white" />
@@ -632,7 +632,7 @@ export default function PetaLapangan() {
 
       {/* Bottom Stats */}
       {myPosition && (
-        <div className="absolute bottom-6 right-4 z-[1000] bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl p-4 rounded-2xl border border-white/50 shadow-2xl">
+        <div className="absolute bottom-24 sm:bottom-28 lg:bottom-6 right-4 z-[1000] bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl p-4 rounded-2xl border border-white/50 shadow-2xl">
           <div className="grid grid-cols-2 gap-4 text-center">
             <div>
               <p className="text-lg font-black text-[#2d5cd5]">{potentials.filter(p => p.status === 'taxpayer').length}</p>

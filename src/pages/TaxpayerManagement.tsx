@@ -1252,7 +1252,7 @@ export default function TaxpayerManagement() {
                       <p className="text-gray-400 md:text-gray-500 text-xs md:text-sm font-medium text-center md:text-left">Tentukan koordinat lokasi unit retribusi</p>
                     </div>
 
-                    <div className="h-[300px] sm:flex-1 sm:min-h-[400px] rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden border-2 border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 shadow-inner">
+                    <div className="h-[300px] sm:flex-1 sm:min-h-[400px] rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden border-2 border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 shadow-inner relative z-0">
                       <MapContainer 
                         center={[form.latitude, form.longitude]} 
                         zoom={15} 

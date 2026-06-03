@@ -201,43 +201,31 @@ export default function Layout({ children }: LayoutProps) {
         </div>
       </header>
 
-      {/* Mobile Top Header (Compact Style) */}
-      <div className="lg:hidden px-6 pt-6 pb-2 space-y-4">
+      {/* Mobile Top Header (Clean Style) */}
+      <div className="lg:hidden px-5 pt-6 pb-2">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button 
-              onClick={() => setSidebarOpen(true)}
-              className="w-12 h-12 bg-white dark:bg-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none rounded-2xl flex items-center justify-center border border-slate-100 dark:border-slate-800 active:scale-90 transition-all"
-            >
-              <Menu size={22} className="text-slate-600 dark:text-slate-400" />
-            </button>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-md border border-slate-100">
-                <img src="/mitra-logo.png" alt="Logo" className="w-7 h-7 object-contain" />
-              </div>
-              <div>
-                <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest leading-none mb-1">Hello,</p>
-                <h2 className="text-xl font-black text-slate-900 dark:text-white tracking-tight leading-none">{user?.name}!</h2>
-              </div>
-            </div>
-          </div>
-          <div className="relative">
+          <div className="flex items-center gap-3 relative">
             <button 
               onClick={() => setProfileOpen(!profileOpen)}
-              className="w-12 h-12 rounded-2xl bg-white dark:bg-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none p-1 flex items-center justify-center overflow-hidden border border-slate-100 dark:border-slate-800 group active:scale-95 transition-all"
+              className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden border-2 border-white dark:border-slate-700 shadow-sm flex items-center justify-center active:scale-95 transition-all"
             >
-              <div className="w-full h-full rounded-xl bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-500 font-black overflow-hidden">
-                {userAvatarUrl ? (
-                  <img src={userAvatarUrl} alt="" className="w-full h-full object-cover" />
-                ) : (
-                  user?.name?.charAt(0) || <User size={20} />
-                )}
-              </div>
+              {userAvatarUrl ? (
+                <img src={userAvatarUrl} alt="" className="w-full h-full object-cover" />
+              ) : (
+                <span className="font-bold text-slate-500">{user?.name?.charAt(0) || <User size={20} />}</span>
+              )}
             </button>
+            <div>
+              <p className="text-slate-500 text-[11px] font-medium leading-none mb-1">Hi, {user?.name} <span className="text-sm">👋</span></p>
+              <div className="flex items-center gap-1">
+                <Map className="w-3.5 h-3.5 text-blue-500" />
+                <h2 className="text-sm font-bold text-slate-900 dark:text-white tracking-tight leading-none">Kota Baubau</h2>
+              </div>
+            </div>
 
             {/* Mobile Profile Dropdown */}
             {profileOpen && (
-              <div className="absolute right-0 mt-3 w-56 bg-white dark:bg-slate-900 rounded-[2rem] shadow-2xl border border-slate-100 dark:border-slate-800 z-[200] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+              <div className="absolute top-14 left-0 w-56 bg-white dark:bg-slate-900 rounded-[2rem] shadow-2xl border border-slate-100 dark:border-slate-800 z-[200] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                 <div className="p-4 border-b border-slate-50 dark:border-slate-800">
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1.5">Signed in as</p>
                   <p className="text-sm font-black text-slate-900 dark:text-white truncate">{user?.name}</p>
@@ -268,6 +256,19 @@ export default function Layout({ children }: LayoutProps) {
                 </div>
               </div>
             )}
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <button className="w-10 h-10 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center border border-slate-100 dark:border-slate-700 shadow-sm relative active:scale-95 transition-all">
+              <Bell size={18} className="text-slate-600 dark:text-slate-300" />
+              <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-800"></span>
+            </button>
+            <button 
+              onClick={() => setSidebarOpen(true)}
+              className="w-10 h-10 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center border border-slate-100 dark:border-slate-700 shadow-sm relative active:scale-95 transition-all"
+            >
+              <Menu size={18} className="text-slate-600 dark:text-slate-300" />
+            </button>
           </div>
         </div>
       </div>
@@ -364,49 +365,27 @@ export default function Layout({ children }: LayoutProps) {
         </div>
       </main>
 
-      {/* Bottom Navigation (Mobile Only - Fixed Style) */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-[9999] bg-white dark:bg-slate-900 border-t-2 border-slate-200 dark:border-slate-800 shadow-[0_-4px_20px_rgba(0,0,0,0.2)] w-full flex items-center justify-around py-3 px-2 h-20">
+      {/* Bottom Navigation (Mobile Only - Clean Modern Style) */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-[90] bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 w-full flex items-center justify-between px-6 pb-2 pt-2 h-20 shadow-[0_-4px_24px_rgba(0,0,0,0.04)]">
         {[
           { icon: Home, path: '/dashboard', label: 'Home' },
-          { icon: FileText, path: '/billing', label: 'Billing' },
+          { icon: Search, path: '/billing', label: 'Search' },
           { icon: QrCode, path: '/scanner', label: 'Scan' },
           { icon: ClipboardList, path: '/tasks', label: 'Tugas' },
-          { icon: User, path: '/profile', label: 'Profile' }
-        ].map((item, i, arr) => {
-          const isActive = location.pathname === item.path;
-          const isCenter = i === Math.floor(arr.length / 2);
-
-          if (isCenter) {
-            return (
-              <button 
-                key={i}
-                onClick={() => navigate(item.path)}
-                className="flex flex-col items-center -mt-7 active:scale-95 transition-all"
-              >
-                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg transition-all ${
-                  isActive 
-                    ? 'bg-gradient-to-br from-[#2d5cd5] to-blue-400 shadow-blue-500/30' 
-                    : 'bg-gradient-to-br from-slate-700 to-slate-500 shadow-slate-400/20'
-                }`}>
-                  <item.icon size={26} strokeWidth={2.5} className="text-white" />
-                </div>
-                <span className={`text-[9px] font-black uppercase tracking-wider mt-1 ${isActive ? 'text-[#2d5cd5]' : 'text-slate-400'}`}>
-                  {item.label}
-                </span>
-              </button>
-            );
-          }
+          { icon: User, path: '/profile', label: 'Account' }
+        ].map((item, i) => {
+          const isActive = location.pathname === item.path || (item.path === '/billing' && location.pathname.includes('/billing'));
 
           return (
             <button 
               key={i}
               onClick={() => navigate(item.path)}
-              className={`flex flex-col items-center gap-1 transition-all ${
-                isActive ? 'text-[#2d5cd5]' : 'text-slate-400'
-              }`}
+              className="flex flex-col items-center gap-1.5 transition-all w-16"
             >
-              <item.icon size={24} strokeWidth={isActive ? 3 : 2} />
-              <span className="text-[10px] font-bold uppercase tracking-wider">{item.label}</span>
+              <div className={`p-1.5 rounded-full transition-all ${isActive ? 'bg-blue-50 dark:bg-blue-900/20 text-[#2d5cd5]' : 'text-slate-400'}`}>
+                <item.icon size={22} strokeWidth={isActive ? 2.5 : 2} className={isActive ? 'text-blue-500' : ''} />
+              </div>
+              <span className={`text-[10px] font-bold ${isActive ? 'text-slate-900 dark:text-white' : 'text-slate-400'}`}>{item.label}</span>
             </button>
           );
         })}

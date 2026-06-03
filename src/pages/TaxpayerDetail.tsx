@@ -390,7 +390,7 @@ export default function TaxpayerDetail() {
             <h2 className="text-[11px] font-black text-gray-900 dark:text-white uppercase tracking-[0.15em]">Lokasi Objek</h2>
           </div>
           <div className="bg-white dark:bg-gray-800/60 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-700/50 shadow-sm">
-            <div className="h-64 md:h-80">
+            <div className="h-64 md:h-80 relative z-0">
               <MapContainer
                 center={[lat, lng]}
                 zoom={16}

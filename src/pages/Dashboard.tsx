@@ -350,7 +350,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="space-y-6 lg:space-y-8 pb-32 w-full max-w-full overflow-hidden">
+    <div className="flex flex-col gap-6 lg:gap-8 pb-32 w-full max-w-full overflow-hidden">
       
       {/* Desktop Top Section */}
       <div className="hidden lg:flex flex-col lg:flex-row lg:items-center justify-between gap-6">
@@ -547,7 +547,7 @@ export default function Dashboard() {
                 Lihat Peta Penuh →
               </button>
             </div>
-            <div className="h-[250px] sm:h-[calc(100%-4rem)] rounded-3xl overflow-hidden relative">
+            <div className="h-[250px] sm:h-[calc(100%-4rem)] rounded-3xl overflow-hidden relative z-0">
               <MapContainer center={[-5.47, 122.6]} zoom={13} scrollWheelZoom={false} style={{ height: '100%', width: '100%' }}>
                 <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                 {potentials.map((potential, index) => (

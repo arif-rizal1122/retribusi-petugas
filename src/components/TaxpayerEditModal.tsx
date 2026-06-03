@@ -481,7 +481,7 @@ export default function TaxpayerEditModal({ isOpen, taxpayer, onClose, onSaved }
                   <h3 className="text-xs font-black text-indigo-600 uppercase tracking-[0.2em] mb-2">Lokasi Objek</h3>
                   <p className="text-gray-500 text-sm font-medium">Tentukan koordinat lokasi unit retribusi</p>
                 </div>
-                <div className="h-[300px] sm:flex-1 sm:min-h-[400px] rounded-[2rem] overflow-hidden border-2 border-gray-100 dark:border-gray-800 bg-gray-50 shadow-inner">
+                <div className="h-[300px] sm:flex-1 sm:min-h-[400px] rounded-[2rem] overflow-hidden border-2 border-gray-100 dark:border-gray-800 bg-gray-50 shadow-inner relative z-0">
                   <MapContainer center={[form.latitude, form.longitude]} zoom={15} style={{height:'100%',width:'100%'}} scrollWheelZoom={true}>
                     <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                     <MapEvents />
