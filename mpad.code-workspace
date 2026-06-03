@@ -1,0 +1,16 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../retribusi-mobile"
+		},
+		{
+			"path": "../retribusi-api"
+		},
+		{
+			"path": "../retribusi-admin"
+		}
+	]
+}
