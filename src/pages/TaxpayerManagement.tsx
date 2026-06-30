@@ -2,14 +2,15 @@ import {
   Plus, Edit, Trash2, Search, Loader2, Filter, X, 
   User, CreditCard, MapPin, Phone, Briefcase, 
   FileCheck, Camera, Info, CheckCircle2, XCircle,
-  Eye, FileText, Calendar, ExternalLink, MapPinned
+  Eye, FileText, Calendar, ExternalLink, MapPinned,
+  Locate
 } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { api } from '../lib/api';
 import { Taxpayer, Opd, RetributionType } from '../types';
 import { useAuth } from '../contexts/AuthContext';
-import { MapContainer, TileLayer, Marker, useMapEvents, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, useMapEvents, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { MapPicker } from '../components/MapPicker';
@@ -440,6 +441,45 @@ export default function TaxpayerManagement() {
     });
     return null;
   }
+
+  // Component to fly map to a new location
+  function FlyToLocation({ lat, lng }: { lat: number; lng: number }) {
+    const map = useMap();
+    useEffect(() => {
+      map.flyTo([lat, lng], 17, { duration: 1.5 });
+    }, [lat, lng, map]);
+    return null;
+  }
+
+  const [geoLoading, setGeoLoading] = useState(false);
+
+  const getCurrentLocation = () => {
+    if (!navigator.geolocation) return;
+    setGeoLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        const newMetadata = { ...form.metadata };
+        Object.keys(newMetadata).forEach(key => {
+          if (key.includes('map') || key.includes('lokasi')) {
+            newMetadata[key] = `${latitude},${longitude}`;
+          }
+        });
+        setForm(prev => ({
+          ...prev,
+          latitude,
+          longitude,
+          metadata: newMetadata
+        }));
+        setGeoLoading(false);
+      },
+      (error) => {
+        console.error('Geolocation error:', error);
+        setGeoLoading(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
 
   const calculateCompletion = (tp: Taxpayer) => {
     let score = 0;
@@ -874,12 +914,12 @@ export default function TaxpayerManagement() {
 
             {/* Right Pane: Form Content */}
             <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-gray-900">
-              <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-12 pb-40 sm:pb-6 custom-scrollbar">
+              <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 pb-40 sm:pb-6 custom-scrollbar">
                 {currentStep === 1 && (
-                  <div className="space-y-4 sm:space-y-6 animate-in slide-in-from-bottom-4 md:slide-in-from-right-4 duration-500 pb-6">
+                  <div className="space-y-4 animate-in slide-in-from-bottom-4 md:slide-in-from-right-4 duration-500 pb-4">
                     <div className="md:block">
-                      <h3 className="text-[10px] md:text-xs font-black text-blue-600 uppercase tracking-[0.2em] mb-1 md:mb-2 text-center md:text-left">Identitas Wajib Pajak</h3>
-                      <p className="text-gray-400 md:text-gray-500 text-xs md:text-sm font-medium text-center md:text-left">Gunakan NIK untuk mencari atau mendaftarkan subjek pajak</p>
+                      <h3 className="text-[10px] md:text-xs font-black text-blue-600 uppercase tracking-[0.2em] mb-1 text-center md:text-left">Identitas Wajib Pajak</h3>
+                      <p className="text-gray-400 md:text-gray-500 text-[10px] md:text-xs font-medium text-center md:text-left">Gunakan NIK untuk mencari atau mendaftarkan subjek pajak</p>
                     </div>
 
                     <div className="grid grid-cols-1 gap-6">
@@ -1000,13 +1040,13 @@ export default function TaxpayerManagement() {
                       </div>
 
                       <div className="group">
-                        <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Alamat Domisili WP</label>
+                        <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Alamat Domisili WP</label>
                         <textarea
                           rows={2}
                           placeholder="Alamat penanggung jawab..."
                           value={form.address}
                           onChange={(e) => setForm({ ...form, address: e.target.value })}
-                          className="w-full px-4 md:px-6 py-3 md:py-4 bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-800 rounded-2xl font-bold resize-none text-sm md:text-base"
+                          className="w-full px-4 md:px-6 py-2.5 md:py-3 bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-800 rounded-2xl font-bold resize-none text-sm md:text-base"
                         />
                       </div>
                     </div>
@@ -1020,89 +1060,43 @@ export default function TaxpayerManagement() {
                       <p className="text-gray-400 md:text-gray-500 text-xs md:text-sm font-medium text-center md:text-left">Tentukan nama objek dan klasifikasi retribusi</p>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                      <div className="group col-span-1 md:col-span-2">
-                        <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Nama Objek/Unit</label>
-                        <input
-                          type="text"
-                          placeholder="Contoh: Kios Pasar B / Tower 1"
-                          value={form.object_name}
-                          onChange={(e) => setForm({ ...form, object_name: e.target.value })}
-                          className="w-full px-4 md:px-6 py-3 md:py-4 bg-white dark:bg-gray-800 border-2 border-emerald-100 dark:border-emerald-900 rounded-2xl font-black text-sm md:text-lg shadow-sm"
-                        />
-                      </div>
-                      <div className="group">
-                        <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Kecamatan</label>
-                        <select
-                          value={form.district}
-                          onChange={(e) => setForm({ ...form, district: e.target.value, sub_district: '' })}
-                          className="w-full px-4 md:px-6 py-3 md:py-4 bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-800 rounded-2xl font-bold cursor-pointer text-sm md:text-base"
-                        >
-                          <option value="">Pilih Kecamatan</option>
-                          {Object.keys(BAUBAU_DATA).map(kec => <option key={kec} value={kec}>{kec}</option>)}
-                        </select>
-                      </div>
-                      <div className="group">
-                        <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Kelurahan</label>
-                        <select
-                          value={form.sub_district}
-                          onChange={(e) => setForm({ ...form, sub_district: e.target.value })}
-                          className="w-full px-4 md:px-6 py-3 md:py-4 bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-800 rounded-2xl font-bold cursor-pointer text-sm md:text-base"
-                          disabled={!form.district}
-                        >
-                          <option value="">Pilih Kelurahan</option>
-                          {form.district && (BAUBAU_DATA as any)[form.district]?.map((kel: string) => <option key={kel} value={kel}>{kel}</option>)}
-                        </select>
-                      </div>
-                      <div className="group col-span-1 md:col-span-2">
-                        <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Alamat Lengkap Lokasi Objek</label>
-                        <textarea
-                          rows={2}
-                          placeholder="Alamat unit retribusi..."
-                          value={form.object_address}
-                          onChange={(e) => setForm({ ...form, object_address: e.target.value })}
-                          className="w-full px-4 md:px-6 py-3 md:py-4 bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-800 rounded-2xl font-bold resize-none text-sm md:text-base"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="bg-slate-50 dark:bg-gray-800/10 p-5 md:p-8 rounded-[2rem] border-2 border-gray-100 dark:border-gray-800">
-                      <div className="flex items-center gap-4 mb-6 md:mb-8">
-                        <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-2xl text-blue-600">
-                          <CreditCard size={20} />
+                    <div className="bg-slate-50 dark:bg-gray-800/10 p-4 md:p-8 rounded-[2rem] border-2 border-gray-100 dark:border-gray-800">
+                      <div className="flex items-center gap-4 mb-4 md:mb-6">
+                        <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-xl text-blue-600">
+                          <CreditCard size={18} />
                         </div>
-                        <h4 className="font-black text-gray-900 dark:text-white uppercase tracking-tighter">Pilih Klasifikasi</h4>
+                        <h4 className="font-black text-xs md:text-sm text-gray-900 dark:text-white uppercase tracking-tighter">Pilih Klasifikasi</h4>
                       </div>
 
                       {!form.opd_id ? (
-                        <div className="py-12 text-center bg-gray-50 dark:bg-gray-800 rounded-2xl border-2 border-dashed border-gray-100 dark:border-gray-800">
-                          <p className="text-gray-400 font-bold uppercase text-[10px] tracking-widest">Pilih Dinas pada langkah sebelumnya</p>
+                        <div className="py-4 text-center bg-gray-50 dark:bg-gray-800 rounded-xl border border-dashed border-gray-100 dark:border-gray-800">
+                          <p className="text-gray-400 font-bold uppercase text-[8px] tracking-widest">Pilih Dinas pada langkah sebelumnya</p>
                         </div>
                       ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 max-h-[400px] overflow-y-auto px-1 custom-scrollbar">
+                        <div className="grid grid-cols-1 gap-4 max-h-[500px] overflow-y-auto px-1 custom-scrollbar">
                           {filteredRetributionTypes?.map(type => (
-                            <div key={type.id} className="space-y-4">
-                              <h5 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] border-l-4 border-blue-500 pl-3">{type.name}</h5>
-                              <div className="space-y-2">
+                            <div key={type.id} className="space-y-1.5">
+                              <h5 className="text-[8px] font-black text-gray-400 uppercase tracking-widest pl-1 opacity-70">{type.name}</h5>
+                              <div className="grid grid-cols-2 gap-1.5">
                                 {classifications
                                   ?.filter(c => c.retribution_type_id === type.id)
                                   ?.map(cls => (
                                     <div 
                                       key={cls.id}
                                       onClick={() => toggleClassification(cls.id, type.id)}
-                                      className={`p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-center gap-4 ${
+                                      className={`p-2 rounded-xl border-2 cursor-pointer transition-all flex items-center gap-2 ${
                                         form.retribution_classification_ids.includes(cls.id)
-                                          ? 'border-emerald-500 bg-white dark:bg-gray-800 shadow-md'
-                                          : 'border-gray-50 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30'
+                                          ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
+                                          : 'border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800'
                                       }`}
                                     >
-                                      <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
+                                      <div className={`w-3.5 h-3.5 rounded-sm border flex items-center justify-center shrink-0 ${
                                         form.retribution_classification_ids.includes(cls.id) ? 'bg-emerald-500 border-emerald-500' : 'border-gray-300'
                                       }`}>
-                                        {form.retribution_classification_ids.includes(cls.id) && <Plus className="w-4 h-4 text-white" />}
+                                        {form.retribution_classification_ids.includes(cls.id) && <Plus className="w-2.5 h-2.5 text-white" />}
                                       </div>
-                                      <span className={`text-[11px] font-black uppercase tracking-tight ${
-                                        form.retribution_classification_ids.includes(cls.id) ? 'text-gray-900 dark:text-white' : 'text-gray-400'
+                                      <span className={`text-[9px] font-black uppercase tracking-tighter leading-none truncate ${
+                                        form.retribution_classification_ids.includes(cls.id) ? 'text-emerald-700 dark:text-emerald-400' : 'text-gray-400'
                                       }`}>
                                         {cls.name}
                                       </span>
@@ -1134,6 +1128,29 @@ export default function TaxpayerManagement() {
                               {cls.name}
                             </span>
                             <div className="h-[2px] flex-1 bg-gray-100 dark:bg-gray-800"></div>
+                          </div>
+
+                          {/* Identification / Object Name Silo */}
+                          <div className="group">
+                            <label className="block text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-2 ml-1">Nama Objek/Unit Khusus ({cls.name})</label>
+                            <input
+                              type="text"
+                              placeholder={`Contoh: ${cls.name} - ${form.name}`}
+                              value={form.metadata[`_object_name_${cls.id}`] || ''}
+                              onChange={(e) => setForm({ 
+                                ...form, 
+                                metadata: { ...form.metadata, [`_object_name_${cls.id}`]: e.target.value } 
+                              })}
+                              onFocus={(e) => {
+                                if (!e.target.value) {
+                                  setForm({
+                                    ...form,
+                                    metadata: { ...form.metadata, [`_object_name_${cls.id}`]: `${cls.name} ${form.name}` }
+                                  });
+                                }
+                              }}
+                              className="w-full px-6 py-4 bg-white dark:bg-gray-800 border-2 border-emerald-100 dark:border-emerald-900 rounded-2xl font-black text-sm md:text-base shadow-sm"
+                            />
                           </div>
 
                           {/* Technical Fields Group */}
@@ -1247,9 +1264,72 @@ export default function TaxpayerManagement() {
 
                 {currentStep === 4 && (
                   <div className="space-y-6 sm:space-y-8 animate-in slide-in-from-bottom-4 md:slide-in-from-right-4 duration-500 flex flex-col h-full pb-10">
-                    <div className="md:block">
-                      <h3 className="text-[10px] md:text-xs font-black text-indigo-600 uppercase tracking-[0.2em] mb-1 md:mb-2 text-center md:text-left">Lokasi Objek</h3>
-                      <p className="text-gray-400 md:text-gray-500 text-xs md:text-sm font-medium text-center md:text-left">Tentukan koordinat lokasi unit retribusi</p>
+                    <div className="flex flex-col gap-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="text-[10px] md:text-xs font-black text-indigo-600 uppercase tracking-[0.2em] mb-1 md:mb-2">Lokasi & Alamat Objek</h3>
+                          <p className="text-gray-400 md:text-gray-500 text-xs md:text-sm font-medium">Tentukan koordinat dan alamat lengkap unit retribusi</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={getCurrentLocation}
+                          disabled={geoLoading}
+                          className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 active:scale-95 transition-all disabled:opacity-50"
+                        >
+                          {geoLoading ? (
+                            <Loader2 size={14} className="animate-spin" />
+                          ) : (
+                            <Locate size={14} />
+                          )}
+                          <span className="hidden sm:inline">Lokasi Saat Ini</span>
+                          <span className="sm:hidden">GPS</span>
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 md:p-6 bg-slate-50 dark:bg-gray-800/50 rounded-[2rem] border-2 border-gray-100 dark:border-gray-800">
+                        <div className="group">
+                          <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Kecamatan</label>
+                          <select
+                            value={form.district}
+                            onChange={(e) => setForm({ ...form, district: e.target.value, sub_district: '' })}
+                            className="w-full px-5 py-3 bg-white dark:bg-gray-900 border-2 border-gray-100 dark:border-gray-800 rounded-xl font-bold text-sm cursor-pointer"
+                          >
+                            <option value="">Pilih Kecamatan</option>
+                            {Object.keys(BAUBAU_DATA).map(kec => <option key={kec} value={kec}>{kec}</option>)}
+                          </select>
+                        </div>
+                        <div className="group">
+                          <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Kelurahan</label>
+                          <select
+                            value={form.sub_district}
+                            onChange={(e) => setForm({ ...form, sub_district: e.target.value })}
+                            className="w-full px-5 py-3 bg-white dark:bg-gray-900 border-2 border-gray-100 dark:border-gray-800 rounded-xl font-bold text-sm cursor-pointer"
+                            disabled={!form.district}
+                          >
+                            <option value="">Pilih Kelurahan</option>
+                            {form.district && (BAUBAU_DATA as any)[form.district]?.map((kel: string) => <option key={kel} value={kel}>{kel}</option>)}
+                          </select>
+                        </div>
+                        <div className="group col-span-1 md:col-span-2">
+                          <div className="flex items-center justify-between mb-2">
+                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Alamat Lengkap Lokasi Objek</label>
+                            <button 
+                              type="button"
+                              onClick={() => setForm(prev => ({ ...prev, object_address: prev.address }))}
+                              className="text-[9px] font-black text-blue-600 uppercase tracking-widest hover:underline"
+                            >
+                              Sama dengan Domisili
+                            </button>
+                          </div>
+                          <textarea
+                            rows={2}
+                            placeholder="Alamat unit retribusi..."
+                            value={form.object_address}
+                            onChange={(e) => setForm({ ...form, object_address: e.target.value })}
+                            className="w-full px-5 py-3 bg-white dark:bg-gray-900 border-2 border-gray-100 dark:border-gray-800 rounded-xl font-bold resize-none text-sm"
+                          />
+                        </div>
+                      </div>
                     </div>
 
                     <div className="h-[300px] sm:flex-1 sm:min-h-[400px] rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden border-2 border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 shadow-inner relative z-0">
@@ -1264,6 +1344,7 @@ export default function TaxpayerManagement() {
                           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                         />
                         <MapEvents />
+                        <FlyToLocation lat={form.latitude} lng={form.longitude} />
                         <Marker 
                           position={[form.latitude, form.longitude]}
                           draggable={true}
@@ -1386,7 +1467,58 @@ export default function TaxpayerManagement() {
                 {currentStep < 5 ? (
                   <button
                     type="button"
-                    onClick={() => setCurrentStep(currentStep + 1)}
+                    onClick={() => {
+                      const nextStep = currentStep + 1;
+
+                      // Auto-fill object_address from domicile address when going to step 2
+                      if (currentStep === 1 && !form.object_address && form.address) {
+                        setForm(prev => ({ ...prev, object_address: prev.address }));
+                      }
+
+                      // Auto-fill date/tariff fields in metadata when going to step 3
+                      if (nextStep === 3) {
+                        const today = new Date().toISOString().split('T')[0];
+                        const selectedClassifications = classifications?.filter(
+                          (c: any) => form.retribution_classification_ids.includes(c.id)
+                        ) || [];
+
+                        const autoMetadata: Record<string, any> = { ...form.metadata };
+
+                        selectedClassifications.forEach((cls: any) => {
+                          ensureArray(cls.form_schema).forEach((field: any) => {
+                            // Auto-fill date fields (tanggal pendataan, survey_date, etc.)
+                            if (
+                              field.type === 'date' &&
+                              !autoMetadata[field.key]
+                            ) {
+                              autoMetadata[field.key] = today;
+                            }
+
+                            // Auto-fill tariff/rate constant fields
+                            if (
+                              field.type === 'constant' &&
+                              field.default_value &&
+                              !autoMetadata[field.key]
+                            ) {
+                              autoMetadata[field.key] = field.default_value;
+                            }
+                          });
+                        });
+
+                        setForm(prev => ({ ...prev, metadata: autoMetadata }));
+                      }
+
+                      // Auto-detect GPS location when going to step 4
+                      if (nextStep === 4 && navigator.geolocation) {
+                        // Only auto-detect if still at default Baubau coordinates
+                        const isDefault = Math.abs(form.latitude - (-5.4632)) < 0.001 && Math.abs(form.longitude - 122.6075) < 0.001;
+                        if (isDefault) {
+                          getCurrentLocation();
+                        }
+                      }
+
+                      setCurrentStep(nextStep);
+                    }}
                     className="px-8 md:px-12 py-4 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-xl transition-all active:scale-95"
                   >
                     Lanjut

@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { PWAProvider } from './contexts/PWAContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
 import PetugasLogin from './pages/PetugasLogin';
@@ -51,7 +52,8 @@ function App() {
   return (
     <BrowserRouter>
       <ThemeProvider>
-        <AuthProvider>
+        <PWAProvider>
+          <AuthProvider>
           <Routes>
             <Route path="/" element={<HomeRoute />} />
             <Route path="/login" element={<PetugasLogin />} />
@@ -253,6 +255,7 @@ function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </AuthProvider>
+      </PWAProvider>
       </ThemeProvider>
     </BrowserRouter>
   );

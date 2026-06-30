@@ -1,10 +1,10 @@
 import { Download, Monitor, Smartphone, Apple, Info, ArrowLeft, Share, PlusSquare } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { usePWAInstall } from '../hooks/usePWAInstall';
+import { usePWA } from '../contexts/PWAContext';
 
 export default function DownloadApp() {
   const navigate = useNavigate();
-  const { isInstallable, installPWA } = usePWAInstall();
+  const { isInstallable, installPWA } = usePWA();
 
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
 
