@@ -15,6 +15,7 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { MapPicker } from '../components/MapPicker';
 import { formatNPWPD, ensureArray } from '../lib/formatUtils';
+import { getAccountStatus, getObjectVerificationStatus } from '../lib/taxpayerStatus';
 
 // Fix for default marker icon in Leaflet
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
@@ -70,45 +71,20 @@ const CompletionBar = ({ percentage }: { percentage: number }) => {
 };
 
 const StatusIndicator = ({ tp }: { tp: Taxpayer }) => {
-  const hasPersonal = !!(tp.nik && tp.name && tp.phone);
-  const hasTax = !!(tp.retribution_types && tp.retribution_types.length > 0 && Object.keys(tp.metadata || {}).length > 0);
-  
-  const isDefaultLoc = (lat: any, lng: any) => {
-    const dLat = -5.4632;
-    const dLng = 122.6075;
-    if (!lat || !lng) return true;
-    return Math.abs(parseFloat(lat) - dLat) < 0.0001 && Math.abs(parseFloat(lng) - dLng) < 0.0001;
-  };
-  
-  const hasLocation = !isDefaultLoc((tp as any).latitude, (tp as any).longitude);
-  const isActive = !!tp.is_active;
+  const accountStatus = getAccountStatus(tp);
+  const objectStatus = getObjectVerificationStatus(tp);
 
   return (
-    <div className="flex items-center gap-3">
-      <div className="group relative">
-        <User size={16} className={hasPersonal ? 'text-emerald-500 drop-shadow-[0_0_5px_rgba(16,185,129,0.3)]' : 'text-gray-300 dark:text-gray-600'} />
-        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-[9px] font-black uppercase tracking-widest rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-20 shadow-xl border border-white/10">
-          Identitas: {hasPersonal ? 'SUDAH LENGKAP' : 'BELUM LENGKAP'}
-        </div>
-      </div>
-      <div className="group relative">
-        <CreditCard size={16} className={hasTax ? 'text-blue-500 drop-shadow-[0_0_5px_rgba(59,130,246,0.3)]' : 'text-gray-300 dark:text-gray-600'} />
-        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-[9px] font-black uppercase tracking-widest rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-20 shadow-xl border border-white/10">
-          Data Pajak: {hasTax ? 'SUDAH LENGKAP' : 'BELUM LENGKAP'}
-        </div>
-      </div>
-      <div className="group relative">
-        <MapPin size={16} className={hasLocation ? 'text-rose-500 drop-shadow-[0_0_5px_rgba(244,63,94,0.3)]' : 'text-gray-300 dark:text-gray-600'} />
-        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-[9px] font-black uppercase tracking-widest rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-20 shadow-xl border border-white/10">
-          Lokasi: {hasLocation ? 'SUDAH LENGKAP' : 'BELUM LENGKAP'}
-        </div>
-      </div>
-      <div className="group relative">
-        <CheckCircle2 size={16} className={isActive ? 'text-emerald-500' : 'text-gray-300 dark:text-gray-600'} />
-        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-[9px] font-black uppercase tracking-widest rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-20 shadow-xl border border-white/10">
-          Status: {isActive ? 'SUDAH AKTIF' : 'NON-AKTIF'}
-        </div>
-      </div>
+    <div className="flex flex-col items-start gap-1.5">
+      <span className={`inline-flex px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${accountStatus.className}`}>
+        {accountStatus.label}
+      </span>
+      <span
+        title={objectStatus.description}
+        className={`inline-flex px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${objectStatus.className}`}
+      >
+        {objectStatus.label}
+      </span>
     </div>
   );
 };
@@ -596,8 +572,8 @@ export default function TaxpayerManagement() {
                   className="w-full pl-9 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 text-[10px] font-black uppercase tracking-widest appearance-none"
                 >
                   <option value="all">Status: Semua</option>
-                  <option value="active">Aktif</option>
-                  <option value="inactive">Non-Aktif</option>
+                  <option value="active">Akun Aktif</option>
+                  <option value="inactive">Akun Nonaktif</option>
                 </select>
              </div>
 

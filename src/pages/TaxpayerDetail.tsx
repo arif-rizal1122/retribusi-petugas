@@ -11,6 +11,7 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import TaxpayerEditModal from '../components/TaxpayerEditModal';
 import 'leaflet/dist/leaflet.css';
 import { Calculator } from 'lucide-react';
+import { getAccountStatus, getObjectVerificationStatus } from '../lib/taxpayerStatus';
 
 export default function TaxpayerDetail() {
   const { id } = useParams<{ id: string }>();
@@ -77,6 +78,10 @@ export default function TaxpayerDetail() {
   const lat = taxpayer.latitude || taxpayer.tax_objects?.[0]?.latitude;
   const lng = taxpayer.longitude || taxpayer.tax_objects?.[0]?.longitude;
   const hasLocation = lat && lng;
+  const accountStatus = getAccountStatus(taxpayer);
+  const objectStatus = getObjectVerificationStatus(taxpayer);
+  const taxObjects = taxpayer.tax_objects || [];
+  const activeTaxObject = taxObjects.find((object: any) => object.status === 'active');
 
   // Separate metadata into files and fields
   const uploadedFiles: { key: string; label: string; url: string }[] = [];
@@ -132,11 +137,15 @@ export default function TaxpayerDetail() {
               ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400'
               : 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-400'
           }`}>
-            {taxpayer.is_active ? '● Aktif' : '● Non-Aktif'}
+            {accountStatus.label}
+          </span>
+          <span className={`px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest ${objectStatus.className}`}>
+            {objectStatus.label}
           </span>
           <button
             onClick={() => {
-              const taxObject = taxpayer.tax_objects?.[0] || taxpayer;
+              if (!activeTaxObject) return;
+              const taxObject = activeTaxObject;
               navigate('/skpd/create', {
                 state: {
                   taxObjectId: taxObject.id,
@@ -146,7 +155,12 @@ export default function TaxpayerDetail() {
                 }
               });
             }}
-            className="flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition-all text-[10px] sm:text-xs font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20 active:scale-95"
+            disabled={!activeTaxObject}
+            className={`flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2 text-white rounded-xl transition-all text-[10px] sm:text-xs font-black uppercase tracking-widest active:scale-95 ${
+              activeTaxObject
+                ? 'bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-500/20'
+                : 'bg-slate-300 dark:bg-slate-700 cursor-not-allowed'
+            }`}
           >
             <Calculator size={13} />
             <span className="hidden sm:inline">Buat SKPD</span>
@@ -241,6 +255,44 @@ export default function TaxpayerDetail() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
           <InfoCard icon={Briefcase} label="Nama Objek" value={taxpayer.object_name} color="indigo" />
           <InfoCard icon={MapPin} label="Alamat Objek" value={taxpayer.object_address || taxpayer.address} color="indigo" />
+        </div>
+
+        <div className="bg-white dark:bg-gray-800/60 rounded-2xl p-4 border border-gray-100 dark:border-gray-700/50 mb-3">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
+            <div>
+              <span className="text-[9px] font-black text-gray-400 uppercase tracking-[0.15em] block mb-1">Status Objek</span>
+              <p className="text-xs font-bold text-gray-500 dark:text-gray-400">{objectStatus.description}</p>
+            </div>
+            <span className={`inline-flex self-start px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest ${objectStatus.className}`}>
+              {objectStatus.label}
+            </span>
+          </div>
+
+          {taxObjects.length > 0 && (
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-2">
+              {taxObjects.map((object: any) => (
+                <div key={object.id} className="rounded-xl border border-gray-100 dark:border-gray-700 p-3 bg-gray-50/70 dark:bg-gray-900/30">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-xs font-black text-gray-900 dark:text-white truncate">{object.name}</p>
+                      <p className="text-[10px] font-bold text-gray-400 truncate">{object.classification?.name || object.retribution_type?.name || '-'}</p>
+                    </div>
+                    <span className={`shrink-0 px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest ${
+                      object.status === 'active'
+                        ? 'bg-blue-100 text-blue-700'
+                        : object.status === 'pending'
+                        ? 'bg-yellow-100 text-yellow-800'
+                        : object.status === 'rejected'
+                        ? 'bg-rose-100 text-rose-700'
+                        : 'bg-slate-100 text-slate-600'
+                    }`}>
+                      {object.status}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Klasifikasi Badges */}
@@ -446,10 +498,16 @@ export default function TaxpayerDetail() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {relatedAssets.map((asset) => (
+            {relatedAssets.map((asset) => {
+              const targetTaxpayerId = asset.taxpayer_id || asset.taxpayer?.id;
+              const assetClassification = asset.classification || asset.retribution_classifications?.[0];
+              const assetType = asset.retribution_type || asset.retributionType;
+              const isAssetActive = asset.status === 'active';
+
+              return (
               <div 
                 key={asset.id}
-                onClick={() => navigate(`/taxpayers/${asset.id}`)}
+                onClick={() => targetTaxpayerId && navigate(`/taxpayers/${targetTaxpayerId}`)}
                 className="group bg-white dark:bg-gray-800/60 rounded-[1.5rem] p-5 border border-gray-100 dark:border-gray-700/50 hover:border-emerald-300 dark:hover:border-emerald-800 hover:shadow-xl hover:shadow-emerald-500/5 transition-all duration-300 cursor-pointer relative overflow-hidden"
               >
                 <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full -mr-8 -mt-8 group-hover:bg-emerald-500/10 transition-colors" />
@@ -464,23 +522,34 @@ export default function TaxpayerDetail() {
                     </div>
                   </div>
 
-                  <h3 className="text-sm font-black text-gray-900 dark:text-white mb-1 group-hover:text-emerald-600 transition-colors">{asset.object_name}</h3>
+                  <h3 className="text-sm font-black text-gray-900 dark:text-white mb-1 group-hover:text-emerald-600 transition-colors">{asset.name || asset.object_name || '-'}</h3>
                   <div className="flex items-center gap-1.5 mb-4">
                     <MapPin size={10} className="text-gray-400" />
-                    <p className="text-[10px] font-bold text-gray-400 truncate max-w-[200px]">{asset.object_address || asset.district || 'Alamat tidak tersedia'}</p>
+                    <p className="text-[10px] font-bold text-gray-400 truncate max-w-[200px]">{asset.address || asset.object_address || asset.taxpayer?.district || 'Alamat tidak tersedia'}</p>
                   </div>
 
                   <div className="flex flex-wrap gap-1.5">
-                    {asset.retribution_classifications?.slice(0, 2).map((cls: any) => (
-                      <span key={cls.id} className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-[8px] font-black rounded-md uppercase tracking-wider">
-                        {cls.name}
-                      </span>
-                    ))}
-                    {asset.retribution_classifications?.length > 2 && (
-                      <span className="px-2 py-0.5 bg-gray-50 dark:bg-gray-800 text-gray-400 text-[8px] font-bold rounded-md">
-                        +{asset.retribution_classifications.length - 2}
+                    {assetClassification && (
+                      <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-[8px] font-black rounded-md uppercase tracking-wider">
+                        {assetClassification.name}
                       </span>
                     )}
+                    {assetType && (
+                      <span className="px-2 py-0.5 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 text-[8px] font-black rounded-md uppercase tracking-wider">
+                        {assetType.name}
+                      </span>
+                    )}
+                    <span className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-wider ${
+                      isAssetActive
+                        ? 'bg-emerald-100 text-emerald-700'
+                        : asset.status === 'pending'
+                        ? 'bg-yellow-100 text-yellow-800'
+                        : asset.status === 'rejected'
+                        ? 'bg-rose-100 text-rose-700'
+                        : 'bg-slate-100 text-slate-600'
+                    }`}>
+                      {asset.status || 'unknown'}
+                    </span>
                   </div>
                   
                   {/* Shortcut Buat SKPD */}
@@ -488,23 +557,30 @@ export default function TaxpayerDetail() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
+                        if (!isAssetActive) return;
                         navigate('/skpd/create', {
                           state: {
                             taxObjectId: asset.id,
-                            classificationId: asset.retribution_classifications?.[0]?.id || '',
+                            classificationId: asset.retribution_classification_id || assetClassification?.id || '',
                             defaultVars: asset.metadata || {},
                             
                           }
                         });
                       }}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:hover:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 text-[9px] font-black uppercase tracking-widest rounded-lg transition-colors border border-emerald-100 dark:border-emerald-800"
+                      disabled={!isAssetActive}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-lg transition-colors border ${
+                        isAssetActive
+                          ? 'bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:hover:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700 cursor-not-allowed'
+                      }`}
                     >
                       <Calculator size={11} /> Buat SKPD
                     </button>
                   </div>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
