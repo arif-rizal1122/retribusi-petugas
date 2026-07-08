@@ -26,17 +26,25 @@ export default defineConfig({
         name: 'Retribusi Petugas Bau-Bau',
         short_name: 'Petugas Retribusi',
         description: 'Aplikasi Petugas Pajak & Retribusi Kota Bau-Bau',
+        start_url: '/',
+        scope: '/',
+        display: 'standalone',
+        background_color: '#ffffff',
         theme_color: '#2d5cd5',
+        orientation: 'portrait',
+        lang: 'id',
         icons: [
           {
             src: '/mitra-logo.png',
             sizes: '192x192',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any'
           },
           {
             src: '/mitra-logo.png',
             sizes: '512x512',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any maskable'
           }
         ]
       }

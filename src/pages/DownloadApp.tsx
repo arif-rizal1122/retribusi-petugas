@@ -19,7 +19,7 @@ export default function DownloadApp() {
           <ArrowLeft size={24} />
         </button>
         <div>
-          <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight leading-none mb-1">Unduh App</h1>
+          <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight leading-none mb-1">Pasang App</h1>
           <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Instalasi Aplikasi Petugas</p>
         </div>
       </div>
@@ -72,7 +72,7 @@ export default function DownloadApp() {
                   <span className="text-blue-500">1.</span> Buka browser Chrome
                 </li>
                 <li className="flex gap-2">
-                  <span className="text-blue-500">2.</span> Klik tombol "Unduh Sekarang" di atas
+                  <span className="text-blue-500">2.</span> Klik tombol "Pasang Aplikasi Sekarang" di atas
                 </li>
                 <li className="flex gap-2">
                   <span className="text-blue-500">3.</span> Atau klik menu <span className="text-slate-900 dark:text-white">⋮</span> dan pilih <span className="text-slate-900 dark:text-white">"Install App"</span>

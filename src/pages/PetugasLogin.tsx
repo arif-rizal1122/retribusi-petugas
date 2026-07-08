@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { ArrowLeft, Loader2, Facebook, Twitter, Chrome, Apple, Eye, EyeOff, BookOpen } from 'lucide-react';
+import { ArrowLeft, Loader2, Facebook, Twitter, Chrome, Apple, Eye, EyeOff, BookOpen, Download } from 'lucide-react';
 import { InstallPWA } from '../components/InstallPWA';
 
 // Baubau Logo Colors
@@ -218,6 +218,16 @@ export default function PetugasLogin() {
                 >
                   <BookOpen size={14} className="group-hover:rotate-12 transition-transform" />
                   View User Guide
+                </Link>
+              </div>
+
+              <div className="mt-5 flex justify-center">
+                <Link
+                  to="/download"
+                  className="inline-flex items-center gap-2 rounded-full border border-[#074764]/10 bg-[#074764]/5 px-4 py-2 text-[10px] font-black uppercase tracking-[0.16em] text-[#074764] transition-colors hover:bg-[#074764]/10"
+                >
+                  <Download size={14} />
+                  Pasang Aplikasi
                 </Link>
               </div>
             </div>

@@ -8,6 +8,7 @@ import {
   ArrowRight,
   CheckCircle,
   BookOpen,
+  Download,
   Smartphone
 } from 'lucide-react';
 
@@ -76,6 +77,7 @@ export default function LandingPage() {
             <div className="hidden md:flex items-center gap-8">
               <a href="#features" className="text-sm font-semibold text-gray-600 hover:text-[#074764] transition-colors">Fitur</a>
               <a href="#benefits" className="text-sm font-semibold text-gray-600 hover:text-[#074764] transition-colors">Keunggulan</a>
+              <Link to="/download" className="text-sm font-semibold text-gray-600 hover:text-[#074764] transition-colors">Pasang App</Link>
               <Link to="/user-guide" className="text-sm font-semibold text-gray-600 hover:text-[#074764] transition-colors">Panduan</Link>
             </div>
 
@@ -122,6 +124,13 @@ export default function LandingPage() {
                   style={{ backgroundColor: BAUBAU_BLUE, boxShadow: `0 20px 40px -12px ${BAUBAU_BLUE}40` }}
                 >
                   Mulai Pendataan <ArrowRight className="w-5 h-5" />
+                </Link>
+                <Link
+                  to="/download"
+                  className="px-8 py-4 bg-white rounded-2xl font-bold border border-[#074764]/15 transition-all flex items-center gap-2 shadow-lg shadow-slate-200/50"
+                  style={{ color: BAUBAU_BLUE }}
+                >
+                  <Download className="w-5 h-5" /> Pasang Aplikasi
                 </Link>
                 <Link 
                   to="/user-guide"
@@ -365,13 +374,20 @@ export default function LandingPage() {
                 <span className="text-xs text-gray-400 block tracking-widest uppercase font-bold text-[8px]">Petugas Lapangan</span>
               </div>
             </div>
-            <div className="text-center">
+            <div className="text-center flex flex-wrap justify-center gap-3">
               <Link 
                 to="/user-guide" 
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-colors"
                 style={{ backgroundColor: BAUBAU_BLUE }}
               >
                 <BookOpen className="w-5 h-5" /> Baca Panduan Pengguna
+              </Link>
+              <Link
+                to="/download"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm text-gray-900 transition-colors"
+                style={{ backgroundColor: BAUBAU_GOLD }}
+              >
+                <Download className="w-5 h-5" /> Pasang Aplikasi
               </Link>
             </div>
             <div className="text-right text-sm text-gray-400">
