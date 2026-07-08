@@ -23,10 +23,10 @@ jobs:
             # 1. Tentukan target folder berdasarkan branch
             if [ "${{ github.ref_name }}" == "main" ]; then
               TARGET_DIR="/home/sipanda/retribusi-petugas"
-              API_URL="https://api.mpad.online"
+              API_URL="https://apimpad.baubaukota.go.id"
             else
               TARGET_DIR="/home/sipanda/retribusi-petugas-staging"
-              API_URL="https://api.mpad.online"
+              API_URL="https://api.sipanda.online"
             fi
 
             echo "🚀 Starting server-side build for Petugas in $TARGET_DIR..."
