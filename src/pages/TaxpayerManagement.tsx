@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast';
 import { 
   Plus, Edit, Trash2, Search, Loader2, Filter, X, 
   User, CreditCard, MapPin, Phone, Briefcase, 
@@ -218,7 +219,7 @@ export default function TaxpayerManagement() {
   const checkNik = async () => {
     const nikRegex = /^\d{16}$/;
     if (!form.nik || !nikRegex.test(form.nik)) {
-      alert('NIK harus terdiri dari 16 digit angka sesuai standar KTP.');
+      toast.error('NIK harus terdiri dari 16 digit angka sesuai standar KTP.');
       return;
     }
     
@@ -236,14 +237,14 @@ export default function TaxpayerManagement() {
           sub_district: res.data.sub_district || prev.sub_district,
         }));
         setFoundAssets(res.all_assets || []);
-        alert(`Data wajib pajak ditemukan! (Terdeteksi ${res.count} aset terdaftar). Informasi identitas telah otomatis terisi.`);
+        toast.success(`Data wajib pajak ditemukan! (Terdeteksi ${res.count} aset terdaftar). Informasi identitas telah otomatis terisi.`);
       } else {
         setFoundAssets([]);
-        alert('NIK belum terdaftar di sistem. Silakan lengkapi data profil baru.');
+        toast('NIK belum terdaftar di sistem. Silakan lengkapi data profil baru.', { icon: 'ℹ️' });
       }
     } catch (error: any) {
       console.error('Error checking NIK:', error);
-      alert('Gagal mengecek NIK. Silakan coba lagi.');
+      toast.error('Gagal mengecek NIK. Silakan coba lagi.');
     } finally {
       setIsCheckingNik(false);
     }
@@ -293,7 +294,7 @@ export default function TaxpayerManagement() {
       setTaxpayerToDelete(null);
       fetchData();
     } catch (error) {
-      alert('Gagal menghapus wajib pajak');
+      toast.error('Gagal menghapus wajib pajak');
     } finally {
       setLoading(false);
     }
@@ -359,8 +360,8 @@ export default function TaxpayerManagement() {
     } catch (error: any) {
       console.error('Update/Store Error:', error);
       const message = error.response?.data?.message || error.message || 'Gagal menyimpan data';
-      const detail = error.response?.data?.errors ? '\n\n' + Object.values(error.response.data.errors).flat().join('\n') : '';
-      alert(message + detail);
+      const detail = error.response?.data?.errors ? '\n' + Object.values(error.response.data.errors).flat().join('\n') : '';
+      toast.error(message + detail);
     } finally {
       setSubmitting(false);
     }

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { Loader2, Receipt, FileText, ArrowRight, AlertCircle, Sparkles, CheckCircle2 } from 'lucide-react';
 import { api, API_URL } from '../lib/api';
 
@@ -184,7 +185,7 @@ export default function CreateSKPD() {
       setTimeout(() => window.URL.revokeObjectURL(url), 1000);
     } catch (error) {
       console.error(error);
-      alert('Gagal membuka dokumen PDF SKPD.');
+      toast.error('Gagal membuka dokumen PDF SKPD.');
     } finally {
       setDownloadingPdf(false);
     }

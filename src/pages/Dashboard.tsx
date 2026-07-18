@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { 
   TrendingUp, 
   FileText, 
@@ -111,7 +112,7 @@ export default function Dashboard() {
       }));
     } catch (error) {
       console.error('Failed to load periods', error);
-      alert('Gagal mengambil tagihan pending');
+      toast.error('Gagal mengambil tagihan pending');
       setPaymentModal(prev => ({ ...prev, isOpen: false, loading: false }));
     }
   };
@@ -146,13 +147,13 @@ export default function Dashboard() {
         amount: selectedObj?.total_amount || selectedObj?.amount || 0,
         proof_url: uploadedProofUrl // Terlampir if available
       });
-      alert(`Pembayaran periode ${paymentModal.selectedPeriod} berhasil dicatat`);
+      toast.success(`Pembayaran periode ${paymentModal.selectedPeriod} berhasil dicatat`);
       setPaymentModal(prev => ({ ...prev, isOpen: false, submitting: false }));
       // Refresh map & stats
       fetchDashboardData();
     } catch (error) {
       console.error('Payment failed', error);
-      alert('Gagal memproses pembayaran atau mengunggah gambar');
+      toast.error('Gagal memproses pembayaran atau mengunggah gambar');
       setPaymentModal(prev => ({ ...prev, submitting: false, uploadingProof: false }));
     }
   };

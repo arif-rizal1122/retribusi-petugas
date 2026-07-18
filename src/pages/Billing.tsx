@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { 
   Download, 
   Search, 
@@ -127,7 +128,7 @@ export default function Billing() {
           amount: selectedBill.amount,
           proof_url: uploadedProofUrl // Optional attachment
         });
-        alert('Pembayaran berhasil dicatat');
+        toast.success('Pembayaran berhasil dicatat');
         setShowPaymentModal(false);
         setSelectedBill(null);
         setProofFile(null);
@@ -152,7 +153,7 @@ export default function Billing() {
         proof_url: uploadedProofUrl
       });
 
-      alert(`Pembayaran periode ${formData.period} berhasil dicatat`);
+      toast.success(`Pembayaran periode ${formData.period} berhasil dicatat`);
       setShowModal(false);
       setFormData({ tax_object_id: '', period: '' });
       setPendingPeriods([]);
@@ -176,7 +177,7 @@ export default function Billing() {
       })));
     } catch (error) {
       console.error(error);
-      alert('Gagal memproses pembayaran atau mengunggah gambar');
+      toast.error('Gagal memproses pembayaran atau mengunggah gambar');
       setUploadingProof(false);
     } finally {
       setPaymentSubmitting(false);
@@ -195,9 +196,9 @@ export default function Billing() {
         date: new Date().toLocaleDateString('id-ID'),
         period: billing.dueDate ? new Date(billing.dueDate).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' }) : '-'
       });
-      alert('Resi sedang dicetak...');
+      toast('Resi sedang dicetak...', { icon: '🖨️' });
     } catch (error) {
-      alert('Gagal mencetak resi');
+      toast.error('Gagal mencetak resi');
     }
   };
 

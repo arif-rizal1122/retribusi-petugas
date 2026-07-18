@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { PWAProvider } from './contexts/PWAContext';
@@ -54,6 +55,7 @@ function App() {
       <ThemeProvider>
         <PWAProvider>
           <AuthProvider>
+          <Toaster position="top-right" />
           <Routes>
             <Route path="/" element={<HomeRoute />} />
             <Route path="/login" element={<PetugasLogin />} />

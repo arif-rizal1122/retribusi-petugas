@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import { 
   CheckCircle, 
   Clock, 
@@ -53,10 +54,10 @@ export default function PaymentVerification() {
           await handlePrintReceipt(payment);
         }
       } else {
-        alert('Pembayaran ditolak');
+        toast.error('Pembayaran ditolak');
       }
     } catch (err: any) {
-      alert(err.message || 'Gagal memperbarui status');
+      toast.error(err.message || 'Gagal memperbarui status');
     } finally {
       setProcessingId(null);
     }
@@ -75,7 +76,7 @@ export default function PaymentVerification() {
         period: payment.billing_period || '-'
       });
     } catch {
-      alert('Gagal mencetak resi. Pastikan printer Bluetooth terhubung.');
+      toast.error('Gagal mencetak resi. Pastikan printer Bluetooth terhubung.');
     }
   };
 

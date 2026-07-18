@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { Search, Loader2, CheckCircle2, XCircle, CreditCard, Building2, FileText, Printer } from 'lucide-react';
 import { thermalPrintService } from '../services/ThermalPrintService';
 import { api } from '../lib/api';
@@ -168,7 +169,7 @@ export default function PbbBapenda() {
         date: new Date(tx.created_at || new Date()).toLocaleDateString('id-ID')
       });
     } catch (err: any) {
-      alert("Gagal mencetak: " + (err.message || "Pastikan printer Bluetooth terhubung"));
+      toast.error("Gagal mencetak: " + (err.message || "Pastikan printer Bluetooth terhubung"));
     } finally {
       setPrinting(null);
     }

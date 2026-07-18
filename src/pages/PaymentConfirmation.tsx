@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { ArrowLeft, CreditCard, Loader2, CheckCircle2, QrCode, Building2, Wallet } from 'lucide-react';
 import { api } from '../lib/api';
 import { Billing as BillingType } from '../types';
@@ -59,7 +60,7 @@ export default function PaymentConfirmation() {
       ));
       setSuccess(true);
     } catch (error) {
-      alert('Gagal memproses pembayaran');
+      toast.error('Gagal memproses pembayaran');
     } finally {
       setProcessing(false);
     }

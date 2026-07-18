@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { Camera, MapPin, CheckCircle, ArrowLeft, Loader2, AlertCircle, Search } from 'lucide-react';
 import { api } from '../lib/api';
 
@@ -121,12 +122,12 @@ export default function FieldInspection() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!location || !photo) {
-      alert("Lokasi dan Foto wajib diisi!");
+      toast.error("Lokasi dan Foto wajib diisi!");
       return;
     }
 
     if (distance !== null && distance > MAX_DISTANCE) {
-       alert(`Anda terlalu jauh dari objek pajak (${Math.round(distance)}m). Maksimal jarak adalh ${MAX_DISTANCE}m.`);
+       toast.error(`Anda terlalu jauh dari objek pajak (${Math.round(distance)}m). Maksimal jarak adalh ${MAX_DISTANCE}m.`);
        return;
     }
 
@@ -141,10 +142,10 @@ export default function FieldInspection() {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
-      alert("Laporan kunjungan lapangan berhasil dikirim!");
+      toast.success("Laporan kunjungan lapangan berhasil dikirim!");
       navigate('/dashboard');
     } catch (err: any) {
-      alert("Gagal mengirim laporan: " + (err.response?.data?.message || err.message));
+      toast.error("Gagal mengirim laporan: " + (err.response?.data?.message || err.message));
     } finally {
       setSubmitting(false);
     }
