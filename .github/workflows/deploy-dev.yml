@@ -30,7 +30,7 @@ jobs:
       with:
         host: ${{ secrets.VPS_HOST }}
         username: ${{ secrets.VPS_USERNAME }}
-        password: ${{ secrets.VPS_PASSWORD }}
+        key: ${{ secrets.VPS_KEY }}
         source: "dist/*"
         target: "/home/sipanda/retribusi-petugas-dev"
         strip_components: 1
