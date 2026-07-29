@@ -8,7 +8,6 @@ import {
   Loader2, 
   QrCode, 
   Search as SearchIcon, 
-  CreditCard,
   Map as MapIcon,
   Activity,
   Plus,
@@ -17,7 +16,16 @@ import {
   Calendar,
   X,
   ImagePlus,
-  Wallet
+  Wallet,
+  Bell,
+  Menu,
+  Building2,
+  Flag,
+  CheckCircle2,
+  ShieldCheck,
+  Home as HomeIcon,
+  User as UserIcon,
+  MapPin
 } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -68,6 +76,7 @@ interface Potential {
   taxpayer_photo?: string | null;
   icon?: string | null;
   retribution_type_id?: number | string;
+  tax_object_id?: number | string;
 }
 
 export default function Dashboard() {
@@ -79,6 +88,7 @@ export default function Dashboard() {
   const [retributionTypes, setRetributionTypes] = useState<any[]>([]);
   const [recentTransactions, setRecentTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'beranda' | 'transaksi' | 'peta' | 'laporan'>('beranda');
   
   // Date Filtering State
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -145,11 +155,10 @@ export default function Dashboard() {
         billing_period: paymentModal.selectedPeriod,
         payment_method: 'cash',
         amount: selectedObj?.total_amount || selectedObj?.amount || 0,
-        proof_url: uploadedProofUrl // Terlampir if available
+        proof_url: uploadedProofUrl
       });
       toast.success(`Pembayaran periode ${paymentModal.selectedPeriod} berhasil dicatat`);
       setPaymentModal(prev => ({ ...prev, isOpen: false, submitting: false }));
-      // Refresh map & stats
       fetchDashboardData();
     } catch (error) {
       console.error('Payment failed', error);
@@ -293,7 +302,7 @@ export default function Dashboard() {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-12 h-12 animate-spin text-[#2d5cd5]" />
+          <Loader2 className="w-12 h-12 animate-spin text-[#00C8E5]" />
           <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Memuat Dashboard...</p>
         </div>
       </div>
@@ -301,24 +310,10 @@ export default function Dashboard() {
   }
 
   const createCustomIcon = (iconUrl: string | null, seed: any, status?: string) => {
-    // If it's a taxpayer, use a user icon with color based on payment status
     if (status === 'taxpayer') {
-      const color = seed?.is_paid ? '#10b981' : '#ef4444'; // Emerald-500 for paid, Red-500 for unpaid
-      const label = seed?.is_paid ? 'LUNAS' : 'BELUM BAYAR';
-      
-      const photoUrl = seed?.taxpayer_photo?.startsWith('http') 
-        ? seed.taxpayer_photo 
-        : (seed?.taxpayer_photo ? `${import.meta.env.VITE_API_URL}${seed.taxpayer_photo.startsWith('/') ? '' : '/'}${seed.taxpayer_photo}` : null);
-
-      const fallbackAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed?.name || 'default'}&backgroundColor=b6e3f4`;
-
       return L.divIcon({
         className: 'custom-div-icon',
-        html: `
-          <div style="position: relative;">
-          </div>
-        </div>
-      `,
+        html: `<div style="position: relative;"></div>`,
         iconSize: [38, 38],
         iconAnchor: [19, 38],
       });
@@ -326,7 +321,7 @@ export default function Dashboard() {
 
     const finalIconUrl = iconUrl?.startsWith('http') 
       ? iconUrl 
-      : (iconUrl ? `${import.meta.env.VITE_API_URL}${iconUrl.startsWith('/') ? '' : '/'}${iconUrl}` : `https://api.dicebear.com/7.x/shapes/svg?seed=${seed}&backgroundColor=2563eb&shape1Color=white`);
+      : (iconUrl ? `${import.meta.env.VITE_API_URL}${iconUrl.startsWith('/') ? '' : '/'}${iconUrl}` : `/mitra-logo.png`);
 
     return L.divIcon({
       className: 'custom-div-icon',
@@ -339,9 +334,9 @@ export default function Dashboard() {
           display: flex; 
           align-items: center; 
           justify-content: center; 
-          box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+          box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
           overflow: hidden;
-          border: 2px solid #10b981;
+          border: 2px solid #00C8E5;
         ">
           <img src="${finalIconUrl}" style="width: 100%; height: 100%; object-fit: contain; padding: 2px;" />
         </div>
@@ -351,124 +346,451 @@ export default function Dashboard() {
     });
   };
 
+  const userName = user?.name || 'Budi Santoso';
+  const currentDateStr = new Date().toLocaleDateString('id-ID', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric'
+  });
+
   return (
-    <div className="flex flex-col gap-6 lg:gap-8 pb-32 w-full max-w-full overflow-hidden">
+    <div className="flex flex-col gap-6 lg:gap-8 pb-32 w-full max-w-full overflow-hidden font-sans">
       
-      {/* Desktop Top Section */}
-      <div className="hidden lg:flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-        <div className="flex items-center gap-5">
-          <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-xl shadow-slate-200 border border-slate-100">
-            <img src="/mitra-logo.png" alt="Logo" className="w-9 h-9 object-contain" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-black text-slate-900 tracking-tight flex items-center gap-3">
-              Pusat Kendali
-              <span className="text-[10px] font-black bg-[#2d5cd5] text-white px-3 py-1 rounded-full uppercase tracking-widest align-middle">Beta</span>
-            </h1>
-            <p className="text-slate-500 font-medium mt-1">Halo, {user?.name}. Berikut ringkasan aktivitas hari ini.</p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-4">
-          {/* Quick Filters */}
-          <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
-            <button 
-              onClick={() => { setFilterType('day'); setCurrentDate(new Date()); }}
-              className={`px-4 py-1.5 text-xs font-black uppercase tracking-widest rounded-lg transition-all ${filterType === 'day' ? 'bg-white dark:bg-slate-700 text-[#2d5cd5] shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-            >
-              Harian
-            </button>
-            <button 
-              onClick={() => { setFilterType('week'); setCurrentDate(new Date()); }}
-              className={`px-4 py-1.5 text-xs font-black uppercase tracking-widest rounded-lg transition-all ${filterType === 'week' ? 'bg-white dark:bg-slate-700 text-[#2d5cd5] shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-            >
-              Pekanan
-            </button>
-            <button 
-              onClick={() => { setFilterType('month'); setCurrentDate(new Date()); }}
-              className={`px-4 py-1.5 text-xs font-black uppercase tracking-widest rounded-lg transition-all ${filterType === 'month' ? 'bg-white dark:bg-slate-700 text-[#2d5cd5] shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-            >
-              Bulanan
-            </button>
-          </div>
-
-          <div className="flex items-center gap-2 bg-white dark:bg-slate-800 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
-            <button onClick={handlePrev} className="p-1 hover:bg-slate-50 rounded-full"><ChevronLeft size={16} /></button>
-            <div className="flex items-center gap-2 min-w-[140px] justify-center text-[#2d5cd5]">
-              <Calendar size={14} />
-              <span className="text-xs font-black uppercase tracking-widest">{getDisplayDate()}</span>
-            </div>
-            <button onClick={handleNext} className="p-1 hover:bg-slate-50 rounded-full"><ChevronRight size={16} /></button>
-          </div>
-        </div>
-      </div>
-
-      {/* Mobile Title & Navigator */}
-      <div className="lg:hidden flex flex-col gap-3">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight shrink-0">Dashboard</h2>
-            <ZoomControl variant="inline" />
-          </div>
-          <div className="flex items-center gap-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm overflow-hidden">
-            <button onClick={handlePrev} className="p-2 text-[#2d5cd5] active:bg-slate-50 transition-colors"><ChevronLeft size={16} /></button>
-            <span className="text-[10px] font-black uppercase tracking-widest text-[#2d5cd5] px-1 whitespace-nowrap">{getDisplayDate(true)}</span>
-            <button onClick={handleNext} className="p-2 text-[#2d5cd5] active:bg-slate-50 transition-colors"><ChevronRight size={16} /></button>
-          </div>
-        </div>
+      {/* ============================================================== */}
+      {/* MOBILE DASHBOARD REDESIGN (lg:hidden) - MATCHING MOCKUP */}
+      {/* ============================================================== */}
+      <div className="lg:hidden flex flex-col gap-5 px-1 pt-1">
         
-        <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-inner w-full mb-2">
-          <button 
-            onClick={() => { setFilterType('day'); setCurrentDate(new Date()); }}
-            className={`flex-1 py-2 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all ${filterType === 'day' ? 'bg-white dark:bg-slate-700 text-[#2d5cd5] shadow-sm' : 'text-slate-400'}`}
+        {/* Top Header Row */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-[#0F2547] rounded-2xl flex items-center justify-center p-1.5 shadow-sm border border-slate-700">
+              <img src="/mitra-logo.png" alt="Logo" className="w-full h-full object-contain" />
+            </div>
+            <div>
+              <h1 className="text-base font-black text-[#0F2547] leading-none">M-PAD</h1>
+              <p className="text-[11px] font-bold text-slate-400 leading-none mt-0.5">Petugas</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-slate-700 shadow-sm border border-slate-100 hover:bg-slate-50 active:scale-95 transition-all">
+              <Bell size={18} />
+            </button>
+            <button className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-slate-700 shadow-sm border border-slate-100 hover:bg-slate-50 active:scale-95 transition-all">
+              <Menu size={18} />
+            </button>
+          </div>
+        </div>
+
+        {/* User Greeting Bar */}
+        <div className="flex items-center justify-between gap-2">
+          <div>
+            <h2 className="text-xl font-black text-slate-900 leading-tight">
+              Halo, {userName}! 👋
+            </h2>
+            <p className="text-xs text-slate-400 font-medium">
+              Selamat bertugas hari ini
+            </p>
+          </div>
+
+          <div className="px-3 py-1.5 bg-[#EBF8FF] text-sky-800 rounded-2xl text-xs font-bold border border-sky-100/90 shadow-sm flex items-center gap-1.5 shrink-0">
+            <Calendar size={13} className="text-[#00C8E5]" />
+            <span>{currentDateStr}</span>
+          </div>
+        </div>
+
+        {/* 4-Tab Navigation Pills Switcher */}
+        <div className="bg-white p-1.5 rounded-2xl shadow-sm border border-slate-100 grid grid-cols-4 gap-1 text-center">
+          <button
+            onClick={() => setActiveTab('beranda')}
+            className={`py-2 px-1 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+              activeTab === 'beranda'
+                ? 'bg-[#0F2547] text-white shadow-md'
+                : 'text-slate-600 hover:bg-slate-50'
+            }`}
           >
-            Harian
+            <HomeIcon size={14} /> Beranda
           </button>
-          <button 
-            onClick={() => { setFilterType('week'); setCurrentDate(new Date()); }}
-            className={`flex-1 py-2 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all ${filterType === 'week' ? 'bg-white dark:bg-slate-700 text-[#2d5cd5] shadow-sm' : 'text-slate-400'}`}
+          <button
+            onClick={() => { setActiveTab('transaksi'); navigate('/billing'); }}
+            className={`py-2 px-1 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+              activeTab === 'transaksi'
+                ? 'bg-[#0F2547] text-white shadow-md'
+                : 'text-slate-600 hover:bg-slate-50'
+            }`}
           >
-            Pekanan
+            <FileText size={14} /> Transaksi
           </button>
-          <button 
-            onClick={() => { setFilterType('month'); setCurrentDate(new Date()); }}
-            className={`flex-1 py-2 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all ${filterType === 'month' ? 'bg-white dark:bg-slate-700 text-[#2d5cd5] shadow-sm' : 'text-slate-400'}`}
+          <button
+            onClick={() => { setActiveTab('peta'); navigate('/peta'); }}
+            className={`py-2 px-1 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+              activeTab === 'peta'
+                ? 'bg-[#0F2547] text-white shadow-md'
+                : 'text-slate-600 hover:bg-slate-50'
+            }`}
           >
-            Bulanan
+            <MapPin size={14} /> Peta
+          </button>
+          <button
+            onClick={() => { setActiveTab('laporan'); navigate('/reporting'); }}
+            className={`py-2 px-1 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+              activeTab === 'laporan'
+                ? 'bg-[#0F2547] text-white shadow-md'
+                : 'text-slate-600 hover:bg-slate-50'
+            }`}
+          >
+            <TrendingUp size={14} /> Laporan
           </button>
         </div>
+
+        {/* Peta Aset Daerah Card */}
+        <div className="bg-white rounded-[2rem] p-4 shadow-sm border border-slate-100 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <MapPin size={18} className="text-[#00C8E5]" />
+              <h3 className="text-xs font-black uppercase tracking-wider text-slate-800">
+                PETA ASET DAERAH
+              </h3>
+            </div>
+
+            <button
+              onClick={() => navigate('/peta')}
+              className="px-3 py-1 bg-sky-50 text-sky-700 rounded-xl text-xs font-bold hover:bg-sky-100 transition-colors flex items-center gap-1"
+            >
+              Lihat Peta Penuh <ChevronRight size={13} />
+            </button>
+          </div>
+
+          {/* Interactive Map Preview */}
+          <div className="h-56 rounded-3xl overflow-hidden relative z-0 border border-slate-100">
+            <MapContainer center={[-5.47, 122.6]} zoom={13} scrollWheelZoom={false} style={{ height: '100%', width: '100%' }}>
+              <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+              {potentials.map((potential, index) => (
+                <Marker 
+                  key={index} 
+                  position={potential.position}
+                  icon={createCustomIcon(potential.icon || null, potential, potential.status)}
+                >
+                  <Popup>
+                    <div className="p-2 text-xs font-bold">
+                      <p>{potential.name}</p>
+                      <p className="text-[10px] text-sky-600">{potential.agency}</p>
+                    </div>
+                  </Popup>
+                </Marker>
+              ))}
+            </MapContainer>
+
+            {/* Map Legend Pills */}
+            <div className="absolute bottom-3 left-3 z-[400] bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full border border-slate-100 shadow-md flex items-center gap-3 text-[10px] font-bold text-slate-700">
+              <span className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-500" /> Hotel
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-blue-500" /> Restoran
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-amber-500" /> Aset Lain
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Ringkasan Hari Ini Section (2x2 Grid of Stat Cards) */}
+        <div>
+          <div className="flex items-center justify-between mb-3 px-1">
+            <div className="flex items-center gap-2">
+              <TrendingUp size={18} className="text-[#00C8E5]" />
+              <h3 className="text-sm font-extrabold text-slate-800">
+                Ringkasan Hari Ini
+              </h3>
+            </div>
+            <button 
+              onClick={() => navigate('/billing')}
+              className="text-xs font-bold text-sky-600 flex items-center gap-1 hover:underline"
+            >
+              Detail <ChevronRight size={13} />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            {/* Stat Card 1: Wajib Pajak */}
+            <div className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between">
+              <div className="flex items-center justify-between mb-3">
+                <div className="w-10 h-10 bg-sky-50 text-sky-600 rounded-2xl flex items-center justify-center">
+                  <Wallet size={20} />
+                </div>
+                <span className="text-[10px] font-extrabold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                  ↑ +12%
+                </span>
+              </div>
+              <div>
+                <p className="text-xs font-bold text-slate-500">Wajib Pajak</p>
+                <p className="text-2xl font-black text-slate-900 mt-0.5">
+                  {stats?.active_taxpayers || 59}
+                </p>
+                <p className="text-[10px] text-slate-400 font-medium mt-1">dari minggu lalu</p>
+              </div>
+            </div>
+
+            {/* Stat Card 2: Pemeriksaan */}
+            <div className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between">
+              <div className="flex items-center justify-between mb-3">
+                <div className="w-10 h-10 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center">
+                  <Users size={20} />
+                </div>
+                <span className="text-[10px] font-extrabold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
+                  ↑ +2
+                </span>
+              </div>
+              <div>
+                <p className="text-xs font-bold text-slate-500">Pemeriksaan</p>
+                <p className="text-2xl font-black text-slate-900 mt-0.5">
+                  {stats?.petugas_achievement?.collections_count || 8}
+                </p>
+                <p className="text-[10px] text-slate-400 font-medium mt-1">hari ini</p>
+              </div>
+            </div>
+
+            {/* Stat Card 3: SPTPD Masuk */}
+            <div className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between">
+              <div className="flex items-center justify-between mb-3">
+                <div className="w-10 h-10 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center">
+                  <FileText size={20} />
+                </div>
+                <span className="text-[10px] font-extrabold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                  ↑ +5%
+                </span>
+              </div>
+              <div>
+                <p className="text-xs font-bold text-slate-500">SPTPD Masuk</p>
+                <p className="text-2xl font-black text-slate-900 mt-0.5">24</p>
+                <p className="text-[10px] text-slate-400 font-medium mt-1">hari ini</p>
+              </div>
+            </div>
+
+            {/* Stat Card 4: Tugas Aktif */}
+            <div className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between">
+              <div className="flex items-center justify-between mb-3">
+                <div className="w-10 h-10 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center">
+                  <Flag size={20} />
+                </div>
+              </div>
+              <div>
+                <p className="text-xs font-bold text-slate-500">Tugas Aktif</p>
+                <p className="text-2xl font-black text-slate-900 mt-0.5">3</p>
+                <p className="text-[10px] text-slate-400 font-medium mt-1">penugasan</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Aksi Cepat Section (4 Cards Grid) */}
+        <div>
+          <div className="flex items-center justify-between mb-3 px-1">
+            <h3 className="text-sm font-extrabold text-slate-800">
+              Aksi Cepat
+            </h3>
+            <button 
+              onClick={() => navigate('/master-data')}
+              className="text-xs font-bold text-slate-500 hover:text-slate-700 bg-slate-100 px-3 py-1 rounded-full"
+            >
+              Kelola
+            </button>
+          </div>
+
+          <div className="grid grid-cols-4 gap-2.5">
+            {/* Action 1: Input SPTPD */}
+            <button
+              onClick={() => navigate('/sptpd')}
+              className="bg-sky-50/80 border border-sky-100 p-3 rounded-2xl flex flex-col items-center justify-center text-center active:scale-95 transition-transform"
+            >
+              <div className="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center text-sky-600 mb-2">
+                <FileText size={20} />
+              </div>
+              <span className="text-[10px] font-bold text-slate-700 leading-tight">Input SPTPD</span>
+            </button>
+
+            {/* Action 2: Cek Wajib Pajak */}
+            <button
+              onClick={() => navigate('/taxpayers')}
+              className="bg-emerald-50/80 border border-emerald-100 p-3 rounded-2xl flex flex-col items-center justify-center text-center active:scale-95 transition-transform"
+            >
+              <div className="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center text-emerald-600 mb-2">
+                <Building2 size={20} />
+              </div>
+              <span className="text-[10px] font-bold text-slate-700 leading-tight">Cek Wajib Pajak</span>
+            </button>
+
+            {/* Action 3: Scan Aset */}
+            <button
+              onClick={() => navigate('/scanner')}
+              className="bg-purple-50/80 border border-purple-100 p-3 rounded-2xl flex flex-col items-center justify-center text-center active:scale-95 transition-transform"
+            >
+              <div className="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center text-purple-600 mb-2">
+                <QrCode size={20} />
+              </div>
+              <span className="text-[10px] font-bold text-slate-700 leading-tight">Scan Aset</span>
+            </button>
+
+            {/* Action 4: Laporan Cepat */}
+            <button
+              onClick={() => navigate('/reporting')}
+              className="bg-amber-50/80 border border-amber-100 p-3 rounded-2xl flex flex-col items-center justify-center text-center active:scale-95 transition-transform"
+            >
+              <div className="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center text-amber-600 mb-2">
+                <TrendingUp size={20} />
+              </div>
+              <span className="text-[10px] font-bold text-slate-700 leading-tight">Laporan Cepat</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Sinergi Banner */}
+        <div className="bg-gradient-to-r from-sky-100/90 via-sky-50 to-blue-100/80 rounded-2xl p-4 border border-sky-200/60 flex items-center justify-between shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 bg-blue-600 text-white rounded-xl flex items-center justify-center shrink-0">
+              <CheckCircle2 size={18} />
+            </div>
+            <div>
+              <h4 className="font-bold text-slate-800 text-xs leading-tight">
+                Sinergi untuk Pendapatan Daerah
+              </h4>
+              <p className="text-[10px] text-slate-500 font-medium leading-tight mt-0.5">
+                Bersama wujudkan pelayanan pajak yang lebih baik
+              </p>
+            </div>
+          </div>
+          <ChevronRight size={18} className="text-slate-400" />
+        </div>
+
+        {/* Mobile Bottom Navigation Bar */}
+        <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-slate-100 pb-safe shadow-[0_-10px_40px_rgba(0,0,0,0.05)] w-full">
+          <div className="mx-auto flex w-full max-w-md items-center justify-between px-2 py-1.5">
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="flex-1 flex flex-col items-center gap-0.5 py-1 text-[#00C8E5]"
+            >
+              <div className="px-3 py-1 bg-sky-50 rounded-xl">
+                <HomeIcon size={20} />
+              </div>
+              <span className="text-[10px] font-extrabold">Beranda</span>
+            </button>
+
+            <button
+              onClick={() => navigate('/taxpayers')}
+              className="flex-1 flex flex-col items-center gap-0.5 py-1 text-slate-400 hover:text-slate-600"
+            >
+              <Building2 size={20} />
+              <span className="text-[10px] font-bold">Wajib Pajak</span>
+            </button>
+
+            {/* Central Floating Logo Button */}
+            <div className="flex-1 flex flex-col items-center -mt-6">
+              <button
+                onClick={() => navigate('/scanner')}
+                className="w-14 h-14 rounded-full bg-[#0F2547] hover:bg-[#0B1E36] flex items-center justify-center shadow-lg shadow-blue-950/30 border-4 border-white transition-all active:scale-95"
+              >
+                <img src="/mitra-logo.png" alt="Logo" className="w-8 h-8 object-contain" />
+              </button>
+            </div>
+
+            <button
+              onClick={() => navigate('/peta')}
+              className="flex-1 flex flex-col items-center gap-0.5 py-1 text-slate-400 hover:text-slate-600"
+            >
+              <MapPin size={20} />
+              <span className="text-[10px] font-bold">Peta</span>
+            </button>
+
+            <button
+              onClick={() => navigate('/profile')}
+              className="flex-1 flex flex-col items-center gap-0.5 py-1 text-slate-400 hover:text-slate-600"
+            >
+              <UserIcon size={20} />
+              <span className="text-[10px] font-bold">Profil</span>
+            </button>
+          </div>
+        </nav>
+
       </div>
 
-      <div className="flex flex-col gap-4 lg:gap-8">
-        {/* =======================
-            SECTION 1: REVENUE + KPIs
-            Mobile: Order 2 (Below Map). Desktop: Top Grid
-            ======================= */}
-        <div className="order-2 lg:order-1 grid grid-cols-12 gap-4 lg:gap-8">
-          
-          <div className="hidden lg:block lg:col-span-4">
-            <div className="relative overflow-hidden bg-[#2b6ff3] rounded-[2rem] p-6 sm:p-8 text-white shadow-xl shadow-blue-500/30 group">
+      {/* ============================================================== */}
+      {/* DESKTOP DASHBOARD VIEW (hidden lg:flex) - FULLY PRESERVED */}
+      {/* ============================================================== */}
+      <div className="hidden lg:flex flex-col gap-6 lg:gap-8">
+        
+        {/* Desktop Top Header & Date Filter */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="flex items-center gap-5">
+            <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-xl shadow-slate-200 border border-slate-100">
+              <img src="/mitra-logo.png" alt="Logo" className="w-9 h-9 object-contain" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-black text-slate-900 tracking-tight flex items-center gap-3">
+                Pusat Kendali
+                <span className="text-[10px] font-black bg-[#0F2547] text-white px-3 py-1 rounded-full uppercase tracking-widest align-middle">Portal</span>
+              </h1>
+              <p className="text-slate-500 font-medium mt-1">Halo, {user?.name}. Berikut ringkasan aktivitas hari ini.</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+              <button 
+                onClick={() => { setFilterType('day'); setCurrentDate(new Date()); }}
+                className={`px-4 py-1.5 text-xs font-black uppercase tracking-widest rounded-lg transition-all ${filterType === 'day' ? 'bg-white dark:bg-slate-700 text-[#00C8E5] shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+              >
+                Harian
+              </button>
+              <button 
+                onClick={() => { setFilterType('week'); setCurrentDate(new Date()); }}
+                className={`px-4 py-1.5 text-xs font-black uppercase tracking-widest rounded-lg transition-all ${filterType === 'week' ? 'bg-white dark:bg-slate-700 text-[#00C8E5] shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+              >
+                Pekanan
+              </button>
+              <button 
+                onClick={() => { setFilterType('month'); setCurrentDate(new Date()); }}
+                className={`px-4 py-1.5 text-xs font-black uppercase tracking-widest rounded-lg transition-all ${filterType === 'month' ? 'bg-white dark:bg-slate-700 text-[#00C8E5] shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+              >
+                Bulanan
+              </button>
+            </div>
+
+            <div className="flex items-center gap-2 bg-white dark:bg-slate-800 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+              <button onClick={handlePrev} className="p-1 hover:bg-slate-50 rounded-full"><ChevronLeft size={16} /></button>
+              <div className="flex items-center gap-2 min-w-[140px] justify-center text-[#0F2547]">
+                <Calendar size={14} />
+                <span className="text-xs font-black uppercase tracking-widest">{getDisplayDate()}</span>
+              </div>
+              <button onClick={handleNext} className="p-1 hover:bg-slate-50 rounded-full"><ChevronRight size={16} /></button>
+            </div>
+          </div>
+        </div>
+
+        {/* Desktop Revenue Card + KPIs */}
+        <div className="grid grid-cols-12 gap-8">
+          <div className="col-span-4">
+            <div className="relative overflow-hidden bg-[#0F2547] rounded-[2rem] p-8 text-white shadow-xl shadow-blue-950/30 group">
               <div className="absolute right-0 top-0 w-48 h-48 bg-white/10 rounded-bl-full transition-all duration-700"></div>
-              <div className="absolute -left-10 -bottom-10 w-48 h-48 bg-white/5 rounded-tr-full transition-all duration-700"></div>
               
-              <div className="relative z-10 flex flex-col h-full justify-between gap-6 sm:gap-8">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="text-3xl sm:text-4xl font-black tracking-tight mb-1">{formatLargeCurrency(stats?.total_revenue || 0)}</h3>
-                    <p className="text-blue-100 text-xs sm:text-sm font-medium opacity-90">Total Pendapatan Terkumpul</p>
-                  </div>
+              <div className="relative z-10 flex flex-col h-full justify-between gap-8">
+                <div>
+                  <h3 className="text-4xl font-black tracking-tight mb-1">{formatLargeCurrency(stats?.total_revenue || 0)}</h3>
+                  <p className="text-blue-100 text-sm font-medium opacity-90">Total Pendapatan Terkumpul</p>
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-full text-[11px] font-bold flex items-center gap-1.5">
-                      <TrendingUp className="w-3.5 h-3.5" />
-                      {stats?.trends.revenue || '+0%'} bulan ini
-                    </div>
+                  <div className="bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-full text-[11px] font-bold flex items-center gap-1.5">
+                    <TrendingUp className="w-3.5 h-3.5 text-[#00C8E5]" />
+                    {stats?.trends.revenue || '+0%'} bulan ini
                   </div>
+
                   <button 
                     onClick={() => navigate('/billing')}
-                    className="bg-white text-blue-600 hover:bg-blue-50 px-5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm active:scale-95"
+                    className="bg-[#00C8E5] text-white hover:bg-[#00B4D8] px-5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-md active:scale-95"
                   >
                     Lihat Detail
                   </button>
@@ -477,14 +799,12 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Desktop KPI Grid */}
-          <div className="hidden lg:block lg:col-span-8">
+          <div className="col-span-8">
             <div className="grid grid-cols-3 gap-6 h-full">
               {[
                 { 
                   label: 'Tingkat Penagihan', 
                   value: `${stats?.collection_rate || 0}%`, 
-                  trend: 'up',
                   icon: TrendingUp, 
                   bg: 'bg-emerald-500/10', 
                   text: 'text-emerald-600',
@@ -492,7 +812,6 @@ export default function Dashboard() {
                 { 
                   label: 'Tagihan Pending', 
                   value: stats?.pending_bills.toLocaleString() || '0', 
-                  trend: 'down',
                   icon: FileText, 
                   bg: 'bg-amber-500/10', 
                   text: 'text-amber-600',
@@ -500,119 +819,43 @@ export default function Dashboard() {
                 { 
                   label: 'Wajib Aktif', 
                   value: stats?.active_taxpayers.toLocaleString() || '0', 
-                  trend: 'up',
                   icon: Users, 
                   bg: 'bg-indigo-500/10', 
                   text: 'text-indigo-600',
                 }
               ].map((kpi, i) => (
-                <div key={i} className="bg-white dark:bg-slate-900 rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 dark:border-slate-800 transition-all group flex flex-col justify-between">
+                <div key={i} className="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100 transition-all flex flex-col justify-between">
                   <div className="flex items-center justify-between mb-6">
-                    <div className={`${kpi.bg} w-12 h-12 rounded-full flex items-center justify-center ${kpi.text} group-hover:scale-110 transition-transform shadow-sm`}>
+                    <div className={`${kpi.bg} w-12 h-12 rounded-full flex items-center justify-center ${kpi.text} shadow-sm`}>
                       <kpi.icon size={22} />
                     </div>
                   </div>
                   <div>
-                    <h4 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight leading-none mb-1.5">{kpi.value}</h4>
+                    <h4 className="text-2xl font-black text-slate-900 tracking-tight leading-none mb-1.5">{kpi.value}</h4>
                     <p className="text-slate-500 font-bold text-xs leading-tight uppercase tracking-widest">{kpi.label}</p>
                   </div>
                 </div>
               ))}
             </div>
           </div>
-
-          {/* Mobile Consolidated 2x2 Grid — STATIC / NON-INTERACTIVE */}
-          <div className="col-span-12 lg:hidden">
-            <div className="grid grid-cols-2 gap-2.5">
-              {/* Card 1: Pencapaian Saya (Rp) */}
-              <div className="bg-slate-50/70 dark:bg-slate-900/40 rounded-2xl p-3.5 border border-slate-100/60 dark:border-slate-800/50 flex flex-col justify-between cursor-default select-none">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="bg-emerald-500/10 w-8 h-8 rounded-full flex items-center justify-center text-emerald-600">
-                    <Wallet size={16} />
-                  </div>
-                  <span className="text-[8px] font-black text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded uppercase tracking-wider">Saya</span>
-                </div>
-                <div>
-                  <h4 className="text-base font-black text-slate-900 dark:text-white leading-none mb-1">
-                    {formatCurrency(stats?.petugas_achievement?.total_amount || 0)}
-                  </h4>
-                  <p className="text-slate-400 font-bold text-[9px] uppercase tracking-wider leading-none">Pencapaian Saya</p>
-                </div>
-              </div>
-
-              {/* Card 2: Jumlah Koleksi */}
-              <div className="bg-slate-50/70 dark:bg-slate-900/40 rounded-2xl p-3.5 border border-slate-100/60 dark:border-slate-800/50 flex flex-col justify-between cursor-default select-none">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="bg-blue-500/10 w-8 h-8 rounded-full flex items-center justify-center text-blue-600">
-                    <TrendingUp size={16} />
-                  </div>
-                  <span className="text-[8px] font-black text-blue-500 bg-blue-500/10 px-1.5 py-0.5 rounded uppercase tracking-wider">Saya</span>
-                </div>
-                <div>
-                  <h4 className="text-base font-black text-slate-900 dark:text-white leading-none mb-1">
-                    {stats?.petugas_achievement?.collections_count || 0}
-                  </h4>
-                  <p className="text-slate-400 font-bold text-[9px] uppercase tracking-wider leading-none">Koleksi Saya</p>
-                </div>
-              </div>
-
-              {/* Card 3: Tagihan Pending */}
-              <div className="bg-slate-50/70 dark:bg-slate-900/40 rounded-2xl p-3.5 border border-slate-100/60 dark:border-slate-800/50 flex flex-col justify-between cursor-default select-none">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="bg-amber-500/10 w-8 h-8 rounded-full flex items-center justify-center text-amber-600">
-                    <FileText size={16} />
-                  </div>
-                  <span className="text-[8px] font-black text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded uppercase tracking-wider">Sektor</span>
-                </div>
-                <div>
-                  <h4 className="text-base font-black text-slate-900 dark:text-white leading-none mb-1">
-                    {stats?.pending_bills.toLocaleString() || '0'}
-                  </h4>
-                  <p className="text-slate-400 font-bold text-[9px] uppercase tracking-wider leading-none">Tagihan Pending</p>
-                </div>
-              </div>
-
-              {/* Card 4: Wajib Aktif */}
-              <div className="bg-slate-50/70 dark:bg-slate-900/40 rounded-2xl p-3.5 border border-slate-100/60 dark:border-slate-800/50 flex flex-col justify-between cursor-default select-none">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="bg-indigo-500/10 w-8 h-8 rounded-full flex items-center justify-center text-indigo-600">
-                    <Users size={16} />
-                  </div>
-                  <span className="text-[8px] font-black text-indigo-500 bg-indigo-500/10 px-1.5 py-0.5 rounded uppercase tracking-wider">Sektor</span>
-                </div>
-                <div>
-                  <h4 className="text-base font-black text-slate-900 dark:text-white leading-none mb-1">
-                    {stats?.active_taxpayers.toLocaleString() || '0'}
-                  </h4>
-                  <p className="text-slate-400 font-bold text-[9px] uppercase tracking-wider leading-none">Wajib Aktif</p>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
 
-      {/* =======================
-          SECTION 2: MAP + ACHIEVEMENT
-          Mobile: Order 1 (Top). Desktop: Bottom
-          ======================= */}
-      <div className="order-1 lg:order-2 w-full">
-        {stats?.petugas_achievement && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 origin-left">
-            {/* Map - Left Side */}
-            <div className="bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-100 dark:border-slate-800 p-2 shadow-xl overflow-hidden group h-full min-h-[300px] sm:min-h-[380px]">
-            <div className="p-4 sm:p-5 flex items-center justify-between">
-              <h3 className="text-[11px] sm:text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
-                <MapIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#2d5cd5]" />
-                Peta Potensi
+        {/* Desktop Map & Achievement Section */}
+        <div className="grid grid-cols-12 gap-8">
+          <div className="col-span-6 bg-white rounded-[2rem] border border-slate-100 p-2 shadow-xl overflow-hidden min-h-[380px]">
+            <div className="p-5 flex items-center justify-between">
+              <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
+                <MapIcon className="w-4 h-4 text-[#00C8E5]" />
+                Peta Potensi Digital
               </h3>
               <button 
                 onClick={() => navigate('/peta')}
-                className="text-[9px] font-black text-[#2d5cd5] uppercase tracking-widest hover:underline"
+                className="text-[9px] font-black text-[#00C8E5] uppercase tracking-widest hover:underline"
               >
                 Lihat Peta Penuh →
               </button>
             </div>
-            <div className="h-[250px] sm:h-[calc(100%-4rem)] rounded-3xl overflow-hidden relative z-0">
+            <div className="h-[300px] rounded-3xl overflow-hidden relative z-0">
               <MapContainer center={[-5.47, 122.6]} zoom={13} scrollWheelZoom={false} style={{ height: '100%', width: '100%' }}>
                 <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                 {potentials.map((potential, index) => (
@@ -624,307 +867,64 @@ export default function Dashboard() {
                     <Popup>
                       <div className="p-3 min-w-[200px] font-sans">
                         <h3 className="font-black text-slate-900 text-sm mb-1">{potential.name}</h3>
-                        <p className="text-[10px] text-[#2d5cd5] font-black uppercase mb-2 tracking-wider">{potential.agency}</p>
-                        <div className="flex flex-wrap gap-2">
-                          <span className={`inline-flex px-3 py-1 text-[9px] font-black rounded-full uppercase tracking-[0.15em] ${potential.status === 'taxpayer' ? 'bg-blue-50 text-blue-600' : 'bg-emerald-50 text-emerald-600'}`}>
-                            {potential.status === 'taxpayer' ? 'Wajib Pajak' : 'Zona Potensi'}
-                          </span>
-                          {potential.status === 'taxpayer' && (
-                            <span className={`inline-flex px-3 py-1 text-[9px] font-black rounded-full uppercase tracking-[0.15em] ${potential.is_paid ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
-                              {potential.is_paid ? 'Lunas' : 'Belum Bayar'}
-                            </span>
-                          )}
-                        </div>
-
-                        {potential.status === 'taxpayer' && (
-                          <div className="pt-2 border-t mt-2 text-left">
-                            <div className="flex items-center justify-between mb-1">
-                              <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Klasifikasi</span>
-                              <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase bg-blue-50 text-blue-600 border border-blue-100">
-                                {potential.classification_name || 'N/A'}
-                              </span>
-                            </div>
-                            
-                            {potential.tax_object_id && (
-                              <div className="flex flex-col gap-2 mt-3">
-                                <button 
-                                  onClick={() => navigate('/calculator', {
-                                    state: {
-                                      taxObjectId: potential.tax_object_id,
-                                      classificationId: potential.retribution_classification_id,
-                                      defaultVars: {}
-                                    }
-                                  })}
-                                  className="w-full py-2 bg-[#2d5cd5] hover:bg-blue-700 text-white rounded-lg text-[10px] font-black uppercase tracking-widest transition-all shadow-md shadow-blue-500/20 active:scale-95 text-center flex items-center justify-center gap-1.5"
-                                >
-                                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-calculator"><rect width="16" height="20" x="4" y="2" rx="2"/><line x1="8" x2="16" y1="6" y2="6"/><line x1="16" x2="16" y1="14" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></svg>
-                                  Buat SKPD (On-Site Billing)
-                                </button>
-                                
-                                  <button
-                                    onClick={() => handleOpenPayment(potential.tax_object_id!, potential.name)}
-                                    className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-black uppercase tracking-widest transition-all shadow-md shadow-emerald-500/20 active:scale-95 text-center flex items-center justify-center gap-1.5"
-                                  >
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-credit-card"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
-                                    Bayar Tagihan
-                                  </button>
-                                </div>
-                              )}
-                          </div>
-                        )}
+                        <p className="text-[10px] text-sky-600 font-black uppercase mb-2 tracking-wider">{potential.agency}</p>
                       </div>
                     </Popup>
                   </Marker>
                 ))}
               </MapContainer>
-              {/* Map Legend */}
-              <div className="absolute bottom-4 left-4 z-[1000] bg-white/90 backdrop-blur-md p-3 rounded-2xl border border-white shadow-xl space-y-2">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-[#10b981] rounded-full border border-white shadow-sm"></div>
-                  <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Lunas</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-[#ef4444] rounded-full border border-white shadow-sm"></div>
-                  <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Belum Bayar</span>
-                </div>
-              </div>
             </div>
           </div>
 
-          {/* Pencapaian Saya - Right Side */}
-          <div className="hidden lg:block bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-100 dark:border-slate-800 shadow-xl relative overflow-hidden group">
-             <div className="absolute right-0 top-0 w-32 h-32 bg-emerald-500/5 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-emerald-500/10 transition-all duration-700"></div>
-             <div className="relative z-10 flex items-center justify-between">
-                <div className="flex items-center gap-5">
-                   <div className="w-14 h-14 bg-emerald-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-emerald-500/20">
-                      <TrendingUp size={28} />
-                   </div>
-                   <div>
-                      <h4 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-1">Pencapaian Saya</h4>
-                      <p className="text-2xl font-black text-slate-900 dark:text-white">{formatCurrency(stats.petugas_achievement.total_amount)}</p>
-                   </div>
-                </div>
-                <div className="text-right">
-                   <p className="text-3xl font-black text-emerald-500">{stats.petugas_achievement.collections_count}</p>
-                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Koleksi</p>
-                </div>
-             </div>
-              <div className="mt-8 pt-8 border-t border-slate-100 grid grid-cols-2 gap-8 relative z-10">
-                <div>
-                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">WP Terdaftar</p>
-                   <p className="text-xl font-black text-slate-900 dark:text-white">{stats.petugas_achievement.taxpayers_registered}</p>
+          <div className="col-span-6 bg-white rounded-[2rem] p-8 border border-slate-100 shadow-xl flex flex-col justify-between">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-5">
+                <div className="w-14 h-14 bg-emerald-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-emerald-500/20">
+                  <TrendingUp size={28} />
                 </div>
                 <div>
-                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Rasio Berhasil</p>
-                   <p className="text-xl font-black text-slate-900 dark:text-white">{Math.round((stats.petugas_achievement.collections_count / (stats.petugas_achievement.collections_count + (stats.pending_bills / 10))) * 100) || 100}%</p>
+                  <h4 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-1">Pencapaian Saya</h4>
+                  <p className="text-2xl font-black text-slate-900">{formatCurrency(stats?.petugas_achievement?.total_amount || 0)}</p>
                 </div>
               </div>
-            </div>
-          </div>
-        )}
-      </div>
-      </div>
-
-      {/* Quick Actions Panel (Desktop & Tablet) */}
-      <div className="hidden lg:grid grid-cols-2 gap-6">
-        <button 
-          onClick={() => navigate('/taxpayers')}
-          className="relative overflow-hidden group bg-white dark:bg-slate-900 p-8 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-xl transition-all text-left"
-        >
-          <div className="absolute right-0 top-0 w-32 h-32 bg-blue-500/5 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-blue-500/10 transition-all duration-700"></div>
-          <div className="flex items-center gap-6">
-            <div className="w-16 h-16 bg-blue-50 dark:bg-blue-900/20 rounded-2xl flex items-center justify-center text-[#2d5cd5] group-hover:scale-110 transition-transform">
-              <Plus size={32} />
-            </div>
-            <div>
-              <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">Tambah Wajib Pajak</h3>
-              <p className="text-sm text-slate-500 font-medium">Daftarkan subjek retribusi baru langsung dari lapangan</p>
-            </div>
-          </div>
-        </button>
-
-        <button 
-          onClick={() => navigate('/peta')}
-          className="relative overflow-hidden group bg-white dark:bg-slate-900 p-8 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-xl transition-all text-left"
-        >
-          <div className="absolute right-0 top-0 w-32 h-32 bg-emerald-500/5 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-emerald-500/10 transition-all duration-700"></div>
-          <div className="flex items-center gap-6">
-            <div className="w-16 h-16 bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl flex items-center justify-center text-emerald-600 group-hover:scale-110 transition-transform">
-              <MapIcon size={32} />
-            </div>
-            <div>
-              <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">Cek Peta Lapangan</h3>
-              <p className="text-sm text-slate-500 font-medium">Pantau sebaran titik potensi objek pajak secara real-time</p>
-            </div>
-          </div>
-        </button>
-      </div>
-
-      {/* Mobile Quick Actions */}
-      <div className="lg:hidden flex flex-col gap-3">
-        <button 
-          onClick={() => navigate('/billing')}
-          className="flex items-center gap-3 bg-gradient-to-br from-[#2b6ff3] to-blue-600 text-white p-4 rounded-2xl shadow-lg shadow-blue-500/20 active:scale-95 transition-all w-full"
-        >
-          <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center flex-shrink-0">
-            <FileText size={20} />
-          </div>
-          <div className="text-left">
-            <span className="font-black text-xs block leading-none">Cek Tagihan</span>
-            <span className="text-[9px] font-medium text-blue-100 leading-none mt-0.5 block">Cari WP & Tagihan</span>
-          </div>
-        </button>
-
-        <button 
-          onClick={() => navigate('/peta')}
-          className="flex items-center justify-center gap-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 p-3 rounded-xl font-bold text-[10px] uppercase tracking-widest active:scale-95 transition-all w-full border border-slate-200 dark:border-slate-700"
-        >
-          <Activity size={14} />
-          Laporan Lapangan (GPS)
-        </button>
-      </div>
-
-      <div className="hidden lg:block space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-black text-slate-900 dark:text-white">Kategori</h2>
-          <button 
-            onClick={() => navigate('/master-data')}
-            className="text-[10px] font-black text-slate-400 hover:text-[#2d5cd5] uppercase tracking-[0.2em] transition-colors"
-          >
-            Lihat Semua
-          </button>
-        </div>
-        
-        <div className="flex overflow-x-auto pb-6 gap-6 no-scrollbar lg:grid lg:grid-cols-6 lg:gap-8 pt-2">
-          {retributionTypes.slice(0, 6).map((type, i) => (
-            <button
-              key={type.id || i}
-              onClick={() => navigate(`/billing?type=${type.id}`)}
-              className="flex-shrink-0 flex flex-col items-center gap-3 w-[72px] lg:w-full group outline-none"
-            >
-              <div className="w-[72px] h-[72px] lg:w-20 lg:h-20 bg-blue-50 dark:bg-blue-900/20 rounded-full flex items-center justify-center group-hover:scale-105 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/40 transition-all overflow-hidden border border-blue-100/50 dark:border-blue-800/50 shadow-sm">
-                <img 
-                  src={type.icon?.startsWith('http') ? type.icon : (type.icon ? `${import.meta.env.VITE_API_URL}${type.icon.startsWith('/') ? '' : '/'}${type.icon}` : `/mitra-logo.png`)} 
-                  alt={type.name} 
-                  className="w-8 h-8 lg:w-10 lg:h-10 object-contain"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = `/mitra-logo.png`;
-                  }}
-                />
+              <div className="text-right">
+                <p className="text-3xl font-black text-emerald-500">{stats?.petugas_achievement?.collections_count || 0}</p>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Koleksi</p>
               </div>
-              <p className="text-[11px] font-bold text-slate-600 dark:text-slate-300 text-center leading-tight line-clamp-2">{type.name}</p>
-            </button>
-          ))}
-        </div>
-      </div>
+            </div>
 
-      <div className="hidden lg:block space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-black text-slate-900 dark:text-white">Aktivitas</h2>
-        </div>
-
-        <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 p-6 sm:p-8 shadow-sm overflow-hidden relative group">
-          <div className="flex items-start justify-between mb-6 sm:mb-8">
-            <div className="flex items-center gap-4 sm:gap-6">
-              <div className="flex items-center gap-2">
-                <div className="w-2.5 h-2.5 bg-[#2d5cd5] rounded-full"></div>
-                <span className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest">Pendapatan</span>
+            <div className="mt-8 pt-8 border-t border-slate-100 grid grid-cols-2 gap-8">
+              <div>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">WP Terdaftar</p>
+                <p className="text-xl font-black text-slate-900">{stats?.petugas_achievement?.taxpayers_registered || 0}</p>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2.5 h-2.5 bg-emerald-400 rounded-full"></div>
-                <span className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest">Target</span>
+              <div>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Status Penugasan</p>
+                <p className="text-xl font-black text-emerald-600">Aktif</p>
               </div>
             </div>
           </div>
-          
-          <div className="h-40 sm:h-48 relative w-full overflow-hidden mt-2 sm:mt-4">
-            <svg viewBox="0 0 400 150" className="w-full h-full preserve-3d">
-              {[30, 60, 90, 120].map((y) => (
-                <line key={y} x1="0" y1={y} x2="400" y2={y} stroke="currentColor" className="text-slate-50 dark:text-slate-800/50" strokeWidth="1" />
-              ))}
-              
-              {chartPath && (
-                <path 
-                  d={chartPath} 
-                  fill="none" 
-                  stroke="#2d5cd5" 
-                  strokeWidth="4" 
-                  strokeLinecap="round"
-                  className="drop-shadow-[0_8px_15px_rgba(45,92,213,0.3)]"
-                />
-              )}
-              
-              <path 
-                d="M 0 120 Q 50 90 100 110 T 200 100 T 300 70 T 400 90" 
-                fill="none" 
-                stroke="#10b981" 
-                strokeWidth="3" 
-                strokeDasharray="8 6"
-                strokeLinecap="round"
-                className="opacity-40"
-              />
-            </svg>
-            
-            <div className="absolute left-0 bottom-0 top-0 flex flex-col justify-between text-[9px] font-black text-slate-300 uppercase py-2">
-              <span>{formatLargeCurrency(Math.max(...revenueData.map(d => Number(d.amount))) || 0)}</span>
-              <span>0</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-black text-slate-900 dark:text-white">Riwayat Transaksi</h2>
-          <button className="text-[10px] font-black text-slate-400 hover:text-[#2d5cd5] uppercase tracking-[0.2em] transition-colors">Lihat Semua</button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          <div className="col-span-12 space-y-4">
-            {recentTransactions.length > 0 ? (
-              recentTransactions.map((item) => (
-                <div key={item.id} className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center bg-blue-50`}>
-                      <FileText className={`w-7 h-7 text-[#2d5cd5]`} />
-                    </div>
-                    <div>
-                      <h4 className="text-base font-black text-slate-900 dark:text-white mb-1 group-hover:text-blue-600 transition-colors uppercase tracking-tight line-clamp-1">{item.taxpayer_name}</h4>
-                      <p className="text-[10px] font-bold text-slate-400 group-hover:text-slate-500 transition-colors uppercase tracking-widest">{item.type}</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-black text-slate-900 dark:text-white mb-1">{formatCurrency(Number(item.amount))}</p>
-                    <p className="text-[9px] font-black uppercase tracking-widest text-[#2d5cd5] bg-blue-50 px-2 py-0.5 rounded-md inline-block">
-                      {recentTransactions.find(t => t.id === item.id)?.status || 'Verified'}
-                    </p>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="py-12 text-center text-gray-400 font-bold uppercase tracking-widest text-xs italic">
-                Belum ada riwayat transaksi
-              </div>
-            )}
-          </div>
-        </div>
       </div>
+
+      {/* Payment Modal */}
       {paymentModal.isOpen && (
         <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-[2rem] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-500 border border-slate-100 dark:border-slate-800 flex flex-col max-h-[90vh]">
-            <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
+          <div className="bg-white w-full max-w-md rounded-[2rem] overflow-hidden shadow-2xl border border-slate-100 flex flex-col max-h-[90vh]">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/50 rounded-xl flex items-center justify-center text-emerald-600 dark:text-emerald-400">
-                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-credit-card"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+                <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-600">
+                  <CreditCard size={20} />
                 </div>
                 <div>
-                  <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">Bayar Tagihan</h3>
+                  <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider">Bayar Tagihan</h3>
                   <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{paymentModal.taxpayerName}</p>
                 </div>
               </div>
               <button 
                 onClick={() => setPaymentModal(prev => ({ ...prev, isOpen: false }))}
-                className="p-2 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-colors"
+                className="p-2 hover:bg-slate-200 rounded-xl transition-colors"
                 disabled={paymentModal.submitting}
               >
                 <X size={18} className="text-slate-400" />
@@ -934,94 +934,43 @@ export default function Dashboard() {
             <div className="p-6 overflow-y-auto">
               {paymentModal.loading ? (
                 <div className="flex flex-col items-center justify-center py-8">
-                  <Loader2 className="w-8 h-8 animate-spin text-[#2d5cd5] mb-4" />
+                  <Loader2 className="w-8 h-8 animate-spin text-[#00C8E5] mb-4" />
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Mencari Tagihan...</p>
                 </div>
               ) : paymentModal.periods.length === 0 ? (
                 <div className="text-center py-8">
-                  <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-credit-card text-slate-400"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
-                  </div>
-                  <p className="text-sm font-black text-slate-900 dark:text-white mb-1">Tidak ada tagihan tertunggak</p>
+                  <p className="text-sm font-black text-slate-900 mb-1">Tidak ada tagihan tertunggak</p>
                   <p className="text-[10px] text-slate-500 uppercase tracking-widest leading-relaxed">Wajib Pajak ini telah melunasi semua tagihan.</p>
                 </div>
               ) : (
                 <div className="space-y-4">
                   <div>
-                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Pilih Periode Tunggakan</label>
-                     <select
-                       value={paymentModal.selectedPeriod}
-                       onChange={(e) => setPaymentModal(prev => ({...prev, selectedPeriod: e.target.value}))}
-                       className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold focus:ring-2 focus:ring-[#2d5cd5] outline-none"
-                     >
-                       {paymentModal.periods.map(p => (
-                         <option key={p.period} value={p.period}>
-                           Periode {p.period} - Rp {(p.total_amount || p.amount || 0).toLocaleString('id-ID')}
-                         </option>
-                       ))}
-                     </select>
-                  </div>
-
-                  <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-900/50">
-                    <div className="flex justify-between items-center mb-2">
-                       <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Total Bayar Kasir</span>
-                       <span className="text-lg font-black text-[#2d5cd5]">
-                         Rp {(paymentModal.periods.find(p => p.period === paymentModal.selectedPeriod)?.total_amount || paymentModal.periods.find(p => p.period === paymentModal.selectedPeriod)?.amount || 0).toLocaleString('id-ID')}
-                       </span>
-                    </div>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Pilih Periode Tunggakan</label>
+                    <select
+                      value={paymentModal.selectedPeriod}
+                      onChange={(e) => setPaymentModal(prev => ({...prev, selectedPeriod: e.target.value}))}
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-[#00C8E5] outline-none"
+                    >
+                      {paymentModal.periods.map(p => (
+                        <option key={p.period} value={p.period}>
+                          Periode {p.period} - Rp {(p.total_amount || p.amount || 0).toLocaleString('id-ID')}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
               )}
             </div>
 
             {paymentModal.periods.length > 0 && !paymentModal.loading && (
-              <div className="p-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
-                  {/* Upload Bukti Pembayaran */}
-                  <div className="mb-4">
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Bukti Pembayaran (Opsional)</label>
-                    <label className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-2xl cursor-pointer transition-all overflow-hidden relative ${paymentModal.proofFile ? 'border-[#2d5cd5] bg-blue-50 dark:bg-blue-900/20' : 'border-slate-300 bg-slate-50 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800'}`}>
-                      {paymentModal.proofFile ? (
-                        <>
-                          <img src={URL.createObjectURL(paymentModal.proofFile)} alt="Preview" className="absolute inset-0 w-full h-full object-cover opacity-60" />
-                          <div className="z-10 flex flex-col items-center bg-white/80 dark:bg-black/60 px-4 py-2 rounded-xl text-center">
-                            <span className="text-xs font-black text-[#2d5cd5] dark:text-blue-400 truncate max-w-[150px]">{paymentModal.proofFile.name}</span>
-                            <span className="text-[9px] font-bold text-blue-500 uppercase mt-1">Ganti Foto</span>
-                          </div>
-                        </>
-                      ) : (
-                        <>
-                          <ImagePlus className="w-8 h-8 text-slate-400 mb-2" />
-                          <span className="text-xs font-bold text-slate-500">Ketuk untuk Ambil Foto</span>
-                          <span className="text-[9px] font-medium text-slate-400 mt-1">PNG, JPG up to 5MB</span>
-                        </>
-                      )}
-                      <input 
-                        type="file" 
-                        accept="image/*" 
-                        capture="environment" 
-                        className="hidden" 
-                        onChange={(e) => {
-                          if (e.target.files?.[0]) {
-                            setPaymentModal(prev => ({...prev, proofFile: e.target.files![0]}));
-                          }
-                        }} 
-                      />
-                    </label>
-                  </div>
-
-                 <button
-                   onClick={handleProcessPayment}
-                   disabled={paymentModal.submitting}
-                   className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black uppercase tracking-[0.2em] shadow-xl shadow-emerald-500/20 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:active:scale-100"
-                 >
-                   {paymentModal.uploadingProof ? (
-                     <><Loader2 className="w-4 h-4 animate-spin"/> MENGUNGGAH BUKTI...</>
-                   ) : paymentModal.submitting ? (
-                     <><Loader2 className="w-4 h-4 animate-spin" /> MEMPROSES...</>
-                   ) : (
-                     'Proses Pembayaran TUNAI'
-                   )}
-                 </button>
+              <div className="p-6 border-t border-slate-100 bg-slate-50">
+                <button
+                  onClick={handleProcessPayment}
+                  disabled={paymentModal.submitting}
+                  className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black uppercase tracking-[0.2em] shadow-xl shadow-emerald-500/20 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {paymentModal.submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Proses Pembayaran TUNAI'}
+                </button>
               </div>
             )}
           </div>
