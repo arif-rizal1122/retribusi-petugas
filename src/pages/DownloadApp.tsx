@@ -28,8 +28,8 @@ export default function DownloadApp() {
         {/* Main Hero Card */}
         <div className="bg-gradient-to-br from-[#2d5cd5] to-blue-600 rounded-[2.5rem] p-8 text-white shadow-2xl shadow-blue-500/20 relative overflow-hidden">
           <div className="relative z-10">
-            <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center mb-6">
-              <Download size={32} />
+            <div className="w-16 h-16 bg-white rounded-2xl p-1 flex items-center justify-center mb-6 shadow-md border border-white/40">
+              <img src="/app-icon.png" alt="App Icon" className="w-full h-full object-contain rounded-xl" />
             </div>
             <h2 className="text-3xl font-black mb-4 tracking-tighter">Akses Lebih Cepat <br/>dengan Aplikasi.</h2>
             <p className="text-blue-50/70 font-bold leading-relaxed text-sm mb-8">
