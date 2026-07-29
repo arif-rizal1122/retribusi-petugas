@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { PWAProvider } from './contexts/PWAContext';
+import { SplashScreen } from './components/SplashScreen';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
 import PetugasLogin from './pages/PetugasLogin';
@@ -30,7 +32,6 @@ import DaftarTugas from './pages/DaftarTugas';
 import CreateSKPD from './pages/CreateSKPD';
 import About from './pages/About';
 
-
 function HomeRoute() {
   const { isAuthenticated, loading } = useAuth();
 
@@ -50,8 +51,18 @@ function HomeRoute() {
 }
 
 function App() {
+  const [showSplash, setShowSplash] = useState(() => {
+    return !sessionStorage.getItem('has_seen_splash');
+  });
+
+  const handleSplashFinish = () => {
+    sessionStorage.setItem('has_seen_splash', 'true');
+    setShowSplash(false);
+  };
+
   return (
     <BrowserRouter>
+      {showSplash && <SplashScreen onFinish={handleSplashFinish} />}
       <ThemeProvider>
         <PWAProvider>
           <AuthProvider>
