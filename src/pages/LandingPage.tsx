@@ -4,290 +4,205 @@ import {
   MapPin, 
   QrCode,
   Wallet,
-  Users,
   ArrowRight,
-  CheckCircle,
+  CheckCircle2,
   BookOpen,
   Download,
-  Smartphone
+  Smartphone,
+  LogIn,
+  UserCheck,
+  Gauge
 } from 'lucide-react';
 
-// Baubau Logo Colors
-const BAUBAU_BLUE = '#074764';
-const BAUBAU_GOLD = '#d9a742';
-
-// Mobile app screenshots for the carousel
 const mobileScreenshots = [
-  {
-    src: 'https://res.cloudinary.com/ddhgtgsed/image/upload/v1770160000/sipanda/petugas-dashboard.png',
-    alt: 'Dashboard Petugas',
-    fallback: true
-  },
-  {
-    src: 'https://res.cloudinary.com/ddhgtgsed/image/upload/v1770160000/sipanda/petugas-pendataan.png', 
-    alt: 'Form Pendataan',
-    fallback: true
-  },
-  {
-    src: 'https://res.cloudinary.com/ddhgtgsed/image/upload/v1770160000/sipanda/petugas-maps.png',
-    alt: 'GPS Tracking',
-    fallback: true
-  },
-  {
-    src: 'https://res.cloudinary.com/ddhgtgsed/image/upload/v1770160000/sipanda/petugas-qr.png',
-    alt: 'Scan QR Code',
-    fallback: true
-  }
+  { alt: 'Form Pendataan', subtitle: 'Pencatatan WP & Objek Pajak' },
+  { alt: 'Dashboard Petugas', subtitle: 'Pantau Target & Pencapaian' },
+  { alt: 'GPS Tracking', subtitle: 'Pemetaan Lokasi Presisi' },
+  { alt: 'Scan QR Code', subtitle: 'Verifikasi Pembayaran Instan' },
 ];
 
 export default function LandingPage() {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [isTransitioning, setIsTransitioning] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setIsTransitioning(true);
-      setTimeout(() => {
-        setCurrentSlide((prev) => (prev + 1) % mobileScreenshots.length);
-        setIsTransitioning(false);
-      }, 300);
-    }, 2000); // Change slide every 2 seconds
-
+      setCurrentSlide((prev) => (prev + 1) % mobileScreenshots.length);
+    }, 2800);
     return () => clearInterval(interval);
   }, []);
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
       {/* Navbar */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-lg border-b border-gray-100">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-xl border-b border-slate-100 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+          <div className="flex items-center justify-between h-20">
+            
+            {/* Logo using existing official logo */}
             <div className="flex items-center gap-3">
-              <img 
-                src="/mitra-logo.png" 
-                alt="Logo Kota Baubau" 
-                className="w-10 h-10 object-contain" 
-              />
+              <div className="w-10 h-10 bg-[#0F2547] rounded-xl shadow-sm border border-slate-700 flex items-center justify-center p-1.5">
+                <img 
+                  src="/mitra-logo.png" 
+                  alt="Logo Petugas" 
+                  className="w-full h-full object-contain" 
+                />
+              </div>
               <div>
-                <span className="font-black text-gray-900 text-lg tracking-tighter">MITRA PAD (M-PAD)</span>
-                <span className="text-[10px] text-gray-500 block uppercase font-bold tracking-widest leading-none -mt-1">Petugas Lapangan</span>
+                <span className="font-black text-[#0F2547] text-lg leading-none block">MITRA PAD (M-PAD)</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mt-0.5">Petugas Lapangan</span>
               </div>
             </div>
             
+            {/* Navigation Links */}
             <div className="hidden md:flex items-center gap-8">
-              <a href="#features" className="text-sm font-semibold text-gray-600 hover:text-[#074764] transition-colors">Fitur</a>
-              <a href="#benefits" className="text-sm font-semibold text-gray-600 hover:text-[#074764] transition-colors">Keunggulan</a>
-              <Link to="/download" className="text-sm font-semibold text-gray-600 hover:text-[#074764] transition-colors">Pasang App</Link>
-              <Link to="/user-guide" className="text-sm font-semibold text-gray-600 hover:text-[#074764] transition-colors">Panduan</Link>
+              <a href="#features" className="text-sm font-bold text-slate-600 hover:text-[#0F2547] transition-colors">Fitur</a>
+              <a href="#benefits" className="text-sm font-bold text-slate-600 hover:text-[#0F2547] transition-colors">Keunggulan</a>
+              <Link to="/download" className="text-sm font-bold text-slate-600 hover:text-[#0F2547] transition-colors">Pasang App</Link>
+              <Link to="/user-guide" className="text-sm font-bold text-slate-600 hover:text-[#0F2547] transition-colors">Panduan</Link>
             </div>
 
+            {/* Login Button */}
             <Link 
               to="/login"
-              className="px-6 py-2.5 text-white rounded-xl font-bold text-sm transition-colors shadow-lg"
-              style={{ backgroundColor: BAUBAU_BLUE }}
+              className="px-6 py-2.5 bg-[#0F2547] hover:bg-[#1E3A8A] text-white rounded-xl font-bold text-sm transition-all shadow-md shadow-blue-950/20 flex items-center gap-2 active:scale-95"
             >
-              Masuk
+              <LogIn size={16} />
+              <span>Masuk</span>
             </Link>
           </div>
         </div>
       </nav>
 
       {/* Hero Section */}
-      <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-white via-[#074764]/5 to-[#d9a742]/10">
+      <section className="pt-32 pb-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-amber-50/40 via-slate-50 to-white relative overflow-hidden">
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
+            
+            {/* Left Content */}
             <div className="space-y-8">
-              <div 
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold"
-                style={{ backgroundColor: `${BAUBAU_BLUE}15`, color: BAUBAU_BLUE }}
-              >
-                <Smartphone className="w-4 h-4" />
-                Aplikasi Petugas Lapangan
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black bg-sky-50 text-sky-600 border border-sky-100 shadow-sm">
+                <Smartphone className="w-4 h-4 text-sky-500" />
+                <span>Aplikasi Petugas Lapangan</span>
               </div>
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-gray-900 leading-tight">
-                Data Potensi <br/>
-                <span 
-                  className="text-transparent bg-clip-text"
-                  style={{ backgroundImage: `linear-gradient(to right, ${BAUBAU_BLUE}, ${BAUBAU_GOLD})` }}
-                >
-                  Langsung dari Lapangan
-                </span>
+
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-slate-900 leading-[1.15] tracking-tight">
+                Data Potensi <br />
+                <span className="text-[#0F2547]">Langsung dari</span> <br />
+                <span className="text-amber-500">Lapangan</span>
               </h1>
-              <p className="text-lg text-gray-600 leading-relaxed max-w-lg">
-                Catat data wajib pajak & retribusi secara digital dengan GPS tracking. 
-                Scan QR untuk konfirmasi pembayaran instan.
+
+              <p className="text-base sm:text-lg text-slate-600 leading-relaxed max-w-lg font-medium">
+                Catat data wajib pajak & retribusi secara digital dengan GPS tracking. Scan QR untuk konfirmasi pembayaran instan.
               </p>
-              <div className="flex flex-wrap gap-4">
+
+              <div className="flex flex-wrap gap-4 pt-2">
                 <Link 
                   to="/login"
-                  className="px-8 py-4 text-white rounded-2xl font-bold transition-all shadow-xl flex items-center gap-2"
-                  style={{ backgroundColor: BAUBAU_BLUE, boxShadow: `0 20px 40px -12px ${BAUBAU_BLUE}40` }}
+                  className="px-7 py-4 bg-[#0F2547] hover:bg-[#1E3A8A] text-white rounded-2xl font-bold transition-all shadow-xl shadow-blue-950/20 flex items-center gap-2.5 text-sm active:scale-95"
                 >
-                  Mulai Pendataan <ArrowRight className="w-5 h-5" />
+                  <span>Mulai Pendataan</span>
+                  <ArrowRight className="w-4 h-4" />
                 </Link>
+
                 <Link
                   to="/download"
-                  className="px-8 py-4 bg-white rounded-2xl font-bold border border-[#074764]/15 transition-all flex items-center gap-2 shadow-lg shadow-slate-200/50"
-                  style={{ color: BAUBAU_BLUE }}
+                  className="px-7 py-4 bg-white text-slate-700 rounded-2xl font-bold border border-slate-200 hover:bg-slate-50 transition-all flex items-center gap-2.5 text-sm shadow-sm active:scale-95"
                 >
-                  <Download className="w-5 h-5" /> Pasang Aplikasi
+                  <Download className="w-5 h-5 text-amber-500" />
+                  <span>Pasang Aplikasi</span>
                 </Link>
+
                 <Link 
                   to="/user-guide"
-                  className="px-8 py-4 bg-white text-gray-700 rounded-2xl font-bold border border-gray-200 hover:border-[#d9a742] hover:text-[#074764] transition-all flex items-center gap-2"
+                  className="px-6 py-4 bg-white text-slate-700 rounded-2xl font-bold border border-slate-200 hover:bg-slate-50 transition-all flex items-center gap-2 text-sm shadow-sm active:scale-95"
                 >
-                  <BookOpen className="w-5 h-5" /> Panduan
+                  <BookOpen className="w-5 h-5 text-slate-400" />
+                  <span>Panduan</span>
                 </Link>
               </div>
             </div>
-            
-            {/* Mobile App Preview with Auto-Sliding Carousel */}
-            <div className="relative hidden lg:block">
-              <div className="absolute -top-10 -right-10 w-72 h-72 rounded-full blur-3xl opacity-30" style={{ backgroundColor: BAUBAU_BLUE }}></div>
-              <div className="absolute -bottom-10 -left-10 w-72 h-72 rounded-full blur-3xl opacity-30" style={{ backgroundColor: BAUBAU_GOLD }}></div>
-              
-              {/* Phone Frame */}
-              <div className="relative bg-white rounded-[2.5rem] shadow-2xl border-4 border-gray-800 p-2 max-w-[280px] mx-auto">
-                {/* Phone Notch */}
-                <div className="absolute top-2 left-1/2 -translate-x-1/2 w-20 h-6 bg-gray-800 rounded-b-xl z-20"></div>
-                
-                {/* Screen Container */}
-                <div 
-                  className="rounded-[2rem] overflow-hidden relative"
-                  style={{ backgroundColor: BAUBAU_BLUE, aspectRatio: '9/19' }}
-                >
-                  {/* Slide Content with Transition */}
-                  <div 
-                    className="absolute inset-0 flex items-center justify-center transition-all duration-500 ease-out"
-                    style={{
-                      transform: isTransitioning ? 'translateY(100%)' : 'translateY(0)',
-                      opacity: isTransitioning ? 0 : 1
-                    }}
-                  >
-                    {/* Placeholder Screen Content */}
-                    <div className="w-full h-full p-4 flex flex-col">
-                      {/* Status Bar */}
-                      <div className="flex items-center justify-between text-white/70 text-[10px] mb-3 pt-6">
-                        <span>09:41</span>
-                        <div className="flex items-center gap-1">
-                          <div className="w-3 h-3 border border-white/50 rounded-sm"></div>
-                          <span>100%</span>
-                        </div>
+
+            {/* Right Mobile Phone Device Mockup */}
+            <div className="relative hidden lg:flex justify-center items-center">
+              <div className="absolute w-80 h-80 rounded-full bg-amber-400/20 blur-3xl pointer-events-none" />
+              <div className="absolute w-80 h-80 rounded-full bg-blue-600/15 blur-3xl pointer-events-none" />
+
+              <div className="relative w-[300px] bg-slate-900 rounded-[3rem] p-3.5 shadow-2xl shadow-blue-950/30 border-4 border-slate-800 transform hover:rotate-1 transition-transform duration-500">
+                {/* Dynamic Island / Notch */}
+                <div className="w-24 h-5 bg-slate-950 rounded-b-2xl mx-auto mb-2 flex items-center justify-center">
+                  <div className="w-3 h-3 rounded-full bg-slate-900 border border-slate-800" />
+                </div>
+
+                {/* Mobile App Screen Content */}
+                <div className="bg-[#0F2547] rounded-[2.2rem] p-4 text-white min-h-[500px] flex flex-col justify-between overflow-hidden relative shadow-inner">
+                  
+                  {/* Status & Header */}
+                  <div>
+                    <div className="flex justify-between items-center text-[10px] text-white/60 font-semibold mb-4 px-1">
+                      <span>09:41</span>
+                      <div className="flex items-center gap-1">
+                        <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                        <span>5G</span>
                       </div>
-                      
-                      {/* App Header */}
-                      <div className="flex items-center gap-2 mb-4">
-                        <img 
-                          src="/mitra-logo.png" 
-                          alt="Logo" 
-                          className="w-8 h-8 object-contain bg-white rounded-lg p-1" 
-                        />
-                        <div>
-                          <div className="text-white text-sm font-bold">MITRA PAD (M-PAD)</div>
-                          <div className="text-white/60 text-[10px]">Petugas</div>
-                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 bg-white/10 backdrop-blur-md p-3 rounded-2xl border border-white/10 mb-4">
+                      <div className="w-8 h-8 bg-white rounded-xl p-1 shrink-0 flex items-center justify-center">
+                        <img src="/mitra-logo.png" alt="Logo" className="w-full h-full object-contain" />
                       </div>
-                      
-                      {/* Dynamic Content Based on Slide */}
-                      <div className="flex-1 bg-white/10 rounded-2xl p-3 backdrop-blur">
-                        {currentSlide === 0 && (
-                          <div className="space-y-3">
-                            <div className="text-white text-xs font-bold">Dashboard</div>
-                            <div className="grid grid-cols-2 gap-2">
-                              <div className="bg-white/20 rounded-xl p-2 text-center">
-                                <div className="text-lg font-black text-white">27</div>
-                                <div className="text-[8px] text-white/70">Pendataan</div>
-                              </div>
-                              <div className="bg-white/20 rounded-xl p-2 text-center">
-                                <div className="text-lg font-black" style={{ color: BAUBAU_GOLD }}>5</div>
-                                <div className="text-[8px] text-white/70">Target Hari Ini</div>
-                              </div>
-                            </div>
-                            <div className="bg-white/20 rounded-xl p-2">
-                              <div className="text-[8px] text-white/70 mb-1">Progress Mingguan</div>
-                              <div className="h-2 bg-white/20 rounded-full overflow-hidden">
-                                <div className="h-full rounded-full" style={{ width: '75%', backgroundColor: BAUBAU_GOLD }}></div>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                        {currentSlide === 1 && (
-                          <div className="space-y-3">
-                            <div className="text-white text-xs font-bold">Form Pendataan</div>
-                            <div className="space-y-2">
-                              <div className="bg-white/20 rounded-lg p-2">
-                                <div className="text-[8px] text-white/50">Nama WP</div>
-                                <div className="text-[10px] text-white">CV. Maju Jaya</div>
-                              </div>
-                              <div className="bg-white/20 rounded-lg p-2">
-                                <div className="text-[8px] text-white/50">Jenis Usaha</div>
-                                <div className="text-[10px] text-white">Restoran</div>
-                              </div>
-                              <div className="bg-white/20 rounded-lg p-2">
-                                <div className="text-[8px] text-white/50">Alamat</div>
-                                <div className="text-[10px] text-white">Jl. Sudirman No. 45</div>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                        {currentSlide === 2 && (
-                          <div className="space-y-3">
-                            <div className="text-white text-xs font-bold">GPS Tracking</div>
-                            <div className="bg-white/20 rounded-xl p-2 aspect-square relative overflow-hidden">
-                              <div className="absolute inset-0 bg-gradient-to-br from-green-400/30 to-blue-400/30"></div>
-                              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                                <MapPin className="w-6 h-6" style={{ color: BAUBAU_GOLD }} />
-                              </div>
-                              <div className="absolute bottom-1 right-1 text-[8px] text-white/70">
-                                -5.4675, 122.6359
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                        {currentSlide === 3 && (
-                          <div className="space-y-3">
-                            <div className="text-white text-xs font-bold">Scan QR Code</div>
-                            <div className="flex items-center justify-center aspect-square bg-white/20 rounded-xl">
-                              <QrCode className="w-16 h-16 text-white/70" />
-                            </div>
-                            <div className="text-center text-[10px] text-white/70">
-                              Arahkan kamera ke kode QR
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                      
-                      {/* Slide Indicators */}
-                      <div className="flex items-center justify-center gap-1.5 mt-3 mb-2">
-                        {mobileScreenshots.map((_, idx) => (
-                          <div 
-                            key={idx}
-                            className="h-1.5 rounded-full transition-all duration-300"
-                            style={{ 
-                              width: currentSlide === idx ? '16px' : '6px',
-                              backgroundColor: currentSlide === idx ? BAUBAU_GOLD : 'rgba(255,255,255,0.3)'
-                            }}
-                          ></div>
-                        ))}
+                      <div>
+                        <p className="font-bold text-xs leading-none">MITRA PAD (M-PAD)</p>
+                        <p className="text-[9px] text-amber-400 font-semibold mt-0.5">Petugas Lapangan</p>
                       </div>
                     </div>
                   </div>
+
+                  {/* Dynamic Slide Content */}
+                  <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10 space-y-3 flex-1 flex flex-col justify-between my-2">
+                    <p className="text-xs font-bold text-amber-300 uppercase tracking-wider">Form Pendataan</p>
+
+                    <div className="space-y-2 text-left">
+                      <div className="bg-white/10 p-2.5 rounded-xl border border-white/5">
+                        <p className="text-[9px] text-slate-300 font-semibold">Nama WP</p>
+                        <p className="text-xs font-bold text-white">CV. Maju Jaya</p>
+                      </div>
+                      <div className="bg-white/10 p-2.5 rounded-xl border border-white/5">
+                        <p className="text-[9px] text-slate-300 font-semibold">Jenis Usaha</p>
+                        <p className="text-xs font-bold text-white">Restoran</p>
+                      </div>
+                      <div className="bg-white/10 p-2.5 rounded-xl border border-white/5">
+                        <p className="text-[9px] text-slate-300 font-semibold">Alamat</p>
+                        <p className="text-xs font-bold text-white truncate">Jl. Sudirman No. 45</p>
+                      </div>
+                    </div>
+
+                    <button className="w-full py-2.5 bg-blue-600 text-white rounded-xl font-bold text-xs shadow-md mt-2">
+                      Simpan Data
+                    </button>
+                  </div>
+
+                  {/* Indicator dots */}
+                  <div className="flex justify-center items-center gap-1.5 pt-2">
+                    {mobileScreenshots.map((_, idx) => (
+                      <div
+                        key={idx}
+                        className={`h-1.5 rounded-full transition-all duration-300 ${
+                          currentSlide === idx ? 'w-5 bg-amber-400' : 'w-1.5 bg-white/30'
+                        }`}
+                      />
+                    ))}
+                  </div>
                 </div>
-                
-                {/* Home Indicator */}
-                <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-24 h-1 bg-gray-800 rounded-full"></div>
-              </div>
-              
-              {/* Current Slide Label */}
-              <div className="text-center mt-4">
-                <span 
-                  className="inline-block px-3 py-1 rounded-full text-xs font-bold text-white"
-                  style={{ backgroundColor: BAUBAU_BLUE }}
-                >
-                  {mobileScreenshots[currentSlide].alt}
-                </span>
+
+                {/* Bottom Pill Badge */}
+                <div className="mt-3 text-center">
+                  <span className="px-4 py-1 bg-[#0F2547] text-white rounded-full text-xs font-bold border border-white/10 inline-block shadow-md">
+                    {mobileScreenshots[currentSlide].alt}
+                  </span>
+                </div>
               </div>
             </div>
+
           </div>
         </div>
       </section>
@@ -296,103 +211,187 @@ export default function LandingPage() {
       <section id="features" className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <span className="text-sm font-bold uppercase tracking-wider" style={{ color: BAUBAU_GOLD }}>Fitur Utama</span>
-            <h2 className="text-3xl sm:text-4xl font-black text-gray-900 mt-2">
-              Semua yang Anda Butuhkan di <span style={{ color: BAUBAU_BLUE }}>Lapangan</span>
+            <span className="px-4 py-1.5 bg-amber-100 text-amber-700 rounded-full text-xs font-black uppercase tracking-widest">
+              FITUR UTAMA
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-black text-slate-900 mt-3">
+              Semua yang Anda Butuhkan di <span className="text-[#0F2547]">Lapangan</span>
             </h2>
           </div>
+
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
-              { icon: MapPin, title: 'GPS Tracking', desc: 'Catat lokasi objek pajak secara akurat dengan peta digital.', color: BAUBAU_BLUE },
-              { icon: Users, title: 'Input Cepat', desc: 'Form multi-tahap yang mudah diisi langsung dari HP.', color: BAUBAU_GOLD },
-              { icon: QrCode, title: 'Scan QR', desc: 'Konfirmasi pembayaran instan dengan scan kode billing.', color: BAUBAU_BLUE },
-              { icon: Wallet, title: 'Laporan Harian', desc: 'Pantau target dan pencapaian pendataan harian Anda.', color: BAUBAU_GOLD },
+              {
+                icon: MapPin,
+                title: 'GPS Tracking',
+                desc: 'Catat lokasi objek pajak secara akurat dengan peta digital real-time.',
+                color: 'bg-sky-50 text-sky-600',
+              },
+              {
+                icon: UserCheck,
+                title: 'Input Cepat',
+                desc: 'Form multi-tahap yang mudah diisi langsung dari HP.',
+                color: 'bg-amber-50 text-amber-600',
+              },
+              {
+                icon: QrCode,
+                title: 'Scan QR',
+                desc: 'Konfirmasi pembayaran instan dengan scan kode billing.',
+                color: 'bg-cyan-50 text-cyan-600',
+              },
+              {
+                icon: Wallet,
+                title: 'Laporan Harian',
+                desc: 'Pantau target dan pencapaian pendataan harian Anda.',
+                color: 'bg-purple-50 text-purple-600',
+              },
             ].map((feature, i) => (
-              <div key={i} className="bg-gray-50 rounded-3xl p-8 hover:shadow-xl hover:-translate-y-1 transition-all group">
-                <div 
-                  className="w-14 h-14 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform"
-                  style={{ backgroundColor: `${feature.color}15` }}
-                >
-                  <feature.icon className="w-7 h-7" style={{ color: feature.color }} />
+              <div
+                key={i}
+                className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all group flex flex-col justify-between"
+              >
+                <div>
+                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform ${feature.color}`}>
+                    <feature.icon size={26} />
+                  </div>
+                  <h3 className="text-xl font-black text-slate-900 mb-3">{feature.title}</h3>
+                  <p className="text-slate-500 text-sm leading-relaxed font-medium">{feature.desc}</p>
                 </div>
-                <h3 className="text-xl font-black text-gray-900 mb-3">{feature.title}</h3>
-                <p className="text-gray-500 leading-relaxed">{feature.desc}</p>
+                <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-end">
+                  <div className="w-8 h-8 rounded-full bg-slate-50 group-hover:bg-[#0F2547] group-hover:text-white transition-colors flex items-center justify-center text-slate-400">
+                    <ArrowRight size={16} />
+                  </div>
+                </div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Benefits Section */}
-      <section id="benefits" className="py-24 text-white" style={{ background: `linear-gradient(135deg, ${BAUBAU_BLUE}, ${BAUBAU_BLUE}dd)` }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Benefits Section (Dark Navy Banner) */}
+      <section id="benefits" className="py-24 bg-[#0F2547] text-white relative overflow-hidden">
+        {/* Background Line Art Overlay */}
+        <div className="absolute inset-0 opacity-10 pointer-events-none">
+          <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <path d="M0,0 Q50,100 100,0" stroke="white" strokeWidth="0.5" fill="none" />
+            <path d="M0,50 Q50,150 100,50" stroke="white" strokeWidth="0.5" fill="none" />
+          </svg>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
+            
+            {/* Left Content */}
             <div>
-              <span className="text-sm font-bold uppercase tracking-wider" style={{ color: BAUBAU_GOLD }}>Keunggulan</span>
-              <h2 className="text-3xl sm:text-4xl font-black mt-2 mb-8">
+              <span className="text-xs font-black uppercase tracking-widest text-amber-400">
+                KEUNGGULAN
+              </span>
+              <h2 className="text-3xl sm:text-4xl font-black mt-2 mb-8 text-white leading-tight">
                 Bekerja Lebih Efisien di Lapangan
               </h2>
-              <div className="space-y-6">
+
+              <div className="space-y-4">
                 {[
                   'Input data tanpa perlu kembali ke kantor',
                   'Sinkronisasi otomatis ke server pusat',
                   'Notifikasi target dan pengingat tugas',
                   'Akses riwayat pendataan kapan saja',
                 ].map((benefit, i) => (
-                  <div key={i} className="flex items-center gap-4">
-                    <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: `${BAUBAU_GOLD}30` }}>
-                      <CheckCircle className="w-5 h-5" style={{ color: BAUBAU_GOLD }} />
+                  <div key={i} className="flex items-center gap-4 bg-white/5 border border-white/10 p-4 rounded-2xl backdrop-blur-sm">
+                    <div className="w-7 h-7 rounded-full bg-amber-400/20 text-amber-400 flex items-center justify-center shrink-0">
+                      <CheckCircle2 size={18} />
                     </div>
-                    <span className="font-semibold">{benefit}</span>
+                    <span className="font-bold text-sm text-slate-100">{benefit}</span>
                   </div>
                 ))}
               </div>
             </div>
-            <div className="backdrop-blur-lg rounded-3xl p-8 border border-white/20 text-center" style={{ backgroundColor: 'rgba(255,255,255,0.1)' }}>
-              <div className="text-6xl font-black mb-2" style={{ color: BAUBAU_GOLD }}>3x</div>
-              <div className="text-xl font-bold opacity-90">Lebih Cepat</div>
-              <p className="text-sm mt-4 opacity-70">
+
+            {/* Right Speedometer Gauge Efficiency Card */}
+            <div className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl rounded-[2.5rem] p-8 sm:p-10 border border-white/15 shadow-2xl flex flex-col items-center text-center">
+              
+              {/* Speedometer Gauge Graphic */}
+              <div className="relative w-48 h-32 flex items-center justify-center mb-4">
+                <svg className="w-full h-full" viewBox="0 0 100 60">
+                  <path
+                    d="M10,50 A40,40 0 0,1 90,50"
+                    fill="none"
+                    stroke="rgba(255,255,255,0.15)"
+                    strokeWidth="10"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M10,50 A40,40 0 0,1 90,50"
+                    fill="none"
+                    stroke="#10B981"
+                    strokeWidth="10"
+                    strokeDasharray="125.6"
+                    strokeDashoffset="25"
+                    strokeLinecap="round"
+                  />
+                  {/* Needle */}
+                  <line x1="50" y1="50" x2="72" y2="24" stroke="#F59E0B" strokeWidth="4" strokeLinecap="round" />
+                  <circle cx="50" cy="50" r="5" fill="#F59E0B" />
+                </svg>
+                <div className="absolute bottom-0 text-center">
+                  <span className="text-4xl font-black text-white">3x</span>
+                </div>
+              </div>
+
+              <h3 className="text-2xl font-black text-white mb-2">Lebih Cepat</h3>
+              <p className="text-sm text-slate-300 font-medium leading-relaxed max-w-xs">
                 Dibanding pencatatan manual menggunakan kertas.
               </p>
             </div>
+
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="py-12 bg-gray-900 text-white">
+      <footer className="py-10 bg-[#0B1E36] text-white border-t border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-3 gap-8 items-center">
+          <div className="grid md:grid-cols-3 gap-6 items-center">
+            
+            {/* Logo using existing official logo */}
             <div className="flex items-center gap-3">
-              <img 
-                src="/mitra-logo.png" 
-                alt="Logo Kota Baubau" 
-                className="w-10 h-10 object-contain" 
-              />
+              <div className="w-9 h-9 bg-white/10 rounded-xl p-1.5 flex items-center justify-center border border-white/10">
+                <img 
+                  src="/mitra-logo.png" 
+                  alt="Logo Kota Baubau" 
+                  className="w-full h-full object-contain" 
+                />
+              </div>
               <div>
-                <span className="font-black text-lg">MITRA PAD (M-PAD)</span>
-                <span className="text-xs text-gray-400 block tracking-widest uppercase font-bold text-[8px]">Petugas Lapangan</span>
+                <span className="font-black text-base leading-none block">MITRA PAD (M-PAD)</span>
+                <span className="text-[10px] text-amber-400 font-bold uppercase tracking-widest block mt-0.5">Petugas Lapangan</span>
               </div>
             </div>
-            <div className="text-center flex flex-wrap justify-center gap-3">
+
+            {/* User Guide & Download Buttons */}
+            <div className="text-center flex items-center justify-center gap-3">
               <Link 
                 to="/user-guide" 
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-colors"
-                style={{ backgroundColor: BAUBAU_BLUE }}
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/10 hover:bg-white/15 border border-white/20 text-white rounded-xl font-bold text-xs transition-colors shadow-sm"
               >
-                <BookOpen className="w-5 h-5" /> Baca Panduan Pengguna
+                <BookOpen size={16} />
+                <span>Baca Panduan Pengguna</span>
               </Link>
-              <Link
-                to="/download"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm text-gray-900 transition-colors"
-                style={{ backgroundColor: BAUBAU_GOLD }}
+              
+              <Link 
+                to="/download" 
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-[#0F2547] rounded-xl font-bold text-xs transition-colors shadow-md"
               >
-                <Download className="w-5 h-5" /> Pasang Aplikasi
+                <Download size={16} />
+                <span>Pasang Aplikasi</span>
               </Link>
             </div>
-            <div className="text-right text-sm text-gray-400">
-              © 2026 BAPPENDA Kota Baubau
+
+            {/* Copyright */}
+            <div className="text-right text-xs text-slate-400 font-medium">
+              © 2026 BAPPENDA Kota Baubau. All rights reserved.
             </div>
+
           </div>
         </div>
       </footer>
