@@ -26,7 +26,7 @@ export default function PetugasRegister() {
   };
 
   return (
-    <div className="min-h-screen bg-[#2d5cd5] flex flex-col relative overflow-hidden font-sans">
+    <div className="min-h-screen bg-[#0F2547] flex flex-col relative overflow-hidden font-sans">
       {/* Dynamic Background Elements */}
       <div className="absolute top-[-10%] right-[-10%] w-[80%] h-[50%] bg-white/20 rounded-full blur-[100px] transform rotate-12"></div>
       <div className="absolute top-[15%] right-[15%] w-24 h-24 bg-white/20 rounded-full blur-md"></div>
@@ -49,7 +49,7 @@ export default function PetugasRegister() {
         <div className="bg-white rounded-t-[3.5rem] px-8 pt-12 pb-16 shadow-[0_-20px_50px_rgba(0,0,0,0.2)]">
           <div className="max-w-md mx-auto">
             <div className="text-center mb-10">
-              <h1 className="text-4xl font-black text-[#2d5cd5] tracking-tight mb-2">Get Started</h1>
+              <h1 className="text-4xl font-black text-[#0F2547] tracking-tight mb-2">Get Started</h1>
               <p className="text-slate-400 font-medium">Create your officer profile</p>
             </div>
 
@@ -60,7 +60,7 @@ export default function PetugasRegister() {
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 text-slate-900 placeholder:text-slate-300 focus:ring-4 focus:ring-blue-500/10 focus:border-[#2d5cd5] transition-all outline-none font-semibold"
+                  className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 text-slate-900 placeholder:text-slate-300 focus:ring-4 focus:ring-blue-500/10 focus:border-[#0F2547] transition-all outline-none font-semibold"
                   placeholder="Enter Full Name"
                   required
                   disabled={isSubmitting}
@@ -73,7 +73,7 @@ export default function PetugasRegister() {
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 text-slate-900 placeholder:text-slate-300 focus:ring-4 focus:ring-blue-500/10 focus:border-[#2d5cd5] transition-all outline-none font-semibold"
+                  className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 text-slate-900 placeholder:text-slate-300 focus:ring-4 focus:ring-blue-500/10 focus:border-[#0F2547] transition-all outline-none font-semibold"
                   placeholder="Enter Email"
                   required
                   disabled={isSubmitting}
@@ -87,7 +87,7 @@ export default function PetugasRegister() {
                     type={showPassword ? "text" : "password"}
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 text-slate-900 placeholder:text-slate-300 focus:ring-4 focus:ring-blue-500/10 focus:border-[#2d5cd5] transition-all outline-none font-semibold pr-14"
+                    className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 text-slate-900 placeholder:text-slate-300 focus:ring-4 focus:ring-blue-500/10 focus:border-[#0F2547] transition-all outline-none font-semibold pr-14"
                     placeholder="Enter Password"
                     required
                     disabled={isSubmitting}
@@ -104,9 +104,9 @@ export default function PetugasRegister() {
               </div>
 
               <div className="flex items-start gap-3 px-1">
-                <input type="checkbox" id="terms" className="mt-1 w-5 h-5 rounded-lg border-slate-200 text-[#2d5cd5] focus:ring-[#2d5cd5]" required />
+                <input type="checkbox" id="terms" className="mt-1 w-5 h-5 rounded-lg border-slate-200 text-[#0F2547] focus:ring-[#0F2547]" required />
                 <label htmlFor="terms" className="text-xs font-bold text-slate-500 leading-tight">
-                  I agree to the processing of <span className="text-[#2d5cd5] cursor-pointer hover:underline">Personal data</span>
+                  I agree to the processing of <span className="text-[#0F2547] cursor-pointer hover:underline">Personal data</span>
                 </label>
               </div>
 
@@ -119,7 +119,7 @@ export default function PetugasRegister() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full bg-[#2d5cd5] text-white font-black py-5 rounded-[2rem] flex items-center justify-center gap-3 transition-all shadow-[0_20px_40px_-12px_rgba(45,92,213,0.4)] hover:shadow-[0_25px_50px_-12px_rgba(45,92,213,0.6)] active:scale-[0.97] disabled:opacity-50 uppercase tracking-[0.2em] text-xs"
+                className="w-full bg-[#0F2547] text-white font-black py-5 rounded-[2rem] flex items-center justify-center gap-3 transition-all shadow-[0_20px_40px_-12px_rgba(45,92,213,0.4)] hover:shadow-[0_25px_50px_-12px_rgba(45,92,213,0.6)] active:scale-[0.97] disabled:opacity-50 uppercase tracking-[0.2em] text-xs"
               >
                 {isSubmitting ? (
                   <>
@@ -140,7 +140,7 @@ export default function PetugasRegister() {
 
               <div className="flex justify-center gap-5">
                 {[Facebook, Twitter, Chrome, Apple].map((Icon, i) => (
-                  <button key={i} className="w-14 h-14 rounded-2xl border border-slate-100 flex items-center justify-center text-slate-400 hover:text-[#2d5cd5] hover:border-[#2d5cd5]/20 hover:bg-blue-50/50 transition-all active:scale-90">
+                  <button key={i} className="w-14 h-14 rounded-2xl border border-slate-100 flex items-center justify-center text-slate-400 hover:text-[#0F2547] hover:border-[#0F2547]/20 hover:bg-blue-50/50 transition-all active:scale-90">
                     <Icon size={20} fill="currentColor" className="opacity-80" />
                   </button>
                 ))}
@@ -148,7 +148,7 @@ export default function PetugasRegister() {
 
               <p className="text-center mt-10 text-sm font-bold text-slate-400">
                 Already have an account?{' '}
-                <Link to="/login" className="text-[#2d5cd5] hover:underline">Sign in</Link>
+                <Link to="/login" className="text-[#0F2547] hover:underline">Sign in</Link>
               </p>
             </div>
           </div>

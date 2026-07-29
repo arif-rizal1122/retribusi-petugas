@@ -172,7 +172,7 @@
   }
 
   th {
-    background-color: #074764 !important;
+    background-color: #0F2547 !important;
     color: white !important;
     font-weight: bold !important;
   }
@@ -223,7 +223,7 @@
   [class*="bg-gradient"],
   .from-blue-600,
   [class*="from-blue-600"] {
-    background: #074764 !important;
+    background: #0F2547 !important;
     color: white !important;
     padding: 12pt !important;
     border-radius: 8px !important;
@@ -264,7 +264,7 @@
   }
 
   [class*="bg-blue-600"] {
-    background-color: #074764 !important;
+    background-color: #0F2547 !important;
     color: white !important;
   }
 
@@ -311,8 +311,8 @@
     text-align: center;
     font-size: 14pt;
     font-weight: 900;
-    color: #074764;
-    border-bottom: 2px solid #074764;
+    color: #0F2547;
+    border-bottom: 2px solid #0F2547;
     padding-bottom: 8pt;
     margin-bottom: 12pt;
   }

@@ -36,7 +36,7 @@ export function InstallPWA() {
       <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-[0_20px_50px_rgba(0,0,0,0.2)] border border-slate-100 dark:border-slate-800 flex flex-col gap-4">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-gradient-to-br from-[#2d5cd5] to-blue-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-blue-500/30">
+            <div className="w-14 h-14 bg-gradient-to-br from-[#0F2547] to-blue-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-blue-500/30">
               <Download size={28} />
             </div>
             <div>
@@ -54,7 +54,7 @@ export function InstallPWA() {
         
         <button
           onClick={handleInstall}
-          className="w-full bg-[#2d5cd5] text-white py-3 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-xl shadow-blue-500/20 active:scale-[0.98]"
+          className="w-full bg-[#0F2547] text-white py-3 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-xl shadow-blue-500/20 active:scale-[0.98]"
         >
           Pasang Sekarang
         </button>

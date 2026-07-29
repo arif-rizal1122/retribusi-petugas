@@ -43,7 +43,7 @@ const slides = [
         </div>
       </div>
     ),
-    bg: 'from-[#074764] via-blue-600 to-indigo-700'
+    bg: 'from-[#0F2547] via-blue-600 to-indigo-700'
   },
   {
     id: 'login',
@@ -347,7 +347,7 @@ const slides = [
         <p className="text-blue-300/40 text-xs">Versi 2.0 | Februari 2026</p>
       </div>
     ),
-    bg: 'from-[#074764] via-blue-600 to-indigo-700'
+    bg: 'from-[#0F2547] via-blue-600 to-indigo-700'
   },
 ];
 
@@ -442,7 +442,7 @@ export default function Presentation() {
       {/* Progress bar */}
       <div className="shrink-0 h-1 bg-black/10">
         <div 
-          className="h-full bg-[#d9a742] transition-all duration-500"
+          className="h-full bg-[#00C8E5] transition-all duration-500"
           style={{ width: `${((currentSlide + 1) / slides.length) * 100}%` }}
         />
       </div>
@@ -485,7 +485,7 @@ export default function Presentation() {
               key={i}
               onClick={() => setCurrentSlide(i)}
               className={`h-1.5 rounded-full transition-all ${
-                i === currentSlide ? 'w-6 bg-[#074764]' : 'w-1.5 bg-gray-300 hover:bg-gray-400'
+                i === currentSlide ? 'w-6 bg-[#0F2547]' : 'w-1.5 bg-gray-300 hover:bg-gray-400'
               }`}
             />
           ))}

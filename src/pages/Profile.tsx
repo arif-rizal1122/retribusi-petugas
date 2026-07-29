@@ -223,12 +223,12 @@ export default function Profile() {
                   className="w-full h-full object-cover"
                   onError={(e) => {
                     (e.target as HTMLImageElement).style.display = 'none';
-                    (e.target as HTMLImageElement).parentElement!.classList.add('bg-gradient-to-br', 'from-[#2d5cd5]', 'to-blue-500', 'flex', 'items-center', 'justify-center');
+                    (e.target as HTMLImageElement).parentElement!.classList.add('bg-gradient-to-br', 'from-[#0F2547]', 'to-blue-500', 'flex', 'items-center', 'justify-center');
                     (e.target as HTMLImageElement).parentElement!.innerHTML = `<span class="text-3xl font-black text-white">${user?.name?.charAt(0) || '?'}</span>`;
                   }}
                 />
               ) : (
-                <div className="w-full h-full bg-gradient-to-br from-[#2d5cd5] to-blue-500 flex items-center justify-center text-3xl font-black text-white">
+                <div className="w-full h-full bg-gradient-to-br from-[#0F2547] to-blue-500 flex items-center justify-center text-3xl font-black text-white">
                   {user?.name?.charAt(0) || <User size={40} />}
                 </div>
               )}
@@ -236,7 +236,7 @@ export default function Profile() {
             {/* Camera Button */}
             <button 
               onClick={() => avatarInputRef.current?.click()}
-              className="absolute -bottom-1 -right-1 w-9 h-9 bg-[#2d5cd5] hover:bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-500/30 flex items-center justify-center transition-all active:scale-90 z-10"
+              className="absolute -bottom-1 -right-1 w-9 h-9 bg-[#0F2547] hover:bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-500/30 flex items-center justify-center transition-all active:scale-90 z-10"
             >
               {uploadingAvatar ? <Loader2 size={16} className="animate-spin" /> : <Camera size={16} />}
             </button>
@@ -297,7 +297,7 @@ export default function Profile() {
           {/* Edit Profile Button */}
           <button 
             onClick={() => setShowEditModal(true)}
-            className="mt-8 w-full py-4 bg-[#2d5cd5] hover:bg-blue-600 text-white font-black text-[10px] uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-blue-500/20 transition-all active:scale-95 flex items-center justify-center gap-3"
+            className="mt-8 w-full py-4 bg-[#0F2547] hover:bg-blue-600 text-white font-black text-[10px] uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-blue-500/20 transition-all active:scale-95 flex items-center justify-center gap-3"
           >
             <Pencil size={14} />
             Edit Profile
@@ -406,7 +406,7 @@ export default function Profile() {
             >
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-slate-50 dark:bg-slate-800/50 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <item.icon size={22} className="text-[#2d5cd5]" />
+                  <item.icon size={22} className="text-[#0F2547]" />
                 </div>
                 <span className="font-black text-[11px] uppercase tracking-widest text-slate-700 dark:text-slate-300">{item.label}</span>
               </div>
@@ -426,7 +426,7 @@ export default function Profile() {
               className={`w-full flex items-center justify-between px-5 py-4 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors border-b border-slate-100 dark:border-slate-800 last:border-b-0 ${item.className || ''}`}
             >
               <div className="flex items-center gap-4">
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform ${item.iconClassName || 'bg-slate-50 dark:bg-slate-800/50 text-[#2d5cd5]'}`}>
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform ${item.iconClassName || 'bg-slate-50 dark:bg-slate-800/50 text-[#0F2547]'}`}>
                   <item.icon size={22} />
                 </div>
                 <span className="font-black text-[11px] uppercase tracking-widest">{item.label}</span>
@@ -467,12 +467,12 @@ export default function Profile() {
                     {avatarPreview || avatarUrl ? (
                       <img src={avatarPreview || avatarUrl || ''} alt="Avatar" className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-[#2d5cd5] to-blue-500 flex items-center justify-center text-2xl font-black text-white">
+                      <div className="w-full h-full bg-gradient-to-br from-[#0F2547] to-blue-500 flex items-center justify-center text-2xl font-black text-white">
                         {user?.name?.charAt(0)}
                       </div>
                     )}
                   </div>
-                  <label className="absolute -bottom-1 -right-1 w-7 h-7 bg-[#2d5cd5] hover:bg-blue-600 text-white rounded-lg shadow-md flex items-center justify-center cursor-pointer transition-all active:scale-90">
+                  <label className="absolute -bottom-1 -right-1 w-7 h-7 bg-[#0F2547] hover:bg-blue-600 text-white rounded-lg shadow-md flex items-center justify-center cursor-pointer transition-all active:scale-90">
                     <Camera size={14} />
                     <input type="file" className="hidden" accept="image/*" onChange={handleAvatarChange} />
                   </label>

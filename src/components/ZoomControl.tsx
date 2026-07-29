@@ -109,7 +109,7 @@ export default function ZoomControl({ variant = 'header' }: ZoomControlProps) {
           className={`min-w-[2.8rem] h-8 flex items-center justify-center rounded-lg text-[10px] font-black tracking-tight transition-all active:scale-95 ${
             isDefault
               ? 'text-slate-400 dark:text-slate-500'
-              : 'text-[#2d5cd5] dark:text-blue-400 hover:bg-white dark:hover:bg-slate-700'
+              : 'text-[#0F2547] dark:text-blue-400 hover:bg-white dark:hover:bg-slate-700'
           }`}
           title="Reset ke 100%"
         >

@@ -122,7 +122,7 @@ export default function Layout({ children }: LayoutProps) {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans selection:bg-[#2d5cd5]/10 selection:text-[#2d5cd5] pb-24 lg:pb-0 relative overflow-x-hidden">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans selection:bg-[#0F2547]/10 selection:text-[#0F2547] pb-24 lg:pb-0 relative overflow-x-hidden">
       
       {/* Top Navigation Bar (Desktop Only) */}
       <header className="hidden lg:block fixed top-0 left-0 right-0 h-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-100 dark:border-slate-800 z-[40] px-8">
@@ -143,13 +143,13 @@ export default function Layout({ children }: LayoutProps) {
 
           {/* Center: Search */}
           <div className="flex-1 max-w-md relative group">
-            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#2d5cd5] transition-colors">
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#0F2547] transition-colors">
               <Search size={18} />
             </div>
             <input 
               type="text" 
               placeholder="Cari transaksi, WP, atau tagihan..." 
-              className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-2xl py-2.5 pl-12 pr-4 text-sm font-medium focus:ring-2 focus:ring-[#2d5cd5]/20 focus:bg-white transition-all outline-none"
+              className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-2xl py-2.5 pl-12 pr-4 text-sm font-medium focus:ring-2 focus:ring-[#0F2547]/20 focus:bg-white transition-all outline-none"
             />
           </div>
 
@@ -177,15 +177,15 @@ export default function Layout({ children }: LayoutProps) {
 
             <button 
               onClick={() => navigate('/profile')}
-              className="flex items-center gap-3 p-1.5 pr-4 pl-1.5 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-800 rounded-xl shadow-sm hover:shadow-md hover:border-[#2d5cd5]/20 transition-all group"
+              className="flex items-center gap-3 p-1.5 pr-4 pl-1.5 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-800 rounded-xl shadow-sm hover:shadow-md hover:border-[#0F2547]/20 transition-all group"
             >
-              <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-500 group-hover:bg-[#2d5cd5]/10 group-hover:text-[#2d5cd5] transition-colors font-black overflow-hidden relative">
+              <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-500 group-hover:bg-[#0F2547]/10 group-hover:text-[#0F2547] transition-colors font-black overflow-hidden relative">
                 {userAvatarUrl ? (
                   <img src={userAvatarUrl} alt="" className="w-full h-full object-cover" />
                 ) : (
                   user?.name?.charAt(0) || <User size={20} />
                 )}
-                <div className="absolute inset-0 bg-gradient-to-tr from-[#2d5cd5]/10 to-transparent"></div>
+                <div className="absolute inset-0 bg-gradient-to-tr from-[#0F2547]/10 to-transparent"></div>
               </div>
               <div className="text-left">
                 <p className="text-xs font-black text-slate-900 dark:text-white leading-none mb-1 line-clamp-1">{user?.name}</p>
@@ -279,7 +279,7 @@ export default function Layout({ children }: LayoutProps) {
                   }`}
                 >
                   {isActive && (
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#2d5cd5] to-blue-400 z-0"></div>
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#0F2547] to-blue-400 z-0"></div>
                   )}
                   <span className={`relative z-10 ${isActive ? 'scale-110' : 'group-hover:scale-110'} transition-transform`}>
                     {item.icon}
@@ -343,7 +343,7 @@ export default function Layout({ children }: LayoutProps) {
               onClick={() => navigate(item.path)}
               className="flex flex-col items-center gap-1.5 transition-all w-16"
             >
-              <div className={`p-1.5 rounded-full transition-all ${isActive ? 'bg-blue-50 dark:bg-blue-900/20 text-[#2d5cd5]' : 'text-slate-400'}`}>
+              <div className={`p-1.5 rounded-full transition-all ${isActive ? 'bg-blue-50 dark:bg-blue-900/20 text-[#0F2547]' : 'text-slate-400'}`}>
                 <item.icon size={22} strokeWidth={isActive ? 2.5 : 2} className={isActive ? 'text-blue-500' : ''} />
               </div>
               <span className={`text-[10px] font-bold ${isActive ? 'text-slate-900 dark:text-white' : 'text-slate-400'}`}>{item.label}</span>

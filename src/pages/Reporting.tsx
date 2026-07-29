@@ -149,19 +149,19 @@ export default function Reporting() {
         <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm md:col-span-1">
           <button 
             onClick={() => handleFilterChange('day')}
-            className={`flex-1 py-1.5 text-xs font-black uppercase tracking-widest rounded-lg transition-all ${filterType === 'day' ? 'bg-white dark:bg-slate-700 text-[#2d5cd5] shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+            className={`flex-1 py-1.5 text-xs font-black uppercase tracking-widest rounded-lg transition-all ${filterType === 'day' ? 'bg-white dark:bg-slate-700 text-[#0F2547] shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
           >
             Harian
           </button>
           <button 
             onClick={() => handleFilterChange('week')}
-            className={`flex-1 py-1.5 text-xs font-black uppercase tracking-widest rounded-lg transition-all ${filterType === 'week' ? 'bg-white dark:bg-slate-700 text-[#2d5cd5] shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+            className={`flex-1 py-1.5 text-xs font-black uppercase tracking-widest rounded-lg transition-all ${filterType === 'week' ? 'bg-white dark:bg-slate-700 text-[#0F2547] shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
           >
             Pekanan
           </button>
           <button 
             onClick={() => handleFilterChange('month')}
-            className={`flex-1 py-1.5 text-xs font-black uppercase tracking-widest rounded-lg transition-all ${filterType === 'month' ? 'bg-white dark:bg-slate-700 text-[#2d5cd5] shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+            className={`flex-1 py-1.5 text-xs font-black uppercase tracking-widest rounded-lg transition-all ${filterType === 'month' ? 'bg-white dark:bg-slate-700 text-[#0F2547] shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
           >
             Bulanan
           </button>

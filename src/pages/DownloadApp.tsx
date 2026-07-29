@@ -26,7 +26,7 @@ export default function DownloadApp() {
 
       <div className="max-w-2xl mx-auto px-6 space-y-8">
         {/* Main Hero Card */}
-        <div className="bg-gradient-to-br from-[#2d5cd5] to-blue-600 rounded-[2.5rem] p-8 text-white shadow-2xl shadow-blue-500/20 relative overflow-hidden">
+        <div className="bg-gradient-to-br from-[#0F2547] to-blue-600 rounded-[2.5rem] p-8 text-white shadow-2xl shadow-blue-500/20 relative overflow-hidden">
           <div className="relative z-10">
             <div className="w-16 h-16 bg-white rounded-2xl p-1 flex items-center justify-center mb-6 shadow-md border border-white/40">
               <img src="/app-icon.png" alt="App Icon" className="w-full h-full object-contain rounded-xl" />
@@ -44,7 +44,7 @@ export default function DownloadApp() {
                   document.getElementById('install-guide')?.scrollIntoView({ behavior: 'smooth' });
                 }
               }}
-              className="w-full py-5 bg-white text-[#2d5cd5] rounded-[2rem] font-black text-sm uppercase tracking-[0.2em] shadow-2xl shadow-blue-900/40 active:scale-[0.98] transition-all hover:brightness-105 mb-4"
+              className="w-full py-5 bg-white text-[#0F2547] rounded-[2rem] font-black text-sm uppercase tracking-[0.2em] shadow-2xl shadow-blue-900/40 active:scale-[0.98] transition-all hover:brightness-105 mb-4"
             >
               {isInstallable ? 'Pasang Aplikasi Sekarang' : 'Lihat Panduan Pasang'}
             </button>
@@ -105,7 +105,7 @@ export default function DownloadApp() {
           <h4 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest mb-6">Keuntungan Aplikasi PWA</h4>
           <div className="space-y-4">
             <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-[#2d5cd5]/10 text-[#2d5cd5] rounded-xl flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 bg-[#0F2547]/10 text-[#0F2547] rounded-xl flex items-center justify-center shrink-0">
                 <Monitor size={20} />
               </div>
               <p className="text-xs font-bold text-slate-600 dark:text-slate-400">Tampilan Full screen tanpa toolbar browser yang mengganggu.</p>

@@ -311,7 +311,7 @@ export default function PetaLapangan() {
             width: 48px; height: 48px; 
             background: white; border-radius: 50%; 
             display: flex; align-items: center; justify-content: center; 
-            box-shadow: 0 4px 20px rgba(45,92,213,0.4); border: 4px solid #2d5cd5;
+            box-shadow: 0 4px 20px rgba(45,92,213,0.4); border: 4px solid #0F2547;
             overflow: hidden;
             animation: pulse 2s ease-in-out infinite;
           ">
@@ -319,7 +319,7 @@ export default function PetaLapangan() {
           </div>
           <div style="
             position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
-            background: #2d5cd5; color: white; padding: 3px 8px; border-radius: 6px;
+            background: #0F2547; color: white; padding: 3px 8px; border-radius: 6px;
             font-size: 8px; font-weight: 900; white-space: nowrap; border: 2px solid white;
             letter-spacing: 0.1em;
           ">
@@ -327,7 +327,7 @@ export default function PetaLapangan() {
           </div>
           <div style="
             position: absolute; bottom: -4px; left: 50%; transform: translateX(-50%);
-            width: 12px; height: 12px; background: #2d5cd5; border-radius: 50%;
+            width: 12px; height: 12px; background: #0F2547; border-radius: 50%;
             border: 3px solid white; box-shadow: 0 0 0 4px rgba(45,92,213,0.2);
           "></div>
         </div>
@@ -414,7 +414,7 @@ export default function PetaLapangan() {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-12 h-12 animate-spin text-[#2d5cd5]" />
+          <Loader2 className="w-12 h-12 animate-spin text-[#0F2547]" />
           <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Memuat Peta...</p>
         </div>
       </div>
@@ -436,7 +436,7 @@ export default function PetaLapangan() {
           </button>
           <div className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl rounded-2xl px-4 py-2.5 shadow-xl border border-white/50">
             <h1 className="text-[11px] font-black text-slate-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
-              <MapPin size={14} className="text-[#2d5cd5]" />
+              <MapPin size={14} className="text-[#0F2547]" />
               Peta Lapangan
             </h1>
           </div>
@@ -462,7 +462,7 @@ export default function PetaLapangan() {
             onClick={() => setShouldRecenter(prev => !prev)}
             className="w-11 h-11 bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl rounded-2xl flex items-center justify-center shadow-xl border border-white/50 active:scale-90 transition-all"
           >
-            <Crosshair size={18} className="text-[#2d5cd5]" />
+            <Crosshair size={18} className="text-[#0F2547]" />
           </button>
 
           {/* Refresh data */}
@@ -500,22 +500,22 @@ export default function PetaLapangan() {
             <Circle
               center={myPosition}
               radius={100}
-              pathOptions={{ color: '#2d5cd5', fillColor: '#2d5cd5', fillOpacity: 0.08, weight: 1 }}
+              pathOptions={{ color: '#0F2547', fillColor: '#0F2547', fillOpacity: 0.08, weight: 1 }}
             />
             <Marker position={myPosition} icon={createPetugasIcon()}>
               <Popup>
                 <div className="p-3 min-w-[180px] font-sans text-center">
-                  <div className="w-12 h-12 mx-auto mb-2 rounded-xl overflow-hidden border-2 border-[#2d5cd5] shadow-md">
+                  <div className="w-12 h-12 mx-auto mb-2 rounded-xl overflow-hidden border-2 border-[#0F2547] shadow-md">
                     {userAvatarUrl ? (
                       <img src={userAvatarUrl} alt="" className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-full h-full bg-[#2d5cd5] flex items-center justify-center text-white font-black text-lg">
+                      <div className="w-full h-full bg-[#0F2547] flex items-center justify-center text-white font-black text-lg">
                         {user?.name?.charAt(0)}
                       </div>
                     )}
                   </div>
                   <h3 className="font-black text-slate-900 text-sm">{user?.name}</h3>
-                  <p className="text-[10px] text-[#2d5cd5] font-black uppercase tracking-wider mt-1">Posisi Saya</p>
+                  <p className="text-[10px] text-[#0F2547] font-black uppercase tracking-wider mt-1">Posisi Saya</p>
                   <p className="text-[9px] text-slate-400 mt-1">
                     {myPosition[0].toFixed(6)}, {myPosition[1].toFixed(6)}
                   </p>
@@ -539,7 +539,7 @@ export default function PetaLapangan() {
               <Popup>
                 <div className="p-3 min-w-[220px] font-sans">
                   <h3 className="font-black text-slate-900 text-sm mb-1">{potential.name}</h3>
-                  <p className="text-[10px] text-[#2d5cd5] font-black uppercase mb-2 tracking-wider">{potential.agency}</p>
+                  <p className="text-[10px] text-[#0F2547] font-black uppercase mb-2 tracking-wider">{potential.agency}</p>
                   
                   {potential.address && (
                     <p className="text-[10px] text-slate-500 mb-2">{potential.address}</p>
@@ -579,7 +579,7 @@ export default function PetaLapangan() {
                                  defaultVars: potential.metadata || {}, 
                                }
                              })}
-                             className="w-full py-2 bg-[#2d5cd5] hover:bg-blue-700 text-white rounded-lg text-[10px] font-black uppercase tracking-widest transition-all shadow-md shadow-blue-500/20 active:scale-95 text-center flex items-center justify-center gap-1.5"
+                             className="w-full py-2 bg-[#0F2547] hover:bg-blue-700 text-white rounded-lg text-[10px] font-black uppercase tracking-widest transition-all shadow-md shadow-blue-500/20 active:scale-95 text-center flex items-center justify-center gap-1.5"
                            >
                              <Calculator size={12} />
                              Buat SKPD (On-Site Billing)
@@ -600,7 +600,7 @@ export default function PetaLapangan() {
                   {/* Distance from petugas */}
                   {distance !== null && (
                     <div className="mt-2 pt-2 border-t border-slate-100 flex items-center gap-2">
-                      <Navigation size={12} className="text-[#2d5cd5]" />
+                      <Navigation size={12} className="text-[#0F2547]" />
                       <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">
                         Jarak: {formatDistance(distance)}
                       </span>
@@ -616,7 +616,7 @@ export default function PetaLapangan() {
       {/* Bottom Legend */}
       <div className="absolute bottom-24 sm:bottom-28 lg:bottom-6 left-4 z-[1000] bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl p-4 rounded-2xl border border-white/50 shadow-2xl space-y-2.5">
         <div className="flex items-center gap-2.5">
-          <div className="w-4 h-4 bg-[#2d5cd5] rounded-full border-2 border-white shadow-sm flex items-center justify-center">
+          <div className="w-4 h-4 bg-[#0F2547] rounded-full border-2 border-white shadow-sm flex items-center justify-center">
             <User size={8} className="text-white" />
           </div>
           <span className="text-[9px] font-black text-slate-600 dark:text-slate-300 uppercase tracking-widest">Posisi Saya</span>
@@ -636,7 +636,7 @@ export default function PetaLapangan() {
         <div className="absolute bottom-24 sm:bottom-28 lg:bottom-6 right-4 z-[1000] bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl p-4 rounded-2xl border border-white/50 shadow-2xl">
           <div className="grid grid-cols-2 gap-4 text-center">
             <div>
-              <p className="text-lg font-black text-[#2d5cd5]">{potentials.filter(p => p.status === 'taxpayer').length}</p>
+              <p className="text-lg font-black text-[#0F2547]">{potentials.filter(p => p.status === 'taxpayer').length}</p>
               <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Wajib Pajak</p>
             </div>
             <div>
@@ -680,7 +680,7 @@ export default function PetaLapangan() {
             <div className="p-6 overflow-y-auto">
               {paymentModal.loading ? (
                 <div className="flex flex-col items-center justify-center py-8">
-                  <Loader2 className="w-8 h-8 animate-spin text-[#2d5cd5] mb-4" />
+                  <Loader2 className="w-8 h-8 animate-spin text-[#0F2547] mb-4" />
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Mencari Tagihan...</p>
                 </div>
               ) : paymentModal.periods.length === 0 ? (
@@ -698,7 +698,7 @@ export default function PetaLapangan() {
                      <select
                        value={paymentModal.selectedPeriod}
                        onChange={(e) => setPaymentModal(prev => ({...prev, selectedPeriod: e.target.value}))}
-                       className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold focus:ring-2 focus:ring-[#2d5cd5] outline-none"
+                       className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold focus:ring-2 focus:ring-[#0F2547] outline-none"
                      >
                        {paymentModal.periods.map(p => (
                          <option key={p.period} value={p.period}>
@@ -711,7 +711,7 @@ export default function PetaLapangan() {
                   <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-900/50">
                     <div className="flex justify-between items-center mb-2">
                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Total Bayar Kasir</span>
-                       <span className="text-lg font-black text-[#2d5cd5]">
+                       <span className="text-lg font-black text-[#0F2547]">
                          Rp {(paymentModal.periods.find(p => p.period === paymentModal.selectedPeriod)?.total_amount || paymentModal.periods.find(p => p.period === paymentModal.selectedPeriod)?.amount || 0).toLocaleString('id-ID')}
                        </span>
                     </div>
@@ -725,12 +725,12 @@ export default function PetaLapangan() {
                   {/* Upload Bukti Pembayaran */}
                   <div className="mb-4">
                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Bukti Pembayaran (Opsional)</label>
-                    <label className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-2xl cursor-pointer transition-all overflow-hidden relative ${paymentModal.proofFile ? 'border-[#2d5cd5] bg-blue-50 dark:bg-blue-900/20' : 'border-slate-300 bg-slate-50 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800'}`}>
+                    <label className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-2xl cursor-pointer transition-all overflow-hidden relative ${paymentModal.proofFile ? 'border-[#0F2547] bg-blue-50 dark:bg-blue-900/20' : 'border-slate-300 bg-slate-50 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800'}`}>
                       {paymentModal.proofFile ? (
                         <>
                           <img src={URL.createObjectURL(paymentModal.proofFile)} alt="Preview" className="absolute inset-0 w-full h-full object-cover opacity-60" />
                           <div className="z-10 flex flex-col items-center bg-white/80 dark:bg-black/60 px-4 py-2 rounded-xl text-center">
-                            <span className="text-xs font-black text-[#2d5cd5] dark:text-blue-400 truncate max-w-[150px]">{paymentModal.proofFile.name}</span>
+                            <span className="text-xs font-black text-[#0F2547] dark:text-blue-400 truncate max-w-[150px]">{paymentModal.proofFile.name}</span>
                             <span className="text-[9px] font-bold text-blue-500 uppercase mt-1">Ganti Foto</span>
                           </div>
                         </>

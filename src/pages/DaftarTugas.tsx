@@ -260,7 +260,7 @@ export default function DaftarTugas() {
                     <button
                       onClick={() => document.getElementById(`photo-${task.id}`)?.click()}
                       disabled={uploadingId === task.id}
-                      className="w-full flex items-center justify-center gap-2 py-3 bg-[#2d5cd5] hover:bg-blue-600 disabled:bg-slate-400 text-white rounded-xl font-bold uppercase tracking-wider text-xs transition-colors shadow-lg shadow-blue-500/20"
+                      className="w-full flex items-center justify-center gap-2 py-3 bg-[#0F2547] hover:bg-blue-600 disabled:bg-slate-400 text-white rounded-xl font-bold uppercase tracking-wider text-xs transition-colors shadow-lg shadow-blue-500/20"
                     >
                       {uploadingId === task.id ? (
                         <>Uploading...</>

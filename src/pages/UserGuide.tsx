@@ -326,7 +326,7 @@ export default function UserGuide() {
         <div className="flex items-center gap-3">
           <button 
             onClick={() => navigate('/presentation')}
-            className="print:hidden w-14 h-14 bg-[#074764] hover:bg-[#063852] rounded-2xl flex items-center justify-center text-white shadow-xl shadow-blue-500/20 transition-all active:scale-95"
+            className="print:hidden w-14 h-14 bg-[#0F2547] hover:bg-[#063852] rounded-2xl flex items-center justify-center text-white shadow-xl shadow-blue-500/20 transition-all active:scale-95"
             title="Lihat Presentasi"
           >
             <Presentation size={24} />

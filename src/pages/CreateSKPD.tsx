@@ -206,7 +206,7 @@ export default function CreateSKPD() {
           <div className="w-24 h-24 rounded-full bg-blue-500/10 animate-ping absolute inset-0" />
           <div className="w-24 h-24 rounded-full bg-blue-500/20 animate-pulse absolute inset-0" />
           <div className="w-24 h-24 rounded-3xl bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 shadow-xl flex items-center justify-center relative z-10">
-            <Loader2 className="w-10 h-10 animate-spin text-[#2d5cd5]" />
+            <Loader2 className="w-10 h-10 animate-spin text-[#0F2547]" />
           </div>
         </div>
         <h1 className="text-2xl font-black text-slate-900 dark:text-white mb-3 tracking-tight">Menyiapkan Dokumen SKPD</h1>
@@ -239,7 +239,7 @@ export default function CreateSKPD() {
 
   return (
     <div className="max-w-4xl mx-auto py-10 px-6 animate-in fade-in slide-in-from-bottom-4 duration-1000">
-      <div className="bg-gradient-to-br from-[#2d5cd5] to-blue-700 rounded-[3rem] p-1 shadow-2xl shadow-blue-500/20 mb-12">
+      <div className="bg-gradient-to-br from-[#0F2547] to-blue-700 rounded-[3rem] p-1 shadow-2xl shadow-blue-500/20 mb-12">
         <div className="bg-white dark:bg-slate-900 rounded-[2.8rem] p-8 md:p-12">
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
@@ -269,14 +269,14 @@ export default function CreateSKPD() {
              <div className="relative z-10">
                 <div className="flex flex-col md:flex-row justify-between items-start mb-12 pb-8 border-b-2 border-slate-200 dark:border-slate-700 border-dashed">
                   <div className="mb-6 md:mb-0">
-                    <h3 className="text-[11px] font-black text-[#2d5cd5] uppercase tracking-[0.4em] mb-4">Pemerintah Kota Baubau</h3>
+                    <h3 className="text-[11px] font-black text-[#0F2547] uppercase tracking-[0.4em] mb-4">Pemerintah Kota Baubau</h3>
                     <p className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white leading-[1.1] tracking-tighter">
                       SURAT KETETAPAN<br/>PAJAK DAERAH (SKPD)
                     </p>
                   </div>
                   <div className="md:text-right">
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Nomor Bayar / Virtual Account</p>
-                    <p className="text-2xl font-mono font-black text-[#2d5cd5] tracking-widest">{createdBill?.bill_number}</p>
+                    <p className="text-2xl font-mono font-black text-[#0F2547] tracking-widest">{createdBill?.bill_number}</p>
                   </div>
                 </div>
 
@@ -303,7 +303,7 @@ export default function CreateSKPD() {
                 <div className="pt-10 border-t-2 border-slate-200 dark:border-slate-700 border-dashed flex flex-col md:flex-row justify-between items-center gap-8">
                   <div className="text-center md:text-left">
                     <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2">Total Pajak / Retribusi Terhutang</p>
-                    <p className="text-4xl md:text-5xl font-black text-[#2d5cd5] tracking-tighter">
+                    <p className="text-4xl md:text-5xl font-black text-[#0F2547] tracking-tighter">
                        {result ? formatCurrency(result.result) : 'Rp 0'}
                     </p>
                   </div>
@@ -321,7 +321,7 @@ export default function CreateSKPD() {
             <button
               onClick={handleDownloadSkpd}
               disabled={downloadingPdf}
-              className="w-full sm:w-auto px-10 py-5 bg-[#2d5cd5] hover:bg-blue-700 text-white rounded-[2rem] font-black uppercase tracking-[0.2em] text-[10px] flex items-center justify-center gap-3 transition-all shadow-xl shadow-blue-500/20 active:scale-95 disabled:opacity-50"
+              className="w-full sm:w-auto px-10 py-5 bg-[#0F2547] hover:bg-blue-700 text-white rounded-[2rem] font-black uppercase tracking-[0.2em] text-[10px] flex items-center justify-center gap-3 transition-all shadow-xl shadow-blue-500/20 active:scale-95 disabled:opacity-50"
             >
               {downloadingPdf ? (
                 <><Loader2 className="w-5 h-5 animate-spin" /> Mengunduh PDF...</>
@@ -342,7 +342,7 @@ export default function CreateSKPD() {
       <div className="text-center">
         <button 
           onClick={() => navigate('/dashboard')}
-          className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] hover:text-[#2d5cd5] transition-colors"
+          className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] hover:text-[#0F2547] transition-colors"
         >
           Kembali ke Dashboard
         </button>
