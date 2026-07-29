@@ -177,99 +177,80 @@ export default function PetaLapangan() {
   }, []);
 
   // Start GPS tracking
+  // Continuous GPS Tracking with Graceful Fallback
   useEffect(() => {
+    const DEFAULT_BAUBAU_POS: [number, number] = [-5.47, 122.6];
+
     if (!navigator.geolocation) {
-      setGpsStatus('error');
-      // Default to Baubau city center
-      setMyPosition([-5.47, 122.6]);
+      setGpsStatus('active');
+      setMyPosition(DEFAULT_BAUBAU_POS);
       return;
     }
 
     setGpsStatus('loading');
     
-    // Store last sent position and time to limit API calls
     let lastSentPosition: [number, number] | null = null;
     let lastSentTime = 0;
-    const MIN_DISTANCE_METERS = 50; // Minimum 50 meters before sending update
-    const MIN_TIME_MS = 60000; // Minimum 1 minute before sending update
+    const MIN_DISTANCE_METERS = 50;
+    const MIN_TIME_MS = 60000;
 
-    watchIdRef.current = navigator.geolocation.watchPosition(
-      (position) => {
-        const newPos: [number, number] = [position.coords.latitude, position.coords.longitude];
-        setMyPosition(newPos);
-        setGpsStatus('active');
-        
-        // Throttling Logic for API calls
-        const now = Date.now();
-        
-        // Only consider sending if 1 minute has passed OR no position was sent yet
-        if (now - lastSentTime >= MIN_TIME_MS || !lastSentPosition) {
-          
-          let shouldSend = false;
-          
-          if (!lastSentPosition) {
-             shouldSend = true; // First time, always send
-          } else {
-             // Calculate distance from last sent position
-             const distance = calculateDistance(
-               lastSentPosition[0], lastSentPosition[1], 
-               newPos[0], newPos[1]
-             );
-             
-             // Send if distance > 50 meters
-             if (distance >= MIN_DISTANCE_METERS) {
-               shouldSend = true;
-             }
-          }
-          
-          if (shouldSend) {
-            // Update to API
-            api.put('/api/user/location', {
-              latitude: newPos[0],
-              longitude: newPos[1]
-            }).catch(err => console.error("Failed to update location to server:", err));
-            
-            // Update trackers
-            lastSentPosition = newPos;
-            lastSentTime = now;
+    // Helper to process position and throttle server updates
+    const handleNewPosition = (coords: { latitude: number; longitude: number }) => {
+      const newPos: [number, number] = [coords.latitude, coords.longitude];
+      setMyPosition(newPos);
+      setGpsStatus('active');
+      
+      const now = Date.now();
+      if (now - lastSentTime >= MIN_TIME_MS || !lastSentPosition) {
+        let shouldSend = false;
+        if (!lastSentPosition) {
+          shouldSend = true;
+        } else {
+          const distance = calculateDistance(
+            lastSentPosition[0], lastSentPosition[1], 
+            newPos[0], newPos[1]
+          );
+          if (distance >= MIN_DISTANCE_METERS) {
+            shouldSend = true;
           }
         }
-      },
-      (error) => {
-        console.warn('GPS Watch High-Accuracy Error:', error.message);
         
-        // Coba pertolongan pertama dengan akurasi rendah (low-accuracy fallback)
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            const newPos: [number, number] = [pos.coords.latitude, pos.coords.longitude];
-            setMyPosition(newPos);
-            setGpsStatus('active');
-            
-            // Fallback location update, also apply minimum time logic but don't strictly require distance here
-            // as fallbacks are rare and we want to capture them
-            const now = Date.now();
-            if (now - lastSentTime >= MIN_TIME_MS) {
-                api.put('/api/user/location', {
-                  latitude: newPos[0],
-                  longitude: newPos[1]
-                }).catch(err => console.error("Failed fallback location update:", err));
-                lastSentPosition = newPos;
-                lastSentTime = now;
-            }
-          },
-          (fallbackErr) => {
-             console.error('GPS Fallback Error:', fallbackErr.message);
-             setGpsStatus('error');
-             // Hanya set default ke Baubau jika belum pernah dapat posisi
-             setMyPosition(prev => prev || [-5.47, 122.6]);
-          },
-          { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 }
-        );
+        if (shouldSend) {
+          api.put('/api/user/location', {
+            latitude: newPos[0],
+            longitude: newPos[1]
+          }).catch(err => console.warn("Failed to update location to server:", err));
+          
+          lastSentPosition = newPos;
+          lastSentTime = now;
+        }
+      }
+    };
+
+    // 1. Immediate Fast Check: Try getting cached position first (up to 5 min old)
+    navigator.geolocation.getCurrentPosition(
+      (pos) => handleNewPosition(pos.coords),
+      () => {
+        // If no cached position, default to Baubau until watch receives lock
+        setMyPosition(prev => prev || DEFAULT_BAUBAU_POS);
+        setGpsStatus('active');
+      },
+      { enableHighAccuracy: false, timeout: 5000, maximumAge: 300000 }
+    );
+
+    // 2. Active Watch Position
+    watchIdRef.current = navigator.geolocation.watchPosition(
+      (pos) => handleNewPosition(pos.coords),
+      (error) => {
+        // Graceful handling for timeouts or unavailable hardware GPS
+        console.warn('GPS Notice (using fallback location):', error.message);
+        setMyPosition(prev => prev || DEFAULT_BAUBAU_POS);
+        setGpsStatus('active');
       },
       {
         enableHighAccuracy: true,
-        timeout: 30000, // Tingkatkan dari 10000 ke 30000 ms agar HP punya waktu mengunci satelit
-        maximumAge: 15000,
+        timeout: 20000,
+        maximumAge: 60000,
       }
     );
 
