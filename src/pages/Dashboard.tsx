@@ -361,28 +361,6 @@ export default function Dashboard() {
       {/* MOBILE DASHBOARD REDESIGN (lg:hidden) - MATCHING MOCKUP */}
       {/* ============================================================== */}
       <div className="lg:hidden flex flex-col gap-5 px-1 pt-1">
-        
-        {/* Top Header Row */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-[#0F2547] rounded-2xl flex items-center justify-center p-1.5 shadow-sm border border-slate-700">
-              <img src="/mitra-logo.png" alt="Logo" className="w-full h-full object-contain" />
-            </div>
-            <div>
-              <h1 className="text-base font-black text-[#0F2547] leading-none">M-PAD</h1>
-              <p className="text-[11px] font-bold text-slate-400 leading-none mt-0.5">Petugas</p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-slate-700 shadow-sm border border-slate-100 hover:bg-slate-50 active:scale-95 transition-all">
-              <Bell size={18} />
-            </button>
-            <button className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-slate-700 shadow-sm border border-slate-100 hover:bg-slate-50 active:scale-95 transition-all">
-              <Menu size={18} />
-            </button>
-          </div>
-        </div>
 
         {/* User Greeting Bar */}
         <div className="flex items-center justify-between gap-2">
