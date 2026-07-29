@@ -4,9 +4,9 @@ import { useAuth } from '../contexts/AuthContext';
 import { ArrowLeft, Loader2, Facebook, Twitter, Chrome, Apple, Eye, EyeOff, BookOpen, Download } from 'lucide-react';
 import { InstallPWA } from '../components/InstallPWA';
 
-// Baubau Logo Colors
-const BAUBAU_BLUE = '#074764';
-const BAUBAU_GOLD = '#d9a742';
+// M-PAD Logo Official Palette
+const BAUBAU_BLUE = '#0F2547';
+const BAUBAU_GOLD = '#00C8E5';
 
 export default function PetugasLogin() {
   const [email, setEmail] = useState('');

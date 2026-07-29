@@ -64,7 +64,7 @@ export default function LandingPage() {
             {/* Login Button */}
             <Link 
               to="/login"
-              className="px-6 py-2.5 bg-[#0F2547] hover:bg-[#1E3A8A] text-white rounded-xl font-bold text-sm transition-all shadow-md shadow-blue-950/20 flex items-center gap-2 active:scale-95"
+              className="px-6 py-2.5 bg-[#0F2547] hover:bg-[#0B1E36] text-white rounded-xl font-bold text-sm transition-all shadow-md shadow-blue-950/20 flex items-center gap-2 active:scale-95"
             >
               <LogIn size={16} />
               <span>Masuk</span>
@@ -98,7 +98,7 @@ export default function LandingPage() {
               <div className="flex flex-wrap gap-4 pt-2">
                 <Link 
                   to="/login"
-                  className="px-7 py-4 bg-[#0F2547] hover:bg-[#1E3A8A] text-white rounded-2xl font-bold transition-all shadow-xl shadow-blue-950/20 flex items-center gap-2.5 text-sm active:scale-95"
+                  className="px-7 py-4 bg-[#0F2547] hover:bg-[#0B1E36] text-white rounded-2xl font-bold transition-all shadow-xl shadow-blue-950/20 flex items-center gap-2.5 text-sm active:scale-95"
                 >
                   <span>Mulai Pendataan</span>
                   <ArrowRight className="w-4 h-4" />
