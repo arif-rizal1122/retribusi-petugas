@@ -204,73 +204,29 @@ export default function Layout({ children }: LayoutProps) {
         </div>
       </header>
 
-      {/* Mobile Top Header (Clean Style) */}
-      <div className="lg:hidden px-5 pt-2 pb-2">
+      {/* Mobile Top Header (Unified Single Top Navbar) */}
+      <div className="lg:hidden px-5 pt-3 pb-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-100 dark:border-slate-800 sticky top-0 z-[40]">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3 relative">
-            <button 
-              onClick={() => setProfileOpen(!profileOpen)}
-              className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden border-2 border-white dark:border-slate-700 shadow-sm flex items-center justify-center active:scale-95 transition-all"
-            >
-              {userAvatarUrl ? (
-                <img src={userAvatarUrl} alt="" className="w-full h-full object-cover" />
-              ) : (
-                <span className="font-bold text-slate-500">{user?.name?.charAt(0) || <User size={20} />}</span>
-              )}
-            </button>
-            <div>
-              <p className="text-slate-500 text-[11px] font-medium leading-none mb-1">Hi, {user?.name} <span className="text-sm">👋</span></p>
-              <div className="flex items-center gap-1">
-                <Map className="w-3.5 h-3.5 text-blue-500" />
-                <h2 className="text-sm font-bold text-slate-900 dark:text-white tracking-tight leading-none">Kota Baubau</h2>
-              </div>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-[#0F2547] rounded-2xl flex items-center justify-center p-1.5 shadow-sm border border-slate-700">
+              <img src="/mitra-logo.png" alt="Logo" className="w-full h-full object-contain" />
             </div>
-
-            {/* Mobile Profile Dropdown */}
-            {profileOpen && (
-              <div className="absolute top-14 left-0 w-56 bg-white dark:bg-slate-900 rounded-[2rem] shadow-2xl border border-slate-100 dark:border-slate-800 z-[200] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                <div className="p-4 border-b border-slate-50 dark:border-slate-800">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1.5">Signed in as</p>
-                  <p className="text-sm font-black text-slate-900 dark:text-white truncate">{user?.name}</p>
-                </div>
-                <div className="p-2">
-                  <button 
-                    onClick={() => { navigate('/profile'); setProfileOpen(false); }}
-                    className="w-full flex items-center gap-3 p-3 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-colors text-sm font-bold"
-                  >
-                    <User size={18} />
-                    Lihat Profil
-                  </button>
-                  <button 
-                    onClick={toggleTheme}
-                    className="w-full flex items-center gap-3 p-3 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-colors text-sm font-bold"
-                  >
-                    {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
-                    Mode {theme === 'light' ? 'Gelap' : 'Terang'}
-                  </button>
-                  <div className="h-px bg-slate-50 dark:bg-slate-800 my-1"></div>
-                  <button 
-                    onClick={handleLogout}
-                    className="w-full flex items-center gap-3 p-3 text-rose-500 hover:bg-rose-50 rounded-xl transition-colors text-sm font-black uppercase tracking-widest"
-                  >
-                    <LogOut size={18} />
-                    Keluar
-                  </button>
-                </div>
-              </div>
-            )}
+            <div>
+              <h1 className="text-base font-black text-[#0F2547] dark:text-white leading-none">M-PAD</h1>
+              <p className="text-[11px] font-bold text-slate-400 leading-none mt-0.5">Petugas Lapangan</p>
+            </div>
           </div>
-          
+
           <div className="flex items-center gap-2">
-            <button className="w-10 h-10 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center border border-slate-100 dark:border-slate-700 shadow-sm relative active:scale-95 transition-all">
-              <Bell size={18} className="text-slate-600 dark:text-slate-300" />
-              <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-800"></span>
+            <button className="w-10 h-10 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-700 dark:text-slate-300 shadow-sm border border-slate-200/80 dark:border-slate-700 hover:bg-slate-100 active:scale-95 transition-all relative">
+              <Bell size={18} />
+              <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-rose-500 rounded-full border-2 border-white dark:border-slate-800"></span>
             </button>
             <button 
               onClick={() => setSidebarOpen(true)}
-              className="w-10 h-10 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center border border-slate-100 dark:border-slate-700 shadow-sm relative active:scale-95 transition-all"
+              className="w-10 h-10 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-700 dark:text-slate-300 shadow-sm border border-slate-200/80 dark:border-slate-700 hover:bg-slate-100 active:scale-95 transition-all"
             >
-              <Menu size={18} className="text-slate-600 dark:text-slate-300" />
+              <Menu size={18} />
             </button>
           </div>
         </div>
