@@ -137,6 +137,19 @@ export default function TaxpayerManagement() {
   });
 
   const [files, setFiles] = useState<Record<string, File | null>>({});
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
+  const handleFileChange = (key: string, file: File | null) => {
+    if (file && file.size > MAX_FILE_SIZE) {
+      toast.error(`Ukuran file terlalu besar (${(file.size / (1024 * 1024)).toFixed(1)}MB). Maksimal 5MB per file.`);
+      return;
+    }
+    setFiles(prev => ({ ...prev, [key]: file }));
+  };
+
+  const removeFile = (key: string) => {
+    setFiles(prev => ({ ...prev, [key]: null }));
+  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -741,8 +754,12 @@ export default function TaxpayerManagement() {
                     <p className="text-[10px] font-bold text-blue-600 truncate">{tp.npwpd || '-'}</p>
                   </div>
                   <div className="p-2 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                    <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Kontak</p>
-                    <p className="text-[10px] font-bold text-gray-700 dark:text-gray-300 truncate">{tp.phone || '-'}</p>
+                    <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Nama Objek</p>
+                    <p className="text-[10px] font-bold text-gray-700 dark:text-gray-300 truncate">
+                      {tp.tax_objects && tp.tax_objects.length > 0
+                        ? (tp.tax_objects.length === 1 ? tp.tax_objects[0].name : `${tp.tax_objects.length} Objek`)
+                        : tp.object_name || '-'}
+                    </p>
                   </div>
                 </div>
 
@@ -1037,6 +1054,19 @@ export default function TaxpayerManagement() {
                       <p className="text-gray-400 md:text-gray-500 text-xs md:text-sm font-medium text-center md:text-left">Tentukan nama objek dan klasifikasi retribusi</p>
                     </div>
 
+                    <div className="space-y-4 mb-4">
+                      <div className="group">
+                        <label className="block text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-2 ml-1">Nama Objek</label>
+                        <input
+                          type="text"
+                          placeholder="Contoh: Toko Sembako, Rumah Makan, Kandang Ayam"
+                          value={form.object_name}
+                          onChange={(e) => setForm({ ...form, object_name: e.target.value })}
+                          className="w-full px-5 md:px-6 py-4 bg-white dark:bg-gray-800 border-2 border-emerald-100 dark:border-emerald-900 rounded-2xl font-bold text-sm shadow-sm"
+                        />
+                      </div>
+                    </div>
+
                     <div className="bg-slate-50 dark:bg-gray-800/10 p-4 md:p-8 rounded-[2rem] border-2 border-gray-100 dark:border-gray-800">
                       <div className="flex items-center gap-4 mb-4 md:mb-6">
                         <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-xl text-blue-600">
@@ -1208,20 +1238,31 @@ export default function TaxpayerManagement() {
                           {ensureArray(cls.requirements).length > 0 && (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                               {ensureArray(cls.requirements).map((req: any, idx: number) => (
-                                <label key={req.key} className="block group cursor-pointer">
+                                <div key={req.key} className="block group">
                                   <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-1">{req.label}</div>
-                                  <div className={`p-6 md:p-8 rounded-[1.5rem] md:rounded-[2rem] border-2 border-dashed flex flex-col items-center justify-center gap-4 transition-all ${
-                                    files[req.key] ? 'bg-emerald-50 border-emerald-500/50' : idx % 2 === 0 ? 'bg-orange-50/50 border-orange-100 hover:border-orange-500' : 'bg-indigo-50/50 border-indigo-100 hover:border-indigo-500'
-                                  }`}>
-                                    <input type="file" onChange={e => setFiles({...files, [req.key]: e.target.files?.[0] || null})} className="hidden" />
-                                    <div className={`w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl flex items-center justify-center ${files[req.key] ? 'bg-emerald-500 text-white' : idx % 2 === 0 ? 'bg-white text-orange-400' : 'bg-white text-indigo-400'}`}>
-                                      {idx % 2 === 0 ? <Camera className="w-7 h-7" /> : <FileCheck className="w-7 h-7" />}
+                                  <label className="block cursor-pointer">
+                                    <div className={`p-6 md:p-8 rounded-[1.5rem] md:rounded-[2rem] border-2 border-dashed flex flex-col items-center justify-center gap-4 transition-all relative ${
+                                      files[req.key] ? 'bg-emerald-50 border-emerald-500/50' : idx % 2 === 0 ? 'bg-orange-50/50 border-orange-100 hover:border-orange-500' : 'bg-indigo-50/50 border-indigo-100 hover:border-indigo-500'
+                                    }`}>
+                                      <input type="file" accept=".jpg,.jpeg,.png,.pdf" onChange={e => handleFileChange(req.key, e.target.files?.[0] || null)} className="hidden" />
+                                      <div className={`w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl flex items-center justify-center ${files[req.key] ? 'bg-emerald-500 text-white' : idx % 2 === 0 ? 'bg-white text-orange-400' : 'bg-white text-indigo-400'}`}>
+                                        {idx % 2 === 0 ? <Camera className="w-7 h-7" /> : <FileCheck className="w-7 h-7" />}
+                                      </div>
+                                      <span className="text-[10px] font-black uppercase text-gray-400 tracking-tighter text-center">
+                                        {files[req.key] ? (files[req.key] as File).name : 'Klik untuk Upload'}
+                                      </span>
+                                      {files[req.key] && (
+                                        <button
+                                          type="button"
+                                          onClick={(e) => { e.stopPropagation(); e.preventDefault(); removeFile(req.key); }}
+                                          className="absolute -top-2 -right-2 w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-red-600 transition-all active:scale-90"
+                                        >
+                                          <X size={14} />
+                                        </button>
+                                      )}
                                     </div>
-                                    <span className="text-[10px] font-black uppercase text-gray-400 tracking-tighter text-center">
-                                      {files[req.key] ? (files[req.key] as File).name : 'Klik untuk Upload'}
-                                    </span>
-                                  </div>
-                                </label>
+                                  </label>
+                                </div>
                               ))}
                             </div>
                           )}
@@ -1393,25 +1434,31 @@ export default function TaxpayerManagement() {
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                      <div className="p-4 sm:p-6 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-50 dark:border-gray-800">
+                      <div className="p-4 sm:p-6 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-50 dark:border-gray-800 sm:col-span-2">
                         <div className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 sm:mb-2">Nama Wajib Pajak</div>
                         <div className="text-gray-900 dark:text-white font-bold text-sm sm:text-base">{form.name}</div>
-                      </div>
-                      <div className="p-4 sm:p-6 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-50 dark:border-gray-800">
-                        <div className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 sm:mb-2">Nama Objek</div>
-                        <div className="text-gray-900 dark:text-white font-bold text-sm sm:text-base">{form.object_name}</div>
+                        <div className="text-[10px] text-gray-400 font-bold mt-1">NIK: {form.nik}</div>
                       </div>
                       <div className="col-span-1 sm:col-span-2 p-4 sm:p-6 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-50 dark:border-gray-800">
-                        <div className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 sm:mb-2">Klasifikasi Terpilih</div>
-                        <div className="flex flex-wrap gap-2">
-                          {classifications
-                            ?.filter(c => form.retribution_classification_ids.includes(c.id))
-                            ?.map(c => (
-                              <span key={c.id} className="px-2.5 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-[9px] sm:text-[10px] font-black rounded-lg uppercase tracking-wider">
-                                {c.name}
-                              </span>
-                            ))}
-                        </div>
+                        <div className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 sm:mb-2">Klasifikasi & Objek Terpilih</div>
+                        {classifications
+                          ?.filter(c => form.retribution_classification_ids.includes(c.id))
+                          ?.map(c => {
+                            const objName = form.metadata?.[`_object_name_${c.id}`] || form.object_name || `-`;
+                            return (
+                              <div key={c.id} className="mb-2 last:mb-0 p-3 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700">
+                                <div className="flex items-center gap-2 mb-1.5">
+                                  <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-[8px] font-black rounded-lg uppercase tracking-wider">{c.name}</span>
+                                </div>
+                                <div className="text-sm font-bold text-gray-900 dark:text-white">
+                                  {objName}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        {(!classifications?.filter(c => form.retribution_classification_ids.includes(c.id))?.length) && (
+                          <div className="text-gray-400 text-sm italic">Belum ada klasifikasi dipilih</div>
+                        )}
                       </div>
                     </div>
 
@@ -1483,6 +1530,18 @@ export default function TaxpayerManagement() {
                         });
 
                         setForm(prev => ({ ...prev, metadata: autoMetadata }));
+                      }
+
+                      // Auto-fill object_name from per-classification names when going to step 5
+                      if (nextStep === 5 && !form.object_name) {
+                        const classificationsWithObj = classifications?.filter(
+                          (c: any) => form.retribution_classification_ids.includes(c.id) && form.metadata?.[`_object_name_${c.id}`]
+                        ) || [];
+                        if (classificationsWithObj.length === 1) {
+                          setForm(prev => ({ ...prev, object_name: form.metadata[`_object_name_${classificationsWithObj[0].id}`] }));
+                        } else if (classificationsWithObj.length > 1) {
+                          setForm(prev => ({ ...prev, object_name: `${classificationsWithObj.length} Objek Terdaftar` }));
+                        }
                       }
 
                       // Auto-detect GPS location when going to step 4
