@@ -264,17 +264,17 @@ export default function Billing() {
   if (loading) {
     return (
       <div className="min-h-[400px] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-baubau-blue" />
+        <Loader2 className="w-6 h-6 sm:w-8 sm:h-8 animate-spin text-baubau-blue" />
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 sm:gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Billing & Tagihan</h1>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+          <h1 className="text-base sm:text-lg sm:text-xl sm:text-2xl sm:text-base sm:text-lg sm:text-xl sm:text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Billing & Tagihan</h1>
+          <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">
             {currentUser?.role === 'petugas' ? 'Monitor dan catat pembayaran tagihan' : 'Generate dan kelola tagihan operasional petugas'}
           </p>
         </div>
@@ -287,7 +287,7 @@ export default function Billing() {
                   setFormData({ tax_object_id: '', period: '' });
                   setPendingPeriods([]);
                 }}
-                className="flex items-center gap-2 px-4 py-2 bg-baubau-blue hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-all shadow-lg active:scale-95 shadow-blue-500/10"
+                className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-baubau-blue hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-all shadow-lg active:scale-95 shadow-blue-500/10"
               >
                 <Plus size={18} />
                 Catat Bayar
@@ -296,7 +296,7 @@ export default function Billing() {
           )}
           <button
             onClick={() => navigate('/scanner')}
-            className="flex items-center justify-center gap-2 px-4 py-2 bg-slate-900 dark:bg-slate-700 text-white text-xs font-bold rounded-xl transition-all active:scale-95"
+            className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-slate-900 dark:bg-slate-700 text-white text-xs font-bold rounded-xl transition-all active:scale-95"
           >
             <QrCode size={18} />
             SCAN
@@ -304,28 +304,28 @@ export default function Billing() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-4 border border-gray-100 dark:border-gray-700">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 sm:gap-4">
+        <div className="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-sm p-3 sm:p-4 border border-gray-100 dark:border-gray-700">
           <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Tagihan</p>
-          <p className="text-2xl font-black text-gray-900 dark:text-white">{summary.total}</p>
+          <p className="text-base sm:text-lg sm:text-xl sm:text-2xl font-black text-gray-900 dark:text-white">{summary.total}</p>
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-4 border border-gray-100 dark:border-gray-700">
+        <div className="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-sm p-3 sm:p-4 border border-gray-100 dark:border-gray-700">
           <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Lunas</p>
-          <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400">{summary.lunas}</p>
+          <p className="text-base sm:text-lg sm:text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400">{summary.lunas}</p>
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-4 border border-gray-100 dark:border-gray-700">
+        <div className="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-sm p-3 sm:p-4 border border-gray-100 dark:border-gray-700">
           <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Pending</p>
-          <p className="text-2xl font-black text-amber-500">{summary.pending}</p>
+          <p className="text-base sm:text-lg sm:text-xl sm:text-2xl font-black text-amber-500">{summary.pending}</p>
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-4 border border-gray-100 dark:border-gray-700">
+        <div className="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-sm p-3 sm:p-4 border border-gray-100 dark:border-gray-700">
           <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Overdue</p>
-          <p className="text-2xl font-black text-rose-500">{summary.overdue}</p>
+          <p className="text-base sm:text-lg sm:text-xl sm:text-2xl font-black text-rose-500">{summary.overdue}</p>
         </div>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
-        <div className="p-4 sm:p-6 border-b border-gray-100 dark:border-gray-700 bg-gray-50/30 dark:bg-gray-900/10">
-          <div className="flex flex-col gap-3">
+      <div className="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+        <div className="p-3 sm:p-4 sm:p-4 sm:p-6 border-b border-gray-100 dark:border-gray-700 bg-gray-50/30 dark:bg-gray-900/10">
+          <div className="flex flex-col gap-2 sm:gap-3">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input
@@ -333,21 +333,21 @@ export default function Billing() {
                 placeholder="Cari invoice, nama, atau NPWPD..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 text-sm"
+                className="w-full pl-10 pr-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm"
               />
             </div>
             <div className="flex flex-wrap gap-2">
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value as any)}
-                className="flex-1 sm:flex-none px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 text-sm appearance-none font-bold"
+                className="flex-1 sm:flex-none px-3 sm:px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm appearance-none font-bold"
               >
                 <option value="all">Semua Status</option>
                 <option value="lunas">Lunas</option>
                 <option value="pending">Pending</option>
                 <option value="overdue">Overdue</option>
               </select>
-              <button className="hidden sm:flex items-center gap-2 px-4 py-2 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-bold">
+              <button className="hidden sm:flex items-center gap-2 px-3 sm:px-4 py-2 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-xs sm:text-sm font-bold">
                 <Download className="w-4 h-4" />
                 Export
               </button>
@@ -360,29 +360,29 @@ export default function Billing() {
           <table className="w-full text-left">
             <thead className="bg-gray-50 dark:bg-gray-700/50">
               <tr>
-                <th className="px-6 py-4 text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest">Invoice</th>
-                <th className="px-6 py-4 text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest">Wajib Pajak</th>
-                <th className="px-6 py-4 text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest">Jumlah</th>
-                <th className="px-6 py-4 text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest">Status</th>
-                <th className="px-6 py-4 text-right text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest">Aksi</th>
+                <th className="px-6 py-3 sm:py-4 text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest">Invoice</th>
+                <th className="px-6 py-3 sm:py-4 text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest">Wajib Pajak</th>
+                <th className="px-6 py-3 sm:py-4 text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest">Jumlah</th>
+                <th className="px-6 py-3 sm:py-4 text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest">Status</th>
+                <th className="px-6 py-3 sm:py-4 text-right text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
               {filteredBillings.length > 0 ? (
                 filteredBillings.map((billing) => (
                   <tr key={billing.id} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="px-6 py-4">
-                      <p className="text-sm font-black text-blue-600 dark:text-blue-400">{billing.invoiceNumber}</p>
+                    <td className="px-6 py-3 sm:py-4">
+                      <p className="text-xs sm:text-sm font-black text-blue-600 dark:text-blue-400">{billing.invoiceNumber}</p>
                       <p className="text-[10px] text-gray-400 font-bold">{new Date(billing.createdAt).toLocaleDateString()}</p>
                     </td>
-                    <td className="px-6 py-4">
-                      <p className="text-sm font-black text-gray-900 dark:text-white">{billing.taxpayerName}</p>
+                    <td className="px-6 py-3 sm:py-4">
+                      <p className="text-xs sm:text-sm font-black text-gray-900 dark:text-white">{billing.taxpayerName}</p>
                       <p className="text-[10px] text-gray-500 font-medium">{billing.type}</p>
                     </td>
-                    <td className="px-6 py-4">
-                      <p className="text-sm font-black text-gray-900 dark:text-white">{formatCurrency(billing.amount)}</p>
+                    <td className="px-6 py-3 sm:py-4">
+                      <p className="text-xs sm:text-sm font-black text-gray-900 dark:text-white">{formatCurrency(billing.amount)}</p>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-3 sm:py-4">
                       <span className={`inline-flex px-2 py-1 text-[9px] font-black uppercase tracking-tighter rounded-md ${
                         billing.status === 'lunas' ? 'bg-emerald-100 text-emerald-700' : 
                         billing.status === 'pending' ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700'
@@ -400,14 +400,14 @@ export default function Billing() {
                         </div>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-6 py-3 sm:py-4 text-right">
                       {billing.status === 'pending' && (
                         <button
                           onClick={() => {
                             setSelectedBill(billing);
                             setShowPaymentModal(true);
                           }}
-                          className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black uppercase rounded-lg transition-all active:scale-95"
+                          className="px-3 sm:px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black uppercase rounded-lg transition-all active:scale-95"
                         >
                           Bayar
                         </button>
@@ -415,7 +415,7 @@ export default function Billing() {
                       {billing.status === 'lunas' && (
                         <button
                           onClick={() => handlePrint(billing)}
-                          className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-black uppercase rounded-lg transition-all active:scale-95 flex items-center gap-2 ml-auto"
+                          className="px-3 sm:px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-black uppercase rounded-lg transition-all active:scale-95 flex items-center gap-2 ml-auto"
                         >
                           <Download size={12} />
                           Print
@@ -434,14 +434,14 @@ export default function Billing() {
         </div>
 
         {/* Mobile Card Layout */}
-        <div className="md:hidden space-y-4 px-4 pb-4">
+        <div className="md:hidden space-y-4 px-3 sm:px-4 pb-4">
           {filteredBillings.length > 0 ? (
             filteredBillings.map((billing) => (
-              <div key={billing.id} className="bg-white dark:bg-gray-800 p-4 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm active:scale-[0.98] transition-all">
+              <div key={billing.id} className="bg-white dark:bg-gray-800 p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm active:scale-[0.98] transition-all">
                 <div className="flex justify-between items-start mb-3">
                   <div className="min-w-0 flex-1">
                     <p className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest leading-none mb-1">{billing.invoiceNumber}</p>
-                    <h4 className="text-sm font-black text-gray-900 dark:text-white truncate">{billing.taxpayerName}</h4>
+                    <h4 className="text-xs sm:text-sm font-black text-gray-900 dark:text-white truncate">{billing.taxpayerName}</h4>
                   </div>
                   <div className="text-right">
                     <span className={`px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest ${
@@ -459,7 +459,7 @@ export default function Billing() {
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-2 gap-3 mb-4">
+                <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-4">
                   <div className="p-2 bg-gray-50 dark:bg-gray-900 rounded-xl">
                     <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Jumlah</p>
                     <p className="text-xs font-black text-gray-900 dark:text-white">{formatCurrency(billing.amount)}</p>
@@ -478,7 +478,7 @@ export default function Billing() {
                         setSelectedBill(billing);
                         setShowPaymentModal(true);
                       }}
-                      className="px-4 py-2 bg-emerald-600 text-white text-[10px] font-black uppercase rounded-lg active:scale-95 transition-all shadow-lg shadow-emerald-500/20"
+                      className="px-3 sm:px-4 py-2 bg-emerald-600 text-white text-[10px] font-black uppercase rounded-lg active:scale-95 transition-all shadow-lg shadow-emerald-500/20"
                     >
                       Bayar
                     </button>
@@ -493,16 +493,16 @@ export default function Billing() {
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[99999] p-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[99999] p-3 sm:p-4">
           <div className="bg-white dark:bg-gray-800 rounded-[2rem] shadow-2xl max-w-md w-full overflow-y-auto max-h-[90vh] border border-gray-100 relative">
-            <div className="p-6 md:p-8 border-b border-gray-50 flex justify-between items-center sticky top-0 bg-white dark:bg-gray-800 z-10">
+            <div className="p-4 sm:p-6 md:p-8 border-b border-gray-50 flex justify-between items-center sticky top-0 bg-white dark:bg-gray-800 z-10">
               <div>
-                <h2 className="text-xl font-black text-gray-900 dark:text-white tracking-tight">Pembayaran Baru</h2>
+                <h2 className="text-base sm:text-lg sm:text-xl font-black text-gray-900 dark:text-white tracking-tight">Pembayaran Baru</h2>
                 <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1">Sistem Otomatis (Virtual Ledger)</p>
               </div>
-              <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600 text-2xl">×</button>
+              <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600 text-base sm:text-lg sm:text-xl sm:text-2xl">×</button>
             </div>
-            <form onSubmit={handlePayment} className="p-6 md:p-8 space-y-5">
+            <form onSubmit={handlePayment} className="p-4 sm:p-6 md:p-8 space-y-5">
               <SearchableSelect
                 label="Cari Objek Pajak"
                 options={taxObjects.map(obj => ({
@@ -520,7 +520,7 @@ export default function Billing() {
               />
 
               {fetchingPeriods ? (
-                <div className="flex items-center justify-center py-4 bg-gray-50 dark:bg-gray-900/50 rounded-2xl">
+                <div className="flex items-center justify-center py-3 sm:py-4 bg-gray-50 dark:bg-gray-900/50 rounded-xl sm:rounded-2xl">
                   <Loader2 className="w-5 h-5 animate-spin text-blue-500" />
                   <span className="ml-2 text-xs text-gray-500 font-bold uppercase tracking-widest">Mengecek...</span>
                 </div>
@@ -531,7 +531,7 @@ export default function Billing() {
                     <select
                       value={formData.period}
                       onChange={(e) => setFormData({ ...formData, period: e.target.value })}
-                      className="w-full px-5 py-3.5 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-blue-500 font-bold text-sm"
+                      className="w-full px-5 py-3.5 bg-gray-50 border-none rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-blue-500 font-bold text-xs sm:text-sm"
                       required
                     >
                       <option value="">Pilih Bulan Tunggakan</option>
@@ -542,7 +542,7 @@ export default function Billing() {
                       ))}
                     </select>
                   ) : (
-                    <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl border border-emerald-100 dark:border-emerald-800 text-center">
+                    <div className="p-3 sm:p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl sm:rounded-2xl border border-emerald-100 dark:border-emerald-800 text-center">
                       <p className="text-xs text-emerald-700 dark:text-emerald-400 font-black uppercase tracking-widest">Semua Lunas!</p>
                       <p className="text-[10px] text-emerald-600/70 mt-1 font-medium">Tidak ada tunggakan untuk objek ini.</p>
                     </div>
@@ -554,18 +554,18 @@ export default function Billing() {
               {formData.period && (
                 <div className="animate-in fade-in duration-300 border-t border-slate-100 pt-4 mt-2">
                   <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Bukti Pembayaran (Opsional)</label>
-                  <label className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-2xl cursor-pointer transition-all overflow-hidden relative ${proofFile ? 'border-emerald-400 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-300 bg-slate-50 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900'}`}>
+                  <label className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-xl sm:rounded-2xl cursor-pointer transition-all overflow-hidden relative ${proofFile ? 'border-emerald-400 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-300 bg-slate-50 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900'}`}>
                     {proofFile ? (
                       <>
                         <img src={URL.createObjectURL(proofFile)} alt="Preview" className="absolute inset-0 w-full h-full object-cover opacity-60" />
-                        <div className="z-10 flex flex-col items-center bg-white/80 dark:bg-black/60 px-4 py-2 rounded-xl text-center">
+                        <div className="z-10 flex flex-col items-center bg-white/80 dark:bg-black/60 px-3 sm:px-4 py-2 rounded-xl text-center">
                            <span className="text-xs font-black text-emerald-600 dark:text-emerald-400 truncate max-w-[150px]">{proofFile.name}</span>
                            <span className="text-[9px] font-bold text-emerald-500 uppercase mt-1">Ganti Foto</span>
                         </div>
                       </>
                     ) : (
                       <>
-                        <ImagePlus className="w-8 h-8 text-slate-400 mb-2" />
+                        <ImagePlus className="w-6 h-6 sm:w-8 sm:h-8 text-slate-400 mb-2" />
                         <span className="text-xs font-bold text-slate-500">Ketuk untuk Ambil Foto</span>
                         <span className="text-[9px] font-medium text-slate-400 mt-1">PNG, JPG up to 5MB</span>
                       </>
@@ -588,7 +588,7 @@ export default function Billing() {
               <button 
                 type="submit" 
                 disabled={!formData.period || pendingPeriods.length === 0 || paymentSubmitting}
-                className="w-full py-4 bg-emerald-600 disabled:bg-gray-300 flex items-center justify-center gap-2 text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl shadow-emerald-500/20 active:scale-95 transition-all mt-6"
+                className="w-full py-3 sm:py-4 bg-emerald-600 disabled:bg-gray-300 flex items-center justify-center gap-2 text-white rounded-xl sm:rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl shadow-emerald-500/20 active:scale-95 transition-all mt-6"
               >
                 {uploadingProof ? (
                   <><Loader2 className="w-4 h-4 animate-spin"/> MENGUNGGAH BUKTI...</>
@@ -604,53 +604,53 @@ export default function Billing() {
       )}
 
       {showPaymentModal && selectedBill && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-[99999] p-4">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-[99999] p-3 sm:p-4">
           <div className="bg-white dark:bg-gray-800 rounded-[2.5rem] shadow-2xl max-w-md w-full overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in duration-300 relative border border-gray-100">
             {/* Header Sticky */}
-            <div className="shrink-0 p-6 md:p-8 pb-0 text-center sticky top-0 bg-white dark:bg-gray-800 z-10">
+            <div className="shrink-0 p-4 sm:p-6 md:p-8 pb-0 text-center sticky top-0 bg-white dark:bg-gray-800 z-10">
               <div className="w-16 h-16 md:w-20 md:h-20 bg-emerald-50 dark:bg-emerald-900/20 rounded-full flex items-center justify-center mx-auto mb-4 md:mb-6">
-                <FileText className="w-8 h-8 md:w-10 md:h-10 text-emerald-600" />
+                <FileText className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 text-emerald-600" />
               </div>
-              <h2 className="text-xl font-black text-slate-900 dark:text-white mb-2">Konfirmasi Pembayaran</h2>
-              <p className="text-slate-400 text-xs md:text-sm font-medium px-4">Verifikasi detail tagihan sebelum mencatat pembayaran</p>
+              <h2 className="text-base sm:text-lg sm:text-xl font-black text-slate-900 dark:text-white mb-2">Konfirmasi Pembayaran</h2>
+              <p className="text-slate-400 text-xs md:text-xs sm:text-sm font-medium px-3 sm:px-4">Verifikasi detail tagihan sebelum mencatat pembayaran</p>
             </div>
             
             {/* Scrollable Content */}
-            <div className="p-6 md:p-8 overflow-y-auto w-full custom-scrollbar flex-1">
+            <div className="p-4 sm:p-6 md:p-8 overflow-y-auto w-full custom-scrollbar flex-1">
               {/* Invoice Details */}
               <div className="space-y-3">
-                <div className="bg-slate-50 dark:bg-slate-900 rounded-2xl p-4 border border-slate-100 dark:border-slate-800">
-                  <div className="grid grid-cols-2 gap-4">
+                <div className="bg-slate-50 dark:bg-slate-900 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-slate-100 dark:border-slate-800">
+                  <div className="grid grid-cols-2 gap-2 sm:gap-3 sm:gap-4">
                     <div>
                       <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">No. Invoice</p>
-                      <p className="text-sm font-black text-blue-600 dark:text-blue-400 truncate">{selectedBill.invoiceNumber}</p>
+                      <p className="text-xs sm:text-sm font-black text-blue-600 dark:text-blue-400 truncate">{selectedBill.invoiceNumber}</p>
                     </div>
                     <div>
                       <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Jatuh Tempo</p>
-                      <p className="text-sm font-bold text-slate-700 dark:text-slate-300">
+                      <p className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300">
                         {new Date(selectedBill.dueDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
                       </p>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-slate-50 dark:bg-slate-900 rounded-2xl p-4 border border-slate-100 dark:border-slate-800">
+                <div className="bg-slate-50 dark:bg-slate-900 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-slate-100 dark:border-slate-800">
                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Wajib Pajak</p>
                   <p className="text-base font-black text-slate-900 dark:text-white truncate">{selectedBill.taxpayerName}</p>
                   <p className="text-[10px] font-bold text-slate-500 mt-1 truncate">{selectedBill.taxpayerId}</p>
                 </div>
 
-                <div className="bg-slate-50 dark:bg-slate-900 rounded-2xl p-4 border border-slate-100 dark:border-slate-800">
+                <div className="bg-slate-50 dark:bg-slate-900 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-slate-100 dark:border-slate-800">
                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Jenis Retribusi</p>
-                  <p className="text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide truncate">{selectedBill.type}</p>
+                  <p className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide truncate">{selectedBill.type}</p>
                 </div>
               </div>
 
               {/* Amount Highlight */}
-              <div className="mt-5 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/30 dark:to-teal-900/30 rounded-2xl p-5 border border-emerald-100 dark:border-emerald-800">
+              <div className="mt-5 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/30 dark:to-teal-900/30 rounded-xl sm:rounded-2xl p-5 border border-emerald-100 dark:border-emerald-800">
                 <div className="text-center mb-4">
                   <p className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-1">Total Pembayaran</p>
-                  <p className="text-3xl font-black text-emerald-700 dark:text-emerald-400">{formatCurrency(selectedBill.amount)}</p>
+                  <p className="text-base sm:text-lg sm:text-xl sm:text-2xl sm:text-3xl font-black text-emerald-700 dark:text-emerald-400">{formatCurrency(selectedBill.amount)}</p>
                   {Number((selectedBill as any).penalty_amount) > 0 && (
                     <p className="text-[10px] text-amber-600 font-black mt-1 uppercase">Termasuk Denda: {formatCurrency((selectedBill as any).penalty_amount)}</p>
                   )}
@@ -658,11 +658,11 @@ export default function Billing() {
 
                 <div className="border-t border-emerald-200/50 dark:border-emerald-800/50 pt-4 mt-4">
                   <p className="text-[10px] font-black text-emerald-700 dark:text-emerald-400 uppercase tracking-widest mb-3 text-center">Metode Pembayaran</p>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-2 sm:gap-3">
                     <button
                       type="button"
                       onClick={() => setPaymentMethod('cash')}
-                      className={`py-3 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+                      className={`py-3 px-3 sm:px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
                         paymentMethod === 'cash' 
                           ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/30' 
                           : 'bg-white dark:bg-gray-800 text-slate-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 border border-emerald-100 dark:border-emerald-800'
@@ -673,7 +673,7 @@ export default function Billing() {
                     <button
                       type="button"
                       onClick={() => setPaymentMethod('transfer')}
-                      className={`py-3 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+                      className={`py-3 px-3 sm:px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
                         paymentMethod === 'transfer' 
                           ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/30' 
                           : 'bg-white dark:bg-gray-800 text-slate-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 border border-emerald-100 dark:border-emerald-800'
@@ -709,7 +709,7 @@ export default function Billing() {
                               </div>
                             )}
 
-                            <p className="text-sm font-mono text-slate-600 dark:text-slate-300 tracking-wider mb-1">
+                            <p className="text-xs sm:text-sm font-mono text-slate-600 dark:text-slate-300 tracking-wider mb-1">
                               {bank.account_number}
                             </p>
                             {bank.account_name && (
@@ -721,7 +721,7 @@ export default function Billing() {
                         ))}
                       </div>
                     ) : (
-                      <div className="bg-amber-50 dark:bg-amber-900/20 p-4 rounded-xl text-center border border-amber-100 dark:border-amber-800">
+                      <div className="bg-amber-50 dark:bg-amber-900/20 p-3 sm:p-4 rounded-xl text-center border border-amber-100 dark:border-amber-800">
                         <p className="text-xs font-bold text-amber-700 dark:text-amber-500">
                           Tidak ada rekening tersedia untuk klasifikasi ini.
                         </p>
@@ -734,18 +734,18 @@ export default function Billing() {
               {/* Upload Bukti Pembayaran */}
               <div className="border-t border-slate-100 pt-5 mt-5">
                 <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 text-center md:text-left">Bukti Pembayaran (Opsional)</label>
-                <label className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-2xl cursor-pointer transition-all overflow-hidden relative ${proofFile ? 'border-emerald-400 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-300 bg-slate-50 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900'}`}>
+                <label className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-xl sm:rounded-2xl cursor-pointer transition-all overflow-hidden relative ${proofFile ? 'border-emerald-400 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-300 bg-slate-50 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900'}`}>
                   {proofFile ? (
                     <>
                       <img src={URL.createObjectURL(proofFile)} alt="Preview" className="absolute inset-0 w-full h-full object-cover opacity-60" />
-                      <div className="z-10 flex flex-col items-center bg-white/80 dark:bg-black/60 px-4 py-2 rounded-xl text-center">
+                      <div className="z-10 flex flex-col items-center bg-white/80 dark:bg-black/60 px-3 sm:px-4 py-2 rounded-xl text-center">
                          <span className="text-xs font-black text-emerald-600 dark:text-emerald-400 truncate max-w-[150px]">{proofFile.name}</span>
                          <span className="text-[9px] font-bold text-emerald-500 uppercase mt-1">Ganti Foto</span>
                       </div>
                     </>
                   ) : (
                     <>
-                      <ImagePlus className="w-8 h-8 text-slate-400 mb-2" />
+                      <ImagePlus className="w-6 h-6 sm:w-8 sm:h-8 text-slate-400 mb-2" />
                       <span className="text-xs font-bold text-slate-500">Ketuk untuk Ambil Foto</span>
                       <span className="text-[9px] font-medium text-slate-400 mt-1">PNG, JPG up to 5MB</span>
                     </>
@@ -766,19 +766,19 @@ export default function Billing() {
             </div>
 
             {/* Sticky Bottom Actions */}
-            <div className="shrink-0 p-6 md:p-8 pt-4 border-t border-slate-50 dark:border-slate-700/50 bg-white dark:bg-gray-800 z-10">
-              <div className="flex gap-3 md:gap-4">
+            <div className="shrink-0 p-4 sm:p-6 md:p-8 pt-4 border-t border-slate-50 dark:border-slate-700/50 bg-white dark:bg-gray-800 z-10">
+              <div className="flex gap-2 sm:gap-3 md:gap-2 sm:gap-3 sm:gap-4">
                 <button
                   onClick={() => setShowPaymentModal(false)}
                   disabled={paymentSubmitting}
-                  className="flex-1 py-3.5 text-slate-400 font-black uppercase text-[10px] tracking-widest hover:bg-slate-50 dark:hover:bg-slate-700 rounded-2xl transition-colors"
+                  className="flex-1 py-3.5 text-slate-400 font-black uppercase text-[10px] tracking-widest hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl sm:rounded-2xl transition-colors"
                 >
                   BATAL
                 </button>
                 <button
                   onClick={handlePayment}
                   disabled={paymentSubmitting}
-                  className="flex-[2] px-4 md:px-8 py-3.5 bg-emerald-600 disabled:bg-slate-300 disabled:text-slate-500 hover:bg-emerald-700 text-white rounded-2xl font-black uppercase text-[10px] md:text-xs tracking-widest shadow-lg shadow-emerald-500/20 active:scale-95 transition-all flex items-center justify-center gap-2"
+                  className="flex-[2] px-3 sm:px-4 md:px-8 py-3.5 bg-emerald-600 disabled:bg-slate-300 disabled:text-slate-500 hover:bg-emerald-700 text-white rounded-xl sm:rounded-2xl font-black uppercase text-[10px] md:text-xs tracking-widest shadow-lg shadow-emerald-500/20 active:scale-95 transition-all flex items-center justify-center gap-2"
                 >
                   {uploadingProof ? (
                     <><Loader2 className="w-4 h-4 animate-spin"/> MENGUNGGAH BUKTI...</>

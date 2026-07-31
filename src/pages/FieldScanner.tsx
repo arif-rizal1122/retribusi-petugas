@@ -234,22 +234,22 @@ export default function FieldScanner() {
       <div id={containerId} className="absolute inset-0 w-full h-full object-cover"></div>
 
       {/* Modern Overlay HUD */}
-      <div className="absolute inset-0 flex flex-col justify-between p-6 pointer-events-none">
+      <div className="absolute inset-0 flex flex-col justify-between p-4 sm:p-6 pointer-events-none">
         {/* Top Controls */}
         <div className="flex items-center justify-between pointer-events-auto">
           <button
             onClick={() => navigate(-1)}
-            className="w-12 h-12 flex items-center justify-center bg-black/40 backdrop-blur-xl border border-white/20 rounded-2xl text-white active:scale-90 transition-all shadow-2xl"
+            className="w-6 h-6 sm:w-8 sm:h-8 sm:w-10 sm:h-10 sm:w-12 sm:h-12 flex items-center justify-center bg-black/40 backdrop-blur-xl border border-white/20 rounded-xl sm:rounded-2xl text-white active:scale-90 transition-all shadow-2xl"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
           
           <div className="flex flex-col items-center">
-            <h1 className="text-white font-black text-lg tracking-tight drop-shadow-lg">Inspeksi Lapangan</h1>
+            <h1 className="text-white font-black text-base sm:text-lg tracking-tight drop-shadow-lg">Inspeksi Lapangan</h1>
             <p className="text-blue-400 font-black text-[9px] uppercase tracking-[0.2em] drop-shadow-md">Scanner Aktif</p>
           </div>
 
-          <div className="w-12 h-12"></div> {/* Spacer */}
+          <div className="w-6 h-6 sm:w-8 sm:h-8 sm:w-10 sm:h-10 sm:w-12 sm:h-12"></div> {/* Spacer */}
         </div>
 
         {/* Center Target Box */}
@@ -277,31 +277,31 @@ export default function FieldScanner() {
 
         {/* Bottom Controls */}
         <div className="flex flex-col gap-6 pointer-events-auto items-center">
-          <div className="flex items-center gap-4 bg-black/40 backdrop-blur-2xl p-4 rounded-[2.5rem] border border-white/10 shadow-2xl">
+          <div className="flex items-center gap-2 sm:gap-3 sm:gap-4 bg-black/40 backdrop-blur-2xl p-3 sm:p-4 rounded-[2.5rem] border border-white/10 shadow-2xl">
             {torchSupported && (
               <button
                 onClick={toggleTorch}
-                className={`w-14 h-14 flex items-center justify-center rounded-2xl transition-all ${torchOn ? 'bg-amber-400 text-black shadow-[0_0_30px_rgba(251,191,36,0.4)]' : 'bg-white/10 text-white'}`}
+                className={`w-14 h-14 flex items-center justify-center rounded-xl sm:rounded-2xl transition-all ${torchOn ? 'bg-amber-400 text-black shadow-[0_0_30px_rgba(251,191,36,0.4)]' : 'bg-white/10 text-white'}`}
               >
                 <Zap className={`w-6 h-6 ${torchOn ? 'fill-current' : ''}`} />
               </button>
             )}
             <button
               onClick={switchCamera}
-              className="w-14 h-14 bg-white/10 flex items-center justify-center rounded-2xl text-white active:bg-white/20 transition-all font-black text-xs"
+              className="w-14 h-14 bg-white/10 flex items-center justify-center rounded-xl sm:rounded-2xl text-white active:bg-white/20 transition-all font-black text-xs"
             >
               <RotateCw className="w-6 h-6" />
             </button>
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="w-14 h-14 bg-white/10 flex items-center justify-center rounded-2xl text-white active:bg-white/20 transition-all font-black text-xs"
+              className="w-14 h-14 bg-white/10 flex items-center justify-center rounded-xl sm:rounded-2xl text-white active:bg-white/20 transition-all font-black text-xs"
               aria-label="Pilih file QR"
             >
               <ImagePlus className="w-6 h-6" />
             </button>
           </div>
 
-          <div className="w-full flex items-center justify-center gap-3 py-4">
+          <div className="w-full flex items-center justify-center gap-2 sm:gap-3 py-3 sm:py-4">
              <ShieldCheck className="w-4 h-4 text-emerald-400" />
              <span className="text-white/50 text-[10px] font-black uppercase tracking-widest">Secure Verification System</span>
           </div>
@@ -312,12 +312,12 @@ export default function FieldScanner() {
       {scanResult && (
         <div className="absolute inset-0 z-[200] bg-blue-600/90 backdrop-blur-xl flex flex-col items-center justify-center text-white animate-in zoom-in duration-300">
           <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center mb-6 shadow-2xl">
-            <Loader2 className="w-12 h-12 animate-spin text-white" />
+            <Loader2 className="w-6 h-6 sm:w-8 sm:h-8 sm:w-10 sm:h-10 sm:w-12 sm:h-12 animate-spin text-white" />
           </div>
-          <h3 className="text-3xl font-black mb-2 tracking-tighter">
+          <h3 className="text-base sm:text-lg sm:text-xl sm:text-2xl sm:text-3xl font-black mb-2 tracking-tighter">
             {detectionHint || "DATA DITEMUKAN"}
           </h3>
-          <p className="text-sm font-bold opacity-80 uppercase tracking-widest">{scanResult}</p>
+          <p className="text-xs sm:text-sm font-bold opacity-80 uppercase tracking-widest">{scanResult}</p>
         </div>
       )}
 
@@ -325,20 +325,20 @@ export default function FieldScanner() {
       {error && (
         <div className="absolute inset-0 z-[300] bg-slate-900 flex flex-col items-center justify-center p-8 text-center">
           <div className="w-20 h-20 bg-rose-500/20 rounded-full flex items-center justify-center mb-6">
-            <AlertCircle className="w-10 h-10 text-rose-500" />
+            <AlertCircle className="w-6 h-6 sm:w-8 sm:h-8 sm:w-10 sm:h-10 text-rose-500" />
           </div>
-          <h2 className="text-2xl font-black text-white mb-2">{errorTitle}</h2>
+          <h2 className="text-base sm:text-lg sm:text-xl sm:text-2xl font-black text-white mb-2">{errorTitle}</h2>
           <p className="text-slate-400 mb-8 max-w-xs">{error}</p>
-          <div className="flex flex-col gap-3 w-full max-w-xs">
+          <div className="flex flex-col gap-2 sm:gap-3 w-full max-w-xs">
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="px-8 py-4 bg-blue-600 text-white rounded-2xl font-black uppercase text-xs tracking-widest active:scale-95 transition-all"
+              className="px-8 py-3 sm:py-4 bg-blue-600 text-white rounded-xl sm:rounded-2xl font-black uppercase text-xs tracking-widest active:scale-95 transition-all"
             >
               Pilih File QR
             </button>
             <button
               onClick={() => window.location.reload()}
-              className="px-8 py-4 bg-white/10 text-white rounded-2xl font-black uppercase text-xs tracking-widest active:scale-95 transition-all border border-white/10"
+              className="px-8 py-3 sm:py-4 bg-white/10 text-white rounded-xl sm:rounded-2xl font-black uppercase text-xs tracking-widest active:scale-95 transition-all border border-white/10"
             >
               Coba Lagi Kamera
             </button>

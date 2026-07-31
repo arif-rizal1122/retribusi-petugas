@@ -111,15 +111,15 @@ export default function Reporting() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 sm:gap-3 sm:gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Laporan Petugas</h1>
+          <h1 className="text-base sm:text-lg sm:text-xl sm:text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">Laporan Petugas</h1>
           <p className="text-slate-600 dark:text-slate-400 mt-1">
             Rekapitulasi dan analisis data operasional lapangan
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2 bg-white dark:bg-slate-800 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm text-sm">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-2 bg-white dark:bg-slate-800 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm text-xs sm:text-sm">
             <CalendarIcon className="w-4 h-4 text-blue-600" />
             <input 
               type="date" 
@@ -137,7 +137,7 @@ export default function Reporting() {
           </div>
           <button 
             onClick={handleExport}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium shadow-sm active:scale-95"
+            className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium shadow-sm active:scale-95"
           >
             <Download className="w-4 h-4" />
             Ekspor CSV
@@ -166,59 +166,59 @@ export default function Reporting() {
             Bulanan
           </button>
         </div>
-        <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm md:col-span-1">
+        <div className="bg-white dark:bg-slate-800 p-4 sm:p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm md:col-span-1">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-sm text-slate-600 dark:text-slate-400">Pendapatan Terinput</p>
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">Pendapatan Terinput</p>
             <DollarSign className="w-5 h-5 text-emerald-600" />
           </div>
-          <p className="text-2xl font-bold text-slate-900 dark:text-white">
+          <p className="text-base sm:text-lg sm:text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
             {formatCurrency(summary?.total_revenue || 0)}
           </p>
-          <p className="text-sm text-emerald-600 mt-1">Periode Terpilih</p>
+          <p className="text-xs sm:text-sm text-emerald-600 mt-1">Periode Terpilih</p>
         </div>
 
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6 border border-slate-200 dark:border-slate-700">
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-4 sm:p-6 border border-slate-200 dark:border-slate-700">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-sm text-slate-600 dark:text-slate-400">Jumlah Transaksi</p>
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">Jumlah Transaksi</p>
             <FileText className="w-5 h-5 text-blue-600" />
           </div>
-          <p className="text-2xl font-bold text-slate-900 dark:text-white">
+          <p className="text-base sm:text-lg sm:text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
             {summary?.stats.total_transactions || 0}
           </p>
-          <p className="text-sm text-blue-600 mt-1">Total Entri</p>
+          <p className="text-xs sm:text-sm text-blue-600 mt-1">Total Entri</p>
         </div>
 
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-6 border border-slate-200 dark:border-slate-700">
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-4 sm:p-6 border border-slate-200 dark:border-slate-700">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-sm text-slate-600 dark:text-slate-400">Rata-rata Setoran</p>
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">Rata-rata Setoran</p>
             <TrendingUp className="w-5 h-5 text-purple-600" />
           </div>
-          <p className="text-2xl font-bold text-slate-900 dark:text-white">
+          <p className="text-base sm:text-lg sm:text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
             {formatCurrency(summary?.stats.avg_transaction || 0)}
           </p>
-          <p className="text-sm text-purple-600 mt-1">Per Transaksi</p>
+          <p className="text-xs sm:text-sm text-purple-600 mt-1">Per Transaksi</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Revenue Breakdown */}
         <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
-          <div className="p-6 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+          <div className="p-4 sm:p-6 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+            <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <PieChart className="w-5 h-5 text-blue-600" />
               Kontribusi per Objek
             </h3>
           </div>
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             <div className="space-y-6">
               {loading ? (
                 <div className="flex justify-center py-8">
-                  <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+                  <Loader2 className="w-6 h-6 sm:w-8 sm:h-8 animate-spin text-blue-600" />
                 </div>
               ) : (
                 summary?.revenue_by_type.map((item, index) => (
                   <div key={index} className="space-y-2">
-                    <div className="flex justify-between items-center text-sm">
+                    <div className="flex justify-between items-center text-xs sm:text-sm">
                       <span className="font-medium text-slate-700 dark:text-slate-300">{item.type}</span>
                       <div className="text-right">
                         <p className="font-bold text-slate-900 dark:text-white">{formatCurrency(item.amount)}</p>
@@ -240,8 +240,8 @@ export default function Reporting() {
 
         {/* Recent Transactions */}
         <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
-          <div className="p-6 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+          <div className="p-4 sm:p-6 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+            <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <TableIcon className="w-5 h-5 text-blue-600" />
               Entri Terakhir
             </h3>
@@ -250,9 +250,9 @@ export default function Reporting() {
             <table className="w-full text-left">
               <thead className="bg-slate-50 dark:bg-slate-750 text-xs font-bold text-slate-500 uppercase tracking-wider">
                 <tr>
-                  <th className="px-6 py-4">Wajib Retribusi</th>
-                  <th className="px-6 py-4 text-right">Setoran</th>
-                  <th className="px-6 py-4">Status</th>
+                  <th className="px-6 py-3 sm:py-4">Wajib Retribusi</th>
+                  <th className="px-6 py-3 sm:py-4 text-right">Setoran</th>
+                  <th className="px-6 py-3 sm:py-4">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
@@ -265,14 +265,14 @@ export default function Reporting() {
                 ) : recentReports.length > 0 ? (
                   recentReports.map((report) => (
                     <tr key={report.id} className="hover:bg-slate-50 dark:hover:bg-slate-750 transition-colors">
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-3 sm:py-4">
                         <p className="font-medium text-slate-900 dark:text-white">{report.taxpayer_name}</p>
                         <p className="text-xs text-slate-500">{report.type}</p>
                       </td>
-                      <td className="px-6 py-4 text-right font-semibold text-blue-600">
+                      <td className="px-6 py-3 sm:py-4 text-right font-semibold text-blue-600">
                         {formatCurrency(report.amount)}
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-3 sm:py-4">
                         <span className="inline-flex px-2 py-1 text-xs font-medium bg-emerald-100 text-emerald-700 rounded-md">
                           {report.status}
                         </span>

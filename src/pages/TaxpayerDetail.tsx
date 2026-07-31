@@ -55,20 +55,20 @@ export default function TaxpayerDetail() {
           <div className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-400 to-blue-500 opacity-20 animate-ping absolute inset-0" />
           <Loader2 className="w-16 h-16 animate-spin text-emerald-600 relative z-10" />
         </div>
-        <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mt-6">Memuat data wajib pajak...</p>
+        <p className="text-xs sm:text-sm font-bold text-gray-400 uppercase tracking-widest mt-6">Memuat data wajib pajak...</p>
       </div>
     );
   }
 
   if (error || !taxpayer) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
-        <div className="w-24 h-24 bg-gradient-to-br from-red-100 to-rose-100 dark:from-red-900/30 dark:to-rose-900/30 rounded-3xl flex items-center justify-center mb-6">
-          <XCircle className="w-12 h-12 text-red-400" />
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-3 sm:px-4">
+        <div className="w-24 h-24 bg-gradient-to-br from-red-100 to-rose-100 dark:from-red-900/30 dark:to-rose-900/30 rounded-xl sm:rounded-2xl sm:rounded-3xl flex items-center justify-center mb-6">
+          <XCircle className="w-6 h-6 sm:w-8 sm:h-8 sm:w-10 sm:h-10 sm:w-12 sm:h-12 text-red-400" />
         </div>
-        <h2 className="text-xl font-black text-gray-900 dark:text-white mb-2">Data Tidak Ditemukan</h2>
-        <p className="text-sm text-gray-500 mb-6">{error || 'Wajib pajak dengan ID tersebut tidak ditemukan'}</p>
-        <button onClick={() => navigate('/taxpayers')} className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm transition-all active:scale-95">
+        <h2 className="text-base sm:text-lg sm:text-xl font-black text-gray-900 dark:text-white mb-2">Data Tidak Ditemukan</h2>
+        <p className="text-xs sm:text-sm text-gray-500 mb-6">{error || 'Wajib pajak dengan ID tersebut tidak ditemukan'}</p>
+        <button onClick={() => navigate('/taxpayers')} className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-xs sm:text-sm transition-all active:scale-95">
           ← Kembali ke Daftar
         </button>
       </div>
@@ -101,7 +101,7 @@ export default function TaxpayerDetail() {
   }
 
   const InfoCard = ({ icon: Icon, label, value, color = 'gray', copyable = false }: any) => (
-    <div className="group relative bg-white dark:bg-gray-800/60 rounded-2xl p-4 border border-gray-100 dark:border-gray-700/50 hover:border-blue-200 dark:hover:border-blue-800 hover:shadow-lg hover:shadow-blue-500/5 transition-all duration-300">
+    <div className="group relative bg-white dark:bg-gray-800/60 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-gray-100 dark:border-gray-700/50 hover:border-blue-200 dark:hover:border-blue-800 hover:shadow-lg hover:shadow-blue-500/5 transition-all duration-300">
       <div className="flex items-center gap-2 mb-2">
         <div className={`p-1.5 rounded-lg bg-${color}-100 dark:bg-${color}-900/30`}>
           <Icon size={12} className={`text-${color}-500`} />
@@ -116,17 +116,17 @@ export default function TaxpayerDetail() {
           </button>
         )}
       </div>
-      <p className="text-sm font-bold text-gray-900 dark:text-white leading-relaxed">{value || <span className="text-gray-300 dark:text-gray-600 italic">Tidak diisi</span>}</p>
+      <p className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white leading-relaxed">{value || <span className="text-gray-300 dark:text-gray-600 italic">Tidak diisi</span>}</p>
     </div>
   );
 
   return (
     <div className="max-w-5xl mx-auto pb-24">
       {/* Floating Back + Edit Bar */}
-      <div className="sticky top-0 z-30 -mx-4 px-4 pt-2 pb-3 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-100/50 dark:border-gray-800/50 mb-6 flex items-center justify-between">
+      <div className="sticky top-0 z-30 -mx-4 px-3 sm:px-4 pt-2 pb-3 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-100/50 dark:border-gray-800/50 mb-6 flex items-center justify-between">
         <button
           onClick={() => navigate('/taxpayers')}
-          className="flex items-center gap-2 px-3 py-2 text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all text-sm font-bold active:scale-95"
+          className="flex items-center gap-2 px-3 py-2 text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all text-xs sm:text-sm font-bold active:scale-95"
         >
           <ArrowLeft size={16} />
           <span className="hidden sm:inline">Kembali</span>
@@ -156,7 +156,7 @@ export default function TaxpayerDetail() {
               });
             }}
             disabled={!activeTaxObject}
-            className={`flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2 text-white rounded-xl transition-all text-[10px] sm:text-xs font-black uppercase tracking-widest active:scale-95 ${
+            className={`flex items-center gap-2 px-3 py-2 sm:px-3 sm:px-4 sm:py-2 text-white rounded-xl transition-all text-[10px] sm:text-xs font-black uppercase tracking-widest active:scale-95 ${
               activeTaxObject
                 ? 'bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-500/20'
                 : 'bg-slate-300 dark:bg-slate-700 cursor-not-allowed'
@@ -168,7 +168,7 @@ export default function TaxpayerDetail() {
           </button>
           <button
             onClick={() => setShowEditModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-all text-xs font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 active:scale-95"
+            className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-all text-xs font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 active:scale-95"
           >
             <Edit size={13} />
             <span className="hidden sm:inline">Edit</span>
@@ -179,7 +179,7 @@ export default function TaxpayerDetail() {
       {/* ========================================== */}
       {/* HERO SECTION - Identity */}
       {/* ========================================== */}
-      <div className="relative bg-gradient-to-br from-emerald-500 via-emerald-600 to-blue-600 rounded-[2rem] p-6 md:p-8 text-white overflow-hidden shadow-2xl shadow-emerald-500/25 mb-6">
+      <div className="relative bg-gradient-to-br from-emerald-500 via-emerald-600 to-blue-600 rounded-[2rem] p-4 sm:p-6 md:p-8 text-white overflow-hidden shadow-2xl shadow-emerald-500/25 mb-6">
         {/* Decorative elements */}
         <div className="absolute top-0 right-0 w-72 h-72 bg-white/[0.04] rounded-full -mr-24 -mt-24" />
         <div className="absolute bottom-0 left-0 w-56 h-56 bg-white/[0.04] rounded-full -ml-20 -mb-20" />
@@ -187,11 +187,11 @@ export default function TaxpayerDetail() {
 
         <div className="relative z-10">
           <div className="flex flex-col sm:flex-row items-start gap-5 mb-8">
-            <div className="w-20 h-20 bg-white/15 backdrop-blur-md rounded-[1.2rem] flex items-center justify-center text-3xl font-black border-2 border-white/20 shadow-lg">
+            <div className="w-20 h-20 bg-white/15 backdrop-blur-md rounded-[1.2rem] flex items-center justify-center text-base sm:text-lg sm:text-xl sm:text-2xl sm:text-3xl font-black border-2 border-white/20 shadow-lg">
               {taxpayer.name?.charAt(0)?.toUpperCase() || '?'}
             </div>
             <div className="flex-1 min-w-0">
-              <h1 className="text-2xl md:text-3xl font-black tracking-tight leading-tight mb-1">{taxpayer.name}</h1>
+              <h1 className="text-base sm:text-lg sm:text-xl sm:text-2xl md:text-base sm:text-lg sm:text-xl sm:text-2xl sm:text-3xl font-black tracking-tight leading-tight mb-1">{taxpayer.name}</h1>
               <p className="text-white/60 text-xs font-bold uppercase tracking-[0.2em] mb-3">Wajib Pajak Retribusi Daerah</p>
               <div className="flex flex-wrap gap-2">
                 {taxpayer.opd && (
@@ -238,7 +238,7 @@ export default function TaxpayerDetail() {
           <MapPin size={14} className="text-blue-500" />
           <h2 className="text-[11px] font-black text-gray-900 dark:text-white uppercase tracking-[0.15em]">Alamat</h2>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3">
           <InfoCard icon={MapPin} label="Alamat Domisili" value={taxpayer.address} color="blue" />
           <InfoCard icon={Globe} label="Kelurahan" value={taxpayer.sub_district} color="blue" />
         </div>
@@ -252,13 +252,13 @@ export default function TaxpayerDetail() {
           <Briefcase size={14} className="text-indigo-500" />
           <h2 className="text-[11px] font-black text-gray-900 dark:text-white uppercase tracking-[0.15em]">Objek Retribusi</h2>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3 mb-3">
           <InfoCard icon={Briefcase} label="Nama Objek" value={taxpayer.object_name} color="indigo" />
           <InfoCard icon={MapPin} label="Alamat Objek" value={taxpayer.object_address || taxpayer.address} color="indigo" />
         </div>
 
-        <div className="bg-white dark:bg-gray-800/60 rounded-2xl p-4 border border-gray-100 dark:border-gray-700/50 mb-3">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
+        <div className="bg-white dark:bg-gray-800/60 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-gray-100 dark:border-gray-700/50 mb-3">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 justify-between">
             <div>
               <span className="text-[9px] font-black text-gray-400 uppercase tracking-[0.15em] block mb-1">Status Objek</span>
               <p className="text-xs font-bold text-gray-500 dark:text-gray-400">{objectStatus.description}</p>
@@ -272,7 +272,7 @@ export default function TaxpayerDetail() {
             <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-2">
               {taxObjects.map((object: any) => (
                 <div key={object.id} className="rounded-xl border border-gray-100 dark:border-gray-700 p-3 bg-gray-50/70 dark:bg-gray-900/30">
-                  <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start justify-between gap-2 sm:gap-3">
                     <div className="min-w-0">
                       <p className="text-xs font-black text-gray-900 dark:text-white truncate">{object.name}</p>
                       <p className="text-[10px] font-bold text-gray-400 truncate">{object.classification?.name || object.retribution_type?.name || '-'}</p>
@@ -297,11 +297,11 @@ export default function TaxpayerDetail() {
 
         {/* Klasifikasi Badges */}
         {taxpayer.retribution_classifications?.length > 0 && (
-          <div className="bg-white dark:bg-gray-800/60 rounded-2xl p-4 border border-gray-100 dark:border-gray-700/50 mb-3">
+          <div className="bg-white dark:bg-gray-800/60 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-gray-100 dark:border-gray-700/50 mb-3">
             <span className="text-[9px] font-black text-gray-400 uppercase tracking-[0.15em] block mb-3">Klasifikasi Terdaftar</span>
             <div className="flex flex-wrap gap-2">
               {taxpayer.retribution_classifications.map((cls: any) => (
-                <span key={cls.id} className="relative overflow-hidden px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-[10px] font-black rounded-xl uppercase tracking-wider shadow-md shadow-blue-500/20">
+                <span key={cls.id} className="relative overflow-hidden px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-[10px] font-black rounded-xl uppercase tracking-wider shadow-md shadow-blue-500/20">
                   <span className="relative z-10">{cls.name}</span>
                 </span>
               ))}
@@ -310,11 +310,11 @@ export default function TaxpayerDetail() {
         )}
 
         {taxpayer.retribution_types?.length > 0 && (
-          <div className="bg-white dark:bg-gray-800/60 rounded-2xl p-4 border border-gray-100 dark:border-gray-700/50">
+          <div className="bg-white dark:bg-gray-800/60 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-gray-100 dark:border-gray-700/50">
             <span className="text-[9px] font-black text-gray-400 uppercase tracking-[0.15em] block mb-3">Jenis Retribusi</span>
             <div className="flex flex-wrap gap-2">
               {taxpayer.retribution_types.map((type: any) => (
-                <span key={type.id} className="px-4 py-2 bg-gradient-to-r from-violet-500 to-purple-500 text-white text-[10px] font-black rounded-xl uppercase tracking-wider shadow-md shadow-violet-500/20">
+                <span key={type.id} className="px-3 sm:px-4 py-2 bg-gradient-to-r from-violet-500 to-purple-500 text-white text-[10px] font-black rounded-xl uppercase tracking-wider shadow-md shadow-violet-500/20">
                   {type.name}
                 </span>
               ))}
@@ -332,7 +332,7 @@ export default function TaxpayerDetail() {
             <FileText size={14} className="text-amber-500" />
             <h2 className="text-[11px] font-black text-gray-900 dark:text-white uppercase tracking-[0.15em]">Data Teknis</h2>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3">
             {metadataFields.map(({ key, label, value }) => (
               <InfoCard key={key} icon={FileText} label={label} value={String(value)} color="amber" copyable />
             ))}
@@ -353,15 +353,15 @@ export default function TaxpayerDetail() {
             </span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3 sm:gap-4">
             {uploadedFiles.map(({ key, label, url }) => {
               const isImage = /\.(jpg|jpeg|png|gif|webp)/i.test(url);
               const isPdf = /\.pdf/i.test(url);
 
               return (
-                <div key={key} className="bg-white dark:bg-gray-800/60 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-700/50 hover:shadow-xl hover:shadow-violet-500/10 transition-all duration-300 group">
+                <div key={key} className="bg-white dark:bg-gray-800/60 rounded-xl sm:rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-700/50 hover:shadow-xl hover:shadow-violet-500/10 transition-all duration-300 group">
                   {/* File Label */}
-                  <div className="px-4 py-3 bg-gradient-to-r from-gray-50 to-gray-50/50 dark:from-gray-800 dark:to-gray-800/50 border-b border-gray-100 dark:border-gray-700/50">
+                  <div className="px-3 sm:px-4 py-3 bg-gradient-to-r from-gray-50 to-gray-50/50 dark:from-gray-800 dark:to-gray-800/50 border-b border-gray-100 dark:border-gray-700/50">
                     <div className="flex items-center gap-2">
                       <div className={`p-1.5 rounded-lg ${isImage ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30'}`}>
                         {isImage ? <Image size={12} className="text-green-600" /> : <FileText size={12} className="text-red-500" />}
@@ -382,22 +382,22 @@ export default function TaxpayerDetail() {
                         className="w-full h-52 object-cover group-hover:scale-105 transition-transform duration-500"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-4">
-                        <span className="px-4 py-1.5 bg-white/90 backdrop-blur-sm rounded-full text-[10px] font-black text-gray-900 uppercase tracking-widest shadow-lg">
+                        <span className="px-3 sm:px-4 py-1.5 bg-white/90 backdrop-blur-sm rounded-full text-[10px] font-black text-gray-900 uppercase tracking-widest shadow-lg">
                           Klik untuk perbesar
                         </span>
                       </div>
                     </div>
                   ) : isPdf ? (
                     <div className="flex flex-col items-center justify-center py-10 bg-gradient-to-br from-red-50 to-rose-50 dark:from-red-900/10 dark:to-rose-900/10">
-                      <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-2xl flex items-center justify-center mb-3 shadow-lg shadow-red-500/10">
-                        <FileText className="w-8 h-8 text-red-500" />
+                      <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-xl sm:rounded-2xl flex items-center justify-center mb-3 shadow-lg shadow-red-500/10">
+                        <FileText className="w-6 h-6 sm:w-8 sm:h-8 text-red-500" />
                       </div>
                       <span className="text-xs font-black text-red-600/80 uppercase tracking-widest">Dokumen PDF</span>
                     </div>
                   ) : (
                     <div className="flex flex-col items-center justify-center py-10 bg-gradient-to-br from-gray-50 to-slate-50 dark:from-gray-800 dark:to-slate-800">
-                      <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-2xl flex items-center justify-center mb-3">
-                        <FileCheck className="w-8 h-8 text-gray-400" />
+                      <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-xl sm:rounded-2xl flex items-center justify-center mb-3">
+                        <FileCheck className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400" />
                       </div>
                       <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">File</span>
                     </div>
@@ -441,7 +441,7 @@ export default function TaxpayerDetail() {
             <MapPinned size={14} className="text-teal-500" />
             <h2 className="text-[11px] font-black text-gray-900 dark:text-white uppercase tracking-[0.15em]">Lokasi Objek</h2>
           </div>
-          <div className="bg-white dark:bg-gray-800/60 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-700/50 shadow-sm">
+          <div className="bg-white dark:bg-gray-800/60 rounded-xl sm:rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-700/50 shadow-sm">
             <div className="h-64 md:h-80 relative z-0">
               <MapContainer
                 center={[lat, lng]}
@@ -456,7 +456,7 @@ export default function TaxpayerDetail() {
                 <Marker position={[lat, lng]}>
                   <Popup>
                     <div className="p-3 min-w-[180px] font-sans">
-                      <h3 className="font-black text-slate-900 text-sm mb-1">{taxpayer.object_name || taxpayer.name}</h3>
+                      <h3 className="font-black text-slate-900 text-xs sm:text-sm mb-1">{taxpayer.object_name || taxpayer.name}</h3>
                       <div className="flex flex-wrap gap-2 mb-2">
                         <span className="inline-flex px-2 py-0.5 rounded text-[10px] font-black uppercase bg-blue-50 text-blue-600 border border-blue-100">
                           {taxpayer.retribution_classifications?.[0]?.name || 'N/A'}
@@ -497,7 +497,7 @@ export default function TaxpayerDetail() {
             </span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3 sm:gap-4">
             {relatedAssets.map((asset) => {
               const targetTaxpayerId = asset.taxpayer_id || asset.taxpayer?.id;
               const assetClassification = asset.classification || asset.retribution_classifications?.[0];
@@ -522,7 +522,7 @@ export default function TaxpayerDetail() {
                     </div>
                   </div>
 
-                  <h3 className="text-sm font-black text-gray-900 dark:text-white mb-1 group-hover:text-emerald-600 transition-colors">{asset.name || asset.object_name || '-'}</h3>
+                  <h3 className="text-xs sm:text-sm font-black text-gray-900 dark:text-white mb-1 group-hover:text-emerald-600 transition-colors">{asset.name || asset.object_name || '-'}</h3>
                   <div className="flex items-center gap-1.5 mb-4">
                     <MapPin size={10} className="text-gray-400" />
                     <p className="text-[10px] font-bold text-gray-400 truncate max-w-[200px]">{asset.address || asset.object_address || asset.taxpayer?.district || 'Alamat tidak tersedia'}</p>
@@ -588,7 +588,7 @@ export default function TaxpayerDetail() {
       {/* ========================================== */}
       {/* FOOTER - Timestamps & Creator */}
       {/* ========================================== */}
-      <div className="bg-gradient-to-r from-gray-50 via-gray-50/80 to-gray-50 dark:from-gray-800/40 dark:via-gray-800/20 dark:to-gray-800/40 rounded-2xl p-5 border border-gray-100 dark:border-gray-700/30">
+      <div className="bg-gradient-to-r from-gray-50 via-gray-50/80 to-gray-50 dark:from-gray-800/40 dark:via-gray-800/20 dark:to-gray-800/40 rounded-xl sm:rounded-2xl p-5 border border-gray-100 dark:border-gray-700/30">
         <div className="flex flex-wrap gap-x-8 gap-y-2 text-[10px] font-bold text-gray-400 uppercase tracking-[0.15em]">
           <div className="flex items-center gap-1.5">
             <Calendar size={11} className="text-gray-300" />
@@ -614,17 +614,17 @@ export default function TaxpayerDetail() {
       {/* ========================================== */}
       {lightboxUrl && (
         <div
-          className="fixed inset-0 bg-black/90 backdrop-blur-xl z-[9999] flex items-center justify-center p-4 animate-in fade-in duration-200 cursor-pointer"
+          className="fixed inset-0 bg-black/90 backdrop-blur-xl z-[9999] flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200 cursor-pointer"
           onClick={() => setLightboxUrl(null)}
         >
           <div className="relative max-w-4xl max-h-[90vh] w-full flex items-center justify-center">
             <img
               src={lightboxUrl}
               alt="Preview"
-              className="max-w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl animate-in zoom-in-95 duration-300"
+              className="max-w-full max-h-[85vh] object-contain rounded-xl sm:rounded-2xl shadow-2xl animate-in zoom-in-95 duration-300"
               onClick={(e) => e.stopPropagation()}
             />
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-3">
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 sm:gap-3">
               <a
                 href={lightboxUrl}
                 target="_blank"

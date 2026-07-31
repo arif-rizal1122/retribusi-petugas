@@ -195,10 +195,10 @@ export default function Profile() {
         <div className="absolute inset-0 bg-gradient-to-br from-orange-100 via-orange-50 to-white dark:from-slate-800 dark:via-slate-900 dark:to-slate-950 h-64 rounded-b-[3rem]"></div>
         
         {/* Back Button */}
-        <div className="relative z-10 px-4 pt-12 pb-4">
+        <div className="relative z-10 px-3 sm:px-4 pt-12 pb-4">
           <button 
             onClick={() => navigate(-1)}
-            className="w-10 h-10 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md rounded-xl flex items-center justify-center shadow-sm"
+            className="w-6 h-6 sm:w-8 sm:h-8 sm:w-10 sm:h-10 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md rounded-xl flex items-center justify-center shadow-sm"
           >
             <ArrowLeft size={20} className="text-slate-600 dark:text-slate-400" />
           </button>
@@ -206,13 +206,13 @@ export default function Profile() {
 
         {/* Title */}
         <div className="relative z-10 px-6 pb-8">
-          <h1 className="text-2xl font-black text-slate-900 dark:text-white">Profile</h1>
+          <h1 className="text-base sm:text-lg sm:text-xl sm:text-2xl font-black text-slate-900 dark:text-white">Profile</h1>
         </div>
       </div>
 
       {/* Profile Card */}
       <div className="relative z-10 -mt-4 mx-4">
-        <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 p-6 text-center">
+        <div className="bg-white dark:bg-slate-900 rounded-xl sm:rounded-2xl sm:rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 p-4 sm:p-6 text-center">
           {/* Avatar Area with Photo Upload */}
           <div className="relative inline-block">
             <div className="w-24 h-24 mx-auto rounded-[2rem] overflow-hidden shadow-2xl shadow-blue-500/30 border-4 border-white dark:border-slate-800 rotate-3 hover:rotate-0 transition-transform duration-500">
@@ -224,11 +224,11 @@ export default function Profile() {
                   onError={(e) => {
                     (e.target as HTMLImageElement).style.display = 'none';
                     (e.target as HTMLImageElement).parentElement!.classList.add('bg-gradient-to-br', 'from-[#0F2547]', 'to-blue-500', 'flex', 'items-center', 'justify-center');
-                    (e.target as HTMLImageElement).parentElement!.innerHTML = `<span class="text-3xl font-black text-white">${user?.name?.charAt(0) || '?'}</span>`;
+                    (e.target as HTMLImageElement).parentElement!.innerHTML = `<span class="text-base sm:text-lg sm:text-xl sm:text-2xl sm:text-3xl font-black text-white">${user?.name?.charAt(0) || '?'}</span>`;
                   }}
                 />
               ) : (
-                <div className="w-full h-full bg-gradient-to-br from-[#0F2547] to-blue-500 flex items-center justify-center text-3xl font-black text-white">
+                <div className="w-full h-full bg-gradient-to-br from-[#0F2547] to-blue-500 flex items-center justify-center text-base sm:text-lg sm:text-xl sm:text-2xl sm:text-3xl font-black text-white">
                   {user?.name?.charAt(0) || <User size={40} />}
                 </div>
               )}
@@ -255,7 +255,7 @@ export default function Profile() {
               <button
                 onClick={handleUploadAvatar}
                 disabled={uploadingAvatar}
-                className="px-4 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg shadow-emerald-500/20 transition-all active:scale-95 disabled:opacity-50 flex items-center gap-2"
+                className="px-3 sm:px-4 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg shadow-emerald-500/20 transition-all active:scale-95 disabled:opacity-50 flex items-center gap-2"
               >
                 {uploadingAvatar ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />}
                 Simpan Foto
@@ -282,8 +282,8 @@ export default function Profile() {
           )}
           
           {/* User Info */}
-          <h2 className="mt-4 text-xl font-bold text-slate-900 dark:text-white">{user?.name}</h2>
-          <p className="text-sm text-slate-500 dark:text-slate-400">{user?.email}</p>
+          <h2 className="mt-4 text-base sm:text-lg sm:text-xl font-bold text-slate-900 dark:text-white">{user?.name}</h2>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">{user?.email}</p>
           <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 flex items-center justify-center gap-1">
             <span className="capitalize">{user?.role?.replace('_', ' ')}</span>
             {user?.opd && (
@@ -297,7 +297,7 @@ export default function Profile() {
           {/* Edit Profile Button */}
           <button 
             onClick={() => setShowEditModal(true)}
-            className="mt-8 w-full py-4 bg-[#0F2547] hover:bg-blue-600 text-white font-black text-[10px] uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-blue-500/20 transition-all active:scale-95 flex items-center justify-center gap-3"
+            className="mt-8 w-full py-3 sm:py-4 bg-[#0F2547] hover:bg-blue-600 text-white font-black text-[10px] uppercase tracking-[0.2em] rounded-xl sm:rounded-2xl shadow-xl shadow-blue-500/20 transition-all active:scale-95 flex items-center justify-center gap-2 sm:gap-3"
           >
             <Pencil size={14} />
             Edit Profile
@@ -307,10 +307,10 @@ export default function Profile() {
 
       {/* Surat Penugasan Section */}
       <div className="mt-6 mx-4">
-        <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
+        <div className="bg-white dark:bg-slate-900 rounded-xl sm:rounded-2xl sm:rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
           <div className="p-5 border-b border-slate-100 dark:border-slate-800">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-amber-50 dark:bg-amber-900/20 rounded-xl flex items-center justify-center">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-6 h-6 sm:w-8 sm:h-8 sm:w-10 sm:h-10 bg-amber-50 dark:bg-amber-900/20 rounded-xl flex items-center justify-center">
                 <FileText size={20} className="text-amber-600" />
               </div>
               <div>
@@ -324,11 +324,11 @@ export default function Profile() {
             {suratPenugasanUrl ? (
               <div className="space-y-3">
                 {/* Preview */}
-                <div className="relative rounded-2xl overflow-hidden border-2 border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
+                <div className="relative rounded-xl sm:rounded-2xl overflow-hidden border-2 border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
                   {suratPenugasanUrl.toLowerCase().endsWith('.pdf') ? (
                     <div className="flex items-center justify-center py-8">
                       <FileText size={48} className="text-amber-500" />
-                      <span className="ml-3 text-sm font-bold text-slate-500">Dokumen PDF</span>
+                      <span className="ml-3 text-xs sm:text-sm font-bold text-slate-500">Dokumen PDF</span>
                     </div>
                   ) : (
                     <img
@@ -364,7 +364,7 @@ export default function Profile() {
               <button
                 onClick={() => suratInputRef.current?.click()}
                 disabled={uploadingSurat}
-                className="w-full py-8 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl hover:border-amber-400 hover:bg-amber-50/50 dark:hover:bg-amber-900/10 transition-all flex flex-col items-center gap-3 disabled:opacity-50"
+                className="w-full py-8 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl sm:rounded-2xl hover:border-amber-400 hover:bg-amber-50/50 dark:hover:bg-amber-900/10 transition-all flex flex-col items-center gap-2 sm:gap-3 disabled:opacity-50"
               >
                 {uploadingSurat ? (
                   <Loader2 size={28} className="animate-spin text-amber-500" />
@@ -397,36 +397,36 @@ export default function Profile() {
 
       {/* Settings Menu */}
       <div className="mt-6 mx-4 space-y-3">
-        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
+        <div className="bg-white dark:bg-slate-900 rounded-xl sm:rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
           {menuItems.slice(0, 2).map((item, i) => (
             <button
               key={i}
               onClick={item.onClick}
-              className="w-full flex items-center justify-between px-5 py-4 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors border-b border-slate-100 dark:border-slate-800 last:border-b-0"
+              className="w-full flex items-center justify-between px-5 py-3 sm:py-4 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors border-b border-slate-100 dark:border-slate-800 last:border-b-0"
             >
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-slate-50 dark:bg-slate-800/50 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+              <div className="flex items-center gap-2 sm:gap-3 sm:gap-4">
+                <div className="w-6 h-6 sm:w-8 sm:h-8 sm:w-10 sm:h-10 sm:w-12 sm:h-12 bg-slate-50 dark:bg-slate-800/50 rounded-xl sm:rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
                   <item.icon size={22} className="text-[#0F2547]" />
                 </div>
                 <span className="font-black text-[11px] uppercase tracking-widest text-slate-700 dark:text-slate-300">{item.label}</span>
               </div>
               <div className="flex items-center gap-2">
-                {item.value && <span className="text-sm text-slate-400">{item.value}</span>}
+                {item.value && <span className="text-xs sm:text-sm text-slate-400">{item.value}</span>}
                 <ChevronRight size={18} className="text-slate-300" />
               </div>
             </button>
           ))}
         </div>
 
-        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
+        <div className="bg-white dark:bg-slate-900 rounded-xl sm:rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
           {menuItems.slice(2).map((item: any, i) => (
             <button
               key={i}
               onClick={item.onClick}
-              className={`w-full flex items-center justify-between px-5 py-4 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors border-b border-slate-100 dark:border-slate-800 last:border-b-0 ${item.className || ''}`}
+              className={`w-full flex items-center justify-between px-5 py-3 sm:py-4 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors border-b border-slate-100 dark:border-slate-800 last:border-b-0 ${item.className || ''}`}
             >
-              <div className="flex items-center gap-4">
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform ${item.iconClassName || 'bg-slate-50 dark:bg-slate-800/50 text-[#0F2547]'}`}>
+              <div className="flex items-center gap-2 sm:gap-3 sm:gap-4">
+                <div className={`w-6 h-6 sm:w-8 sm:h-8 sm:w-10 sm:h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform ${item.iconClassName || 'bg-slate-50 dark:bg-slate-800/50 text-[#0F2547]'}`}>
                   <item.icon size={22} />
                 </div>
                 <span className="font-black text-[11px] uppercase tracking-widest">{item.label}</span>
@@ -439,18 +439,18 @@ export default function Profile() {
 
       {/* Edit Profile Modal */}
       {showEditModal && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto">
-          <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden my-auto">
-            <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-800">
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white">Edit Profile</h3>
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-sm overflow-y-auto">
+          <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-xl sm:rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden my-auto">
+            <div className="flex items-center justify-between p-4 sm:p-6 border-b border-slate-100 dark:border-slate-800">
+              <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">Edit Profile</h3>
               <button onClick={() => setShowEditModal(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl">
                 <X size={20} className="text-slate-400" />
               </button>
             </div>
             
-            <form onSubmit={handleUpdateProfile} className="p-6 space-y-4">
+            <form onSubmit={handleUpdateProfile} className="p-4 sm:p-6 space-y-4">
               {message && (
-                <div className={`p-3 rounded-xl flex items-center gap-2 text-sm ${
+                <div className={`p-3 rounded-xl flex items-center gap-2 text-xs sm:text-sm ${
                   message.type === 'success' 
                     ? 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400' 
                     : 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400'
@@ -463,11 +463,11 @@ export default function Profile() {
               {/* Avatar in Edit Modal */}
               <div className="flex flex-col items-center">
                 <div className="relative">
-                  <div className="w-20 h-20 rounded-2xl overflow-hidden border-2 border-slate-200 dark:border-slate-700 shadow-md">
+                  <div className="w-20 h-20 rounded-xl sm:rounded-2xl overflow-hidden border-2 border-slate-200 dark:border-slate-700 shadow-md">
                     {avatarPreview || avatarUrl ? (
                       <img src={avatarPreview || avatarUrl || ''} alt="Avatar" className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-[#0F2547] to-blue-500 flex items-center justify-center text-2xl font-black text-white">
+                      <div className="w-full h-full bg-gradient-to-br from-[#0F2547] to-blue-500 flex items-center justify-center text-base sm:text-lg sm:text-xl sm:text-2xl font-black text-white">
                         {user?.name?.charAt(0)}
                       </div>
                     )}
@@ -481,23 +481,23 @@ export default function Profile() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Nama Lengkap</label>
+                <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Nama Lengkap</label>
                 <input
                   type="text"
                   value={profileForm.name}
                   onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+                  className="w-full px-3 sm:px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Email</label>
+                <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Email</label>
                 <input
                   type="email"
                   value={profileForm.email}
                   onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+                  className="w-full px-3 sm:px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
                   required
                 />
               </div>
@@ -523,18 +523,18 @@ export default function Profile() {
 
       {/* Change Password Modal */}
       {showPasswordModal && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto">
-          <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden my-auto">
-            <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-800">
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white">Ganti Password</h3>
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-sm overflow-y-auto">
+          <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-xl sm:rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden my-auto">
+            <div className="flex items-center justify-between p-4 sm:p-6 border-b border-slate-100 dark:border-slate-800">
+              <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">Ganti Password</h3>
               <button onClick={() => setShowPasswordModal(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl">
                 <X size={20} className="text-slate-400" />
               </button>
             </div>
             
-            <form onSubmit={handleChangePassword} className="p-6 space-y-4">
+            <form onSubmit={handleChangePassword} className="p-4 sm:p-6 space-y-4">
               {message && (
-                <div className={`p-3 rounded-xl flex items-center gap-2 text-sm ${
+                <div className={`p-3 rounded-xl flex items-center gap-2 text-xs sm:text-sm ${
                   message.type === 'success' 
                     ? 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400' 
                     : 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400'
@@ -545,13 +545,13 @@ export default function Profile() {
               )}
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Password Saat Ini</label>
+                <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Password Saat Ini</label>
                 <div className="relative">
                   <input
                     type={showCurrentPassword ? "text" : "password"}
                     value={passwordForm.current_password}
                     onChange={(e) => setPasswordForm({ ...passwordForm, current_password: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none pr-12"
+                    className="w-full px-3 sm:px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none pr-12"
                     required
                   />
                   <button
@@ -566,13 +566,13 @@ export default function Profile() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Password Baru</label>
+                <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Password Baru</label>
                 <div className="relative">
                   <input
                     type={showNewPassword ? "text" : "password"}
                     value={passwordForm.new_password}
                     onChange={(e) => setPasswordForm({ ...passwordForm, new_password: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none pr-12"
+                    className="w-full px-3 sm:px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none pr-12"
                     required
                   />
                   <button
@@ -587,13 +587,13 @@ export default function Profile() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Konfirmasi Password Baru</label>
+                <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Konfirmasi Password Baru</label>
                 <div className="relative">
                   <input
                     type={showConfirmPassword ? "text" : "password"}
                     value={passwordForm.new_password_confirmation}
                     onChange={(e) => setPasswordForm({ ...passwordForm, new_password_confirmation: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none pr-12"
+                    className="w-full px-3 sm:px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none pr-12"
                     required
                   />
                   <button
