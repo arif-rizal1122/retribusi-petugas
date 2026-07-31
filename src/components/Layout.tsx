@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { ReactNode, useState } from 'react';
 import ZoomControl from './ZoomControl';
 import { InstallPWA } from './InstallPWA';

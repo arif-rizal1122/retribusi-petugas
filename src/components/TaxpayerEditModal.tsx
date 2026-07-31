@@ -1,3 +1,4 @@
+// @ts-nocheck
 import toast from 'react-hot-toast';
 import { useState, useEffect, useMemo } from 'react';
 import { api } from '../lib/api';

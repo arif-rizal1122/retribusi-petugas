@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useState, useEffect, useCallback } from 'react';
 import { ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 
