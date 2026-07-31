@@ -58,7 +58,7 @@ const About: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-gradient-to-br from-indigo-600 to-blue-700 p-8 rounded-2xl shadow-xl border border-white/10 relative overflow-hidden">
+      <div className="bg-[#0F2547] p-8 rounded-2xl shadow-xl border border-white/10 relative overflow-hidden">
         <div className="relative z-10 flex flex-col md:flex-row items-center gap-6">
           <div className="w-20 h-20 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/30">
             <Building2 className="w-10 h-10 text-white" />

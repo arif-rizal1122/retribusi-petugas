@@ -52,7 +52,7 @@ export default function TaxpayerDetail() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
         <div className="relative">
-          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-400 to-blue-500 opacity-20 animate-ping absolute inset-0" />
+          <div className="w-16 h-16 rounded-full bg-[#0F2547] opacity-20 animate-ping absolute inset-0" />
           <Loader2 className="w-16 h-16 animate-spin text-emerald-600 relative z-10" />
         </div>
         <p className="text-xs sm:text-sm font-bold text-gray-400 uppercase tracking-widest mt-6">Memuat data wajib pajak...</p>
@@ -63,7 +63,7 @@ export default function TaxpayerDetail() {
   if (error || !taxpayer) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-3 sm:px-4">
-        <div className="w-24 h-24 bg-gradient-to-br from-red-100 to-rose-100 dark:from-red-900/30 dark:to-rose-900/30 rounded-xl sm:rounded-2xl sm:rounded-3xl flex items-center justify-center mb-6">
+        <div className="w-24 h-24 bg-[#0F2547] dark:from-red-900/30 dark:to-rose-900/30 rounded-xl sm:rounded-2xl sm:rounded-3xl flex items-center justify-center mb-6">
           <XCircle className="w-6 h-6 sm:w-8 sm:h-8 sm:w-10 sm:h-10 sm:w-12 sm:h-12 text-red-400" />
         </div>
         <h2 className="text-base sm:text-lg sm:text-xl font-black text-gray-900 dark:text-white mb-2">Data Tidak Ditemukan</h2>
@@ -179,7 +179,7 @@ export default function TaxpayerDetail() {
       {/* ========================================== */}
       {/* HERO SECTION - Identity */}
       {/* ========================================== */}
-      <div className="relative bg-gradient-to-br from-emerald-500 via-emerald-600 to-blue-600 rounded-[2rem] p-4 sm:p-6 md:p-8 text-white overflow-hidden shadow-2xl shadow-emerald-500/25 mb-6">
+      <div className="relative bg-[#0F2547] rounded-[2rem] p-4 sm:p-6 md:p-8 text-white overflow-hidden shadow-2xl shadow-emerald-500/25 mb-6">
         {/* Decorative elements */}
         <div className="absolute top-0 right-0 w-72 h-72 bg-white/[0.04] rounded-full -mr-24 -mt-24" />
         <div className="absolute bottom-0 left-0 w-56 h-56 bg-white/[0.04] rounded-full -ml-20 -mb-20" />
@@ -301,7 +301,7 @@ export default function TaxpayerDetail() {
             <span className="text-[9px] font-black text-gray-400 uppercase tracking-[0.15em] block mb-3">Klasifikasi Terdaftar</span>
             <div className="flex flex-wrap gap-2">
               {taxpayer.retribution_classifications.map((cls: any) => (
-                <span key={cls.id} className="relative overflow-hidden px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-[10px] font-black rounded-xl uppercase tracking-wider shadow-md shadow-blue-500/20">
+                <span key={cls.id} className="relative overflow-hidden px-3 sm:px-4 py-2 bg-[#0F2547] text-white text-[10px] font-black rounded-xl uppercase tracking-wider shadow-md shadow-blue-500/20">
                   <span className="relative z-10">{cls.name}</span>
                 </span>
               ))}
@@ -314,7 +314,7 @@ export default function TaxpayerDetail() {
             <span className="text-[9px] font-black text-gray-400 uppercase tracking-[0.15em] block mb-3">Jenis Retribusi</span>
             <div className="flex flex-wrap gap-2">
               {taxpayer.retribution_types.map((type: any) => (
-                <span key={type.id} className="px-3 sm:px-4 py-2 bg-gradient-to-r from-violet-500 to-purple-500 text-white text-[10px] font-black rounded-xl uppercase tracking-wider shadow-md shadow-violet-500/20">
+                <span key={type.id} className="px-3 sm:px-4 py-2 bg-[#0F2547] text-white text-[10px] font-black rounded-xl uppercase tracking-wider shadow-md shadow-violet-500/20">
                   {type.name}
                 </span>
               ))}
@@ -361,7 +361,7 @@ export default function TaxpayerDetail() {
               return (
                 <div key={key} className="bg-white dark:bg-gray-800/60 rounded-xl sm:rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-700/50 hover:shadow-xl hover:shadow-violet-500/10 transition-all duration-300 group">
                   {/* File Label */}
-                  <div className="px-3 sm:px-4 py-3 bg-gradient-to-r from-gray-50 to-gray-50/50 dark:from-gray-800 dark:to-gray-800/50 border-b border-gray-100 dark:border-gray-700/50">
+                  <div className="px-3 sm:px-4 py-3 bg-[#0F2547] dark:from-gray-800 dark:to-gray-800/50 border-b border-gray-100 dark:border-gray-700/50">
                     <div className="flex items-center gap-2">
                       <div className={`p-1.5 rounded-lg ${isImage ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30'}`}>
                         {isImage ? <Image size={12} className="text-green-600" /> : <FileText size={12} className="text-red-500" />}
@@ -388,14 +388,14 @@ export default function TaxpayerDetail() {
                       </div>
                     </div>
                   ) : isPdf ? (
-                    <div className="flex flex-col items-center justify-center py-10 bg-gradient-to-br from-red-50 to-rose-50 dark:from-red-900/10 dark:to-rose-900/10">
+                    <div className="flex flex-col items-center justify-center py-10 bg-[#0F2547] dark:from-red-900/10 dark:to-rose-900/10">
                       <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-xl sm:rounded-2xl flex items-center justify-center mb-3 shadow-lg shadow-red-500/10">
                         <FileText className="w-6 h-6 sm:w-8 sm:h-8 text-red-500" />
                       </div>
                       <span className="text-xs font-black text-red-600/80 uppercase tracking-widest">Dokumen PDF</span>
                     </div>
                   ) : (
-                    <div className="flex flex-col items-center justify-center py-10 bg-gradient-to-br from-gray-50 to-slate-50 dark:from-gray-800 dark:to-slate-800">
+                    <div className="flex flex-col items-center justify-center py-10 bg-[#0F2547] dark:from-gray-800 dark:to-slate-800">
                       <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-xl sm:rounded-2xl flex items-center justify-center mb-3">
                         <FileCheck className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400" />
                       </div>
@@ -409,7 +409,7 @@ export default function TaxpayerDetail() {
                       href={url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex-1 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-[10px] font-black uppercase tracking-[0.15em] rounded-xl flex items-center justify-center gap-1.5 transition-all active:scale-95 shadow-md shadow-blue-500/20"
+                      className="flex-1 py-2.5 bg-[#0F2547] hover:from-blue-600 hover:to-blue-700 text-white text-[10px] font-black uppercase tracking-[0.15em] rounded-xl flex items-center justify-center gap-1.5 transition-all active:scale-95 shadow-md shadow-blue-500/20"
                     >
                       <ExternalLink size={12} />
                       Buka
@@ -588,7 +588,7 @@ export default function TaxpayerDetail() {
       {/* ========================================== */}
       {/* FOOTER - Timestamps & Creator */}
       {/* ========================================== */}
-      <div className="bg-gradient-to-r from-gray-50 via-gray-50/80 to-gray-50 dark:from-gray-800/40 dark:via-gray-800/20 dark:to-gray-800/40 rounded-xl sm:rounded-2xl p-5 border border-gray-100 dark:border-gray-700/30">
+      <div className="bg-[#0F2547] dark:from-gray-800/40 dark:via-gray-800/20 dark:to-gray-800/40 rounded-xl sm:rounded-2xl p-5 border border-gray-100 dark:border-gray-700/30">
         <div className="flex flex-wrap gap-x-8 gap-y-2 text-[10px] font-bold text-gray-400 uppercase tracking-[0.15em]">
           <div className="flex items-center gap-1.5">
             <Calendar size={11} className="text-gray-300" />

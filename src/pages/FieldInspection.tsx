@@ -282,7 +282,7 @@ export default function FieldInspection() {
         </div>
       ) : (
         <>
-          <div className="bg-gradient-to-br from-blue-600 to-indigo-700 p-6 rounded-[2.5rem] text-white shadow-xl shadow-blue-500/20 relative overflow-hidden group">
+          <div className="bg-[#0F2547] p-6 rounded-[2.5rem] text-white shadow-xl shadow-blue-500/20 relative overflow-hidden group">
             <div className="absolute right-0 top-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-white/20 transition-all duration-700"></div>
             <div className="relative z-10">
               <div className="flex justify-between items-start mb-4">

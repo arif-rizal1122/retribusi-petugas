@@ -345,7 +345,7 @@ export default function UserGuide() {
       </div>
 
       {/* Intro Card */}
-      <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-[3rem] p-10 text-white shadow-2xl shadow-blue-500/20 relative overflow-hidden">
+      <div className="bg-[#0F2547] rounded-[3rem] p-10 text-white shadow-2xl shadow-blue-500/20 relative overflow-hidden">
         <div className="relative z-10 max-w-lg">
           <h2 className="text-4xl font-black mb-4 tracking-tighter">Siap Bertugas?</h2>
           <p className="text-blue-50/70 font-bold leading-relaxed text-sm">

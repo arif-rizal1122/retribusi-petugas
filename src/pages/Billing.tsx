@@ -647,7 +647,7 @@ export default function Billing() {
               </div>
 
               {/* Amount Highlight */}
-              <div className="mt-5 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/30 dark:to-teal-900/30 rounded-xl sm:rounded-2xl p-5 border border-emerald-100 dark:border-emerald-800">
+              <div className="mt-5 bg-emerald-600 dark:from-emerald-900/30 dark:to-teal-900/30 rounded-xl sm:rounded-2xl p-5 border border-emerald-100 dark:border-emerald-800">
                 <div className="text-center mb-4">
                   <p className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-1">Total Pembayaran</p>
                   <p className="text-base sm:text-lg sm:text-xl sm:text-2xl sm:text-3xl font-black text-emerald-700 dark:text-emerald-400">{formatCurrency(selectedBill.amount)}</p>

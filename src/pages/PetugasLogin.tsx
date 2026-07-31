@@ -73,7 +73,7 @@ export default function PetugasLogin() {
                 window.location.hostname === 'petugas-dev.sipanda.online';
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-sky-50 via-slate-50 to-blue-50/70 relative overflow-hidden flex flex-col justify-between font-sans">
+    <div className="min-h-screen bg-[#0F2547] relative overflow-hidden flex flex-col justify-between font-sans">
       
       {/* Top Background Wave Contour Graphic */}
       <div className="absolute top-0 left-0 w-full h-96 opacity-15 pointer-events-none">

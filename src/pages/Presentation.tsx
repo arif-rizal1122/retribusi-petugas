@@ -26,7 +26,7 @@ const slides = [
     subtitle: 'Sistem Informasi Pendapatan Daerah',
     content: (
       <div className="text-center space-y-4">
-        <div className="w-20 h-20 mx-auto bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-xl">
+        <div className="w-20 h-20 mx-auto bg-[#0F2547] rounded-2xl flex items-center justify-center shadow-xl">
           <BookOpen className="w-10 h-10 text-white" />
         </div>
         <div>
@@ -160,7 +160,7 @@ const slides = [
               { step: '5', title: 'Review', desc: 'Cek & Kirim' },
             ].map((item) => (
               <div key={item.step} className="flex items-center gap-3 p-2 bg-white rounded-lg shadow-sm border border-gray-100">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center font-black text-sm shrink-0">
+                <div className="w-8 h-8 rounded-lg bg-[#0F2547] text-white flex items-center justify-center font-black text-sm shrink-0">
                   {item.step}
                 </div>
                 <div>

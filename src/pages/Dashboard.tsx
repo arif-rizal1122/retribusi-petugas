@@ -628,7 +628,7 @@ export default function Dashboard() {
         </div>
 
         {/* Sinergi Banner */}
-        <div className="bg-gradient-to-r from-sky-100/90 via-sky-50 to-blue-100/80 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-sky-200/60 flex items-center justify-between shadow-sm">
+        <div className="bg-sky-50 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-sky-200/60 flex items-center justify-between shadow-sm">
           <div className="flex items-center gap-2 sm:gap-3">
             <div className="w-8 h-8 sm:w-9 sm:h-9 bg-blue-600 text-white rounded-lg sm:rounded-xl flex items-center justify-center shrink-0">
               <CheckCircle2 size={16} className="sm:w-[18px] sm:h-[18px]" />
