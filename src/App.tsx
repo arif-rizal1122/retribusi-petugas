@@ -19,6 +19,7 @@ import TaxpayerManagement from './pages/TaxpayerManagement';
 import TaxpayerDetail from './pages/TaxpayerDetail';
 import Profile from './pages/Profile';
 import FieldScanner from './pages/FieldScanner';
+import MyQrPetugas from './pages/MyQrPetugas';
 import PaymentConfirmation from './pages/PaymentConfirmation';
 import TaxCalculator from './pages/TaxCalculator';
 import UserGuide from './pages/UserGuide';
@@ -101,6 +102,17 @@ function App() {
                 <ProtectedRoute allowedRoles={['super_admin', 'opd', 'petugas']}>
                   <Layout>
                     <FieldScanner />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/qr-saya"
+              element={
+                <ProtectedRoute allowedRoles={['super_admin', 'opd', 'petugas']}>
+                  <Layout>
+                    <MyQrPetugas />
                   </Layout>
                 </ProtectedRoute>
               }

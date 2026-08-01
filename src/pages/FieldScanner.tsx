@@ -151,6 +151,35 @@ export default function FieldScanner() {
         return;
       }
     } else if (result.type === 'url') {
+      if (result.metadata?.isTaxpayer) {
+        // QR Wajib Pajak: resolve token -> data WP -> buka detail
+        fetch(`https://apimpad.baubaukota.go.id/api/verify/taxpayer/${encodeURIComponent(result.value)}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        })
+          .then(r => r.json())
+          .then(json => {
+            if (json.success && json.taxpayer?.id) {
+              navigate(`/taxpayers/${json.taxpayer.id}`);
+            } else {
+              setScanResult(null);
+              setDetectionHint(null);
+              setErrorTitle('QR Tidak Valid');
+              setError(json.message || 'Wajib pajak tidak ditemukan.');
+              hasHandledScanRef.current = false;
+              startScanner(activeCamera!);
+            }
+          })
+          .catch(() => {
+            setScanResult(null);
+            setDetectionHint(null);
+            setErrorTitle('Gagal Ambil Data');
+            setError('Terjadi kesalahan saat memuat data wajib pajak.');
+            hasHandledScanRef.current = false;
+            startScanner(activeCamera!);
+          });
+        return;
+      }
+
       if (result.metadata?.isPbbSppt) {
         targetUrl = `/pbb-bapenda?nop=${encodeURIComponent(result.value)}&autoplay=true`;
       } else {

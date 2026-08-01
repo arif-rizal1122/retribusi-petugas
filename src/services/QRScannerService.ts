@@ -16,6 +16,22 @@ export const QRScannerService = {
    */
   parse(data: string): QRParseResult {
     // 1. Check if it's a Bapenda/m-PAD verification URL
+    if (data.includes('/api/verify/taxpayer/')) {
+      const parts = data.split('/api/verify/taxpayer/');
+      const token = parts[parts.length - 1];
+      return {
+        type: 'url',
+        value: token,
+        actionHint: 'QR Wajib Pajak Terdeteksi',
+        metadata: {
+          originalUrl: data,
+          isVerification: true,
+          isTaxpayer: true,
+          token: token
+        }
+      };
+    }
+
     if (data.includes('/api/verify/bill/') || data.includes('/api/verify/payment/')) {
       const parts = data.split('/');
       const billNumber = parts[parts.length - 1];
