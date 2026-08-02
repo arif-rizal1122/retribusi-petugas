@@ -25,7 +25,8 @@ import {
   Map,
   Download,
   CheckCircle,
-  ClipboardList
+  ClipboardList,
+  Landmark
 } from 'lucide-react';
 import { UserRole } from '../types';
 
@@ -87,6 +88,12 @@ const menuItems: MenuItem[] = [
     label: 'PBB Bapenda',
     path: '/pbb-bapenda',
     icon: <FileText className="w-5 h-5" />,
+    roles: ['super_admin', 'opd', 'petugas'],
+  },
+  {
+    label: 'BPHTB',
+    path: '/bphtb',
+    icon: <Landmark className="w-5 h-5" />,
     roles: ['super_admin', 'opd', 'petugas'],
   },
   {

@@ -27,6 +27,7 @@ import FieldInspection from './pages/FieldInspection';
 import Presentation from './pages/Presentation';
 import PetaLapangan from './pages/PetaLapangan';
 import PbbBapenda from './pages/PbbBapenda';
+import Bphtb from './pages/Bphtb';
 import DownloadApp from './pages/DownloadApp';
 import PaymentVerification from './pages/PaymentVerification';
 import DaftarTugas from './pages/DaftarTugas';
@@ -245,6 +246,17 @@ function App() {
                 <ProtectedRoute allowedRoles={['super_admin', 'opd', 'petugas']}>
                   <Layout>
                     <PbbBapenda />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/bphtb"
+              element={
+                <ProtectedRoute allowedRoles={['super_admin', 'opd', 'petugas']}>
+                  <Layout>
+                    <Bphtb />
                   </Layout>
                 </ProtectedRoute>
               }
