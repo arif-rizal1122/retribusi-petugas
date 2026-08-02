@@ -10,7 +10,7 @@ const STATUS_META: Record<string, { label: string; cls: string }> = {
   submitted: { label: 'Submitted', cls: 'bg-blue-100 text-blue-700' },
   verified: { label: 'Terverifikasi', cls: 'bg-teal-100 text-teal-700' },
   paid: { label: 'Lunas', cls: 'bg-green-100 text-green-700' },
-  skb_issued: { label: 'SKB Terbit', cls: 'bg-emerald-100 text-emerald-700' },
+  sspd_issued: { label: 'SSPD Terbit', cls: 'bg-emerald-100 text-emerald-700' },
   rejected: { label: 'Ditolak', cls: 'bg-red-100 text-red-700' },
 };
 
@@ -61,15 +61,15 @@ export default function Bphtb() {
     }
   };
 
-  const handleIssueSkb = async (id: number) => {
-    if (!window.confirm('Terbitkan SKB digital untuk berkas ini?')) return;
+  const handleIssueSspd = async (id: number) => {
+    if (!window.confirm('Terbitkan SSPD digital untuk berkas ini?')) return;
     setActing(id);
     try {
-      const data = await api.post(`/api/h2h/bphtb/${id}/skb`, {});
-      toast.success(data.message || 'SKB diterbitkan');
+      const data = await api.post(`/api/h2h/bphtb/${id}/sspd`, {});
+      toast.success(data.message || 'SSPD diterbitkan');
       void fetchList();
     } catch (e: any) {
-      toast.error(e.message || 'Gagal terbitkan SKB');
+      toast.error(e.message || 'Gagal terbitkan SSPD');
     } finally {
       setActing(null);
     }
@@ -79,7 +79,7 @@ export default function Bphtb() {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-10">
       <div className="sticky top-0 z-30 bg-white dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700 px-4 py-3">
         <h1 className="text-lg font-black text-slate-900 dark:text-white">BPHTB (Pajak)</h1>
-        <p className="text-[11px] text-slate-500">Bea Perolehan Hak atas Tanah dan Bangunan — verifikasi & SKB</p>
+        <p className="text-[11px] text-slate-500">Bea Perolehan Hak atas Tanah dan Bangunan — verifikasi & SSPD</p>
         <div className="mt-2 flex gap-2">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -126,7 +126,7 @@ export default function Bphtb() {
                     <div className="text-[11px] text-slate-500 truncate">NIB {s.nib}{s.nop ? ` · NOP ${s.nop}` : ''}</div>
                   </div>
                   <span className={`shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold ${meta.cls}`}>
-                    {s.status === 'paid' || s.status === 'skb_issued' ? <CreditCard className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
+                    {s.status === 'paid' || s.status === 'sspd_issued' ? <CreditCard className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
                     {meta.label}
                   </span>
                 </div>
@@ -158,10 +158,10 @@ export default function Bphtb() {
                       <CheckCircle2 className="w-3.5 h-3.5" /> Verifikasi Bapenda: {new Date(s.verified_at).toLocaleString('id-ID')}
                     </div>
                   )}
-                  {s.skb_number && (
+                  {s.sspd_number && (
                     <div className="flex items-center gap-1.5 text-[11px] text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg px-3 py-2">
                       <ShieldCheck className="w-4 h-4 shrink-0" />
-                      <span className="font-mono font-bold">{s.skb_number}</span>
+                      <span className="font-mono font-bold">{s.sspd_number}</span>
                     </div>
                   )}
 
@@ -177,11 +177,11 @@ export default function Bphtb() {
                     )}
                     {s.status === 'paid' && (
                       <button
-                        onClick={() => void handleIssueSkb(s.id)}
+                        onClick={() => void handleIssueSspd(s.id)}
                         disabled={acting === s.id}
                         className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white text-xs font-bold rounded-lg"
                       >
-                        <ShieldCheck className="w-4 h-4" /> Terbitkan SKB
+                        <ShieldCheck className="w-4 h-4" /> Terbitkan SSPD
                       </button>
                     )}
                     {!['submitted', 'paid'].includes(s.status) && (
