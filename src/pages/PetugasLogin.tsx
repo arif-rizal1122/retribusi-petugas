@@ -59,18 +59,13 @@ export default function PetugasLogin() {
     setIsSubmitting(false);
   };
 
-  const demoAccounts = [
-    { email: 'superadmin@sipanda.online', password: 'Mpad123#', label: 'Super Admin' },
-    { email: 'bapenda@baubaukota.go.id', password: 'password123', label: 'Admin Bapenda' },
-    { email: 'petugas@bapenda.go.id', password: 'password123', label: 'Petugas Bapenda' },
-  ];
+  const demoAccounts: { email: string; password: string; label: string }[] = [];
 
   const isDev = import.meta.env.MODE === 'development' || 
                 import.meta.env.VITE_APP_ENV === 'local' || 
                 import.meta.env.VITE_APP_ENV === 'development' ||
                 window.location.hostname === 'localhost' || 
-                window.location.hostname === '127.0.0.1' ||
-                window.location.hostname === 'petugas-dev.sipanda.online';
+                window.location.hostname === '127.0.0.1';
 
   return (
     <div className="min-h-screen bg-[#0F2547] relative overflow-hidden flex flex-col justify-between font-sans">
