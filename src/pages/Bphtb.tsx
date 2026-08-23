@@ -1,9 +1,9 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { api } from '../lib/api';
 import {
   Search, RefreshCw, ChevronDown, ChevronUp, ShieldCheck, CheckCircle2,
-  FileText, CreditCard, Clock, MapPin, User as UserIcon
+  CreditCard, Clock
 } from 'lucide-react';
 
 const STATUS_META: Record<string, { label: string; cls: string }> = {
@@ -14,11 +14,40 @@ const STATUS_META: Record<string, { label: string; cls: string }> = {
   rejected: { label: 'Ditolak', cls: 'bg-red-100 text-red-700' },
 };
 
-const rupiah = (v: any) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(Number(v || 0));
+type BphtbSubmission = {
+  id: number;
+  billing_code?: string;
+  nib?: string;
+  nop?: string;
+  nama_wp?: string;
+  nik_wp?: string;
+  final_npop?: number | string | null;
+  status: string;
+  ntpd?: string | null;
+  verified_at?: string | null;
+  sspd_number?: string | null;
+  documents?: unknown[];
+  bill?: {
+    amount?: number | string | null;
+  } | null;
+};
+
+type Pagination = {
+  current_page: number;
+  last_page: number;
+};
+
+type ApiParams = Record<string, string | number>;
+
+const rupiah = (v: unknown) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(Number(v || 0));
+
+function errorMessage(error: unknown, fallback: string) {
+  return error instanceof Error ? error.message : fallback;
+}
 
 export default function Bphtb() {
-  const [items, setItems] = useState<any[]>([]);
-  const [pagination, setPagination] = useState<any>(null);
+  const [items, setItems] = useState<BphtbSubmission[]>([]);
+  const [pagination, setPagination] = useState<Pagination | null>(null);
   const [status, setStatus] = useState('');
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
@@ -28,14 +57,14 @@ export default function Bphtb() {
   const fetchList = useCallback(async (page = 1) => {
     setLoading(true);
     try {
-      const params: Record<string, any> = { page };
+      const params: ApiParams = { page };
       if (status) params.status = status;
       if (search) params.search = search;
       const data = await api.get('/api/h2h/bphtb', { params });
       setItems(data.data || []);
       setPagination(data);
-    } catch (e: any) {
-      toast.error(e.message || 'Gagal memuat data BPHTB');
+    } catch (e: unknown) {
+      toast.error(errorMessage(e, 'Gagal memuat data BPHTB'));
     } finally {
       setLoading(false);
     }
@@ -54,8 +83,8 @@ export default function Bphtb() {
       const data = await api.post(`/api/h2h/bphtb/${id}/verify`, { nop: nop.trim() });
       toast.success(data.message || 'Berkas terverifikasi');
       void fetchList();
-    } catch (e: any) {
-      toast.error(e.message || 'Gagal verifikasi');
+    } catch (e: unknown) {
+      toast.error(errorMessage(e, 'Gagal verifikasi'));
     } finally {
       setActing(null);
     }
@@ -65,11 +94,11 @@ export default function Bphtb() {
     if (!window.confirm('Terbitkan SSPD digital untuk berkas ini?')) return;
     setActing(id);
     try {
-      const data = await api.post(`/api/h2h/bphtb/${id}/sspd`, {});
+      const data = await api.post(`/api/h2h/bphtb/${id}/issue-sspd`, {});
       toast.success(data.message || 'SSPD diterbitkan');
       void fetchList();
-    } catch (e: any) {
-      toast.error(e.message || 'Gagal terbitkan SSPD');
+    } catch (e: unknown) {
+      toast.error(errorMessage(e, 'Gagal terbitkan SSPD'));
     } finally {
       setActing(null);
     }
