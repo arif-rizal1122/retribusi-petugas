@@ -8,9 +8,13 @@ import {
   Search,
   MapPin,
   User,
-  AlertCircle
+  AlertCircle,
+  Wrench,
+  ShieldCheck,
+  CheckCircle2,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { AssetSurveyForm, type AssetRentalSurveyItem } from '../components/AssetSurveyForm';
 
 interface Task {
   id: number;
@@ -33,15 +37,34 @@ interface Task {
 
 export default function DaftarTugas() {
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [assetRentals, setAssetRentals] = useState<AssetRentalSurveyItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState<'pending' | 'completed'>('pending');
+  const [activeTab, setActiveTab] = useState<'pending' | 'completed' | 'asset_survey'>('pending');
+  const [selectedRentalForSurvey, setSelectedRentalForSurvey] = useState<AssetRentalSurveyItem | null>(null);
 
   useEffect(() => {
-    fetchTasks();
+    if (activeTab === 'asset_survey') {
+      fetchAssetRentals();
+    } else {
+      fetchTasks();
+    }
   }, [activeTab]);
 
   const [uploadingId, setUploadingId] = useState<number | null>(null);
+
+  const fetchAssetRentals = async () => {
+    try {
+      setLoading(true);
+      const res = await api.get('/api/asset/rentals');
+      const items = res.data?.data || res.data || [];
+      setAssetRentals(Array.isArray(items) ? items : []);
+    } catch (err) {
+      console.error('Error fetching asset rentals for survey:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchTasks = async () => {
     try {
@@ -137,10 +160,10 @@ export default function DaftarTugas() {
       </div>
 
       {/* Tabs */}
-      <div className="flex p-1 bg-slate-100/50 dark:bg-slate-800/50 rounded-2xl w-fit backdrop-blur-xl border border-slate-200 dark:border-slate-700">
+      <div className="flex flex-wrap p-1 bg-slate-100/50 dark:bg-slate-800/50 rounded-2xl w-fit backdrop-blur-xl border border-slate-200 dark:border-slate-700 gap-1">
         <button
           onClick={() => setActiveTab('pending')}
-          className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${
             activeTab === 'pending'
               ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-white shadow-sm'
               : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
@@ -151,7 +174,7 @@ export default function DaftarTugas() {
         </button>
         <button
           onClick={() => setActiveTab('completed')}
-          className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${
             activeTab === 'completed'
               ? 'bg-white dark:bg-slate-700 text-emerald-600 dark:text-white shadow-sm'
               : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
@@ -160,13 +183,24 @@ export default function DaftarTugas() {
           <CheckCircle className="w-4 h-4" />
           Selesai
         </button>
+        <button
+          onClick={() => setActiveTab('asset_survey')}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${
+            activeTab === 'asset_survey'
+              ? 'bg-white dark:bg-slate-700 text-purple-600 dark:text-white shadow-sm'
+              : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+          }`}
+        >
+          <Wrench className="w-4 h-4" />
+          Survey Alat Berat PUPR
+        </button>
       </div>
 
       <div className="relative group max-w-md">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5 group-focus-within:text-blue-500" />
         <input
           type="text"
-          placeholder="Cari tugas berdasarkan catatan, zona, atau wp..."
+          placeholder={activeTab === 'asset_survey' ? "Cari kode, nama alat, lokasi, atau pemohon..." : "Cari tugas berdasarkan catatan, zona, atau wp..."}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="w-full bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-2xl py-3 pl-12 pr-4 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium placeholder:font-normal"
@@ -179,6 +213,95 @@ export default function DaftarTugas() {
             <div key={i} className="h-64 bg-slate-100 dark:bg-slate-800 rounded-3xl"></div>
           ))}
         </div>
+      ) : activeTab === 'asset_survey' ? (
+        assetRentals.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 bg-white/50 dark:bg-slate-800/50 rounded-3xl border border-dashed border-slate-200 dark:border-slate-700">
+            <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center mb-4">
+              <Wrench className="w-8 h-8 text-slate-400" />
+            </div>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">
+              Tidak Ada Pengajuan Sewa
+            </h3>
+            <p className="text-slate-500 dark:text-slate-400 text-center max-w-sm">
+              Belum ada permohonan sewa alat berat yang perlu diverifikasi lapangan.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {assetRentals
+              .filter((r) => {
+                const s = searchTerm.toLowerCase();
+                return (
+                  r.rental_code?.toLowerCase().includes(s) ||
+                  r.asset_item?.name?.toLowerCase().includes(s) ||
+                  r.taxpayer?.name?.toLowerCase().includes(s) ||
+                  r.lokasi_penggunaan?.toLowerCase().includes(s)
+                );
+              })
+              .map((rental) => (
+                <div
+                  key={rental.id}
+                  className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700 overflow-hidden hover:shadow-xl hover:shadow-slate-200/20 dark:hover:shadow-none transition-all flex flex-col"
+                >
+                  <div className="p-6 pb-5 border-b border-slate-50 dark:border-slate-700/50 space-y-3">
+                    <div className="flex items-start justify-between">
+                      <span className="px-3 py-1 rounded-lg text-xs font-bold bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300">
+                        {rental.rental_code}
+                      </span>
+                      <span className="text-xs font-semibold text-slate-400">
+                        {rental.lama_sewa} {rental.satuan_sewa}
+                      </span>
+                    </div>
+
+                    <div>
+                      <h4 className="text-base font-bold text-slate-900 dark:text-white">
+                        {rental.asset_item?.name || 'Unit Alat Berat'}
+                      </h4>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mt-1">
+                        Keperluan: {rental.jenis_pekerjaan || 'Pengoperasian proyek'}
+                      </p>
+                    </div>
+
+                    <div className="space-y-2 pt-1 border-t border-slate-100 dark:border-slate-700/60 text-xs">
+                      <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
+                        <User size={14} className="text-slate-400 shrink-0" />
+                        <span className="font-semibold">{rental.taxpayer?.name || 'Pemohon'}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
+                        <MapPin size={14} className="text-slate-400 shrink-0" />
+                        <span className="truncate">{rental.lokasi_penggunaan || 'Lokasi Baubau'}</span>
+                      </div>
+                    </div>
+
+                    {/* Status Survey 4 Poin */}
+                    <div className="pt-2">
+                      {rental.survey_submitted_at ? (
+                        <div className="p-2.5 rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400 text-xs font-semibold flex items-center gap-2">
+                          <CheckCircle2 size={16} />
+                          <span>Survey 4 Butir Telah Disimpan</span>
+                        </div>
+                      ) : (
+                        <div className="p-2.5 rounded-xl bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400 text-xs font-semibold flex items-center gap-2">
+                          <AlertCircle size={16} />
+                          <span>Menunggu Survey Kelayakan Lapangan</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="p-4 mt-auto bg-slate-50 dark:bg-slate-900/50">
+                    <button
+                      onClick={() => setSelectedRentalForSurvey(rental)}
+                      className="w-full flex items-center justify-center gap-2 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold uppercase tracking-wider text-xs transition-colors shadow-lg shadow-purple-600/20"
+                    >
+                      <ShieldCheck className="w-4 h-4" />
+                      {rental.survey_submitted_at ? 'Edit / Tinjau Survey 4 Poin' : 'Isi Survey Kelayakan Lapangan'}
+                    </button>
+                  </div>
+                </div>
+              ))}
+          </div>
+        )
       ) : filteredTasks.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 bg-white/50 dark:bg-slate-800/50 rounded-3xl border border-dashed border-slate-200 dark:border-slate-700">
           <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center mb-4">
@@ -283,6 +406,18 @@ export default function DaftarTugas() {
             </div>
           ))}
         </div>
+      )}
+
+      {/* Modal Survey Kelayakan */}
+      {selectedRentalForSurvey && (
+        <AssetSurveyForm
+          rental={selectedRentalForSurvey}
+          onSuccess={() => {
+            setSelectedRentalForSurvey(null);
+            fetchAssetRentals();
+          }}
+          onClose={() => setSelectedRentalForSurvey(null)}
+        />
       )}
     </div>
   );
