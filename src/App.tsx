@@ -35,6 +35,7 @@ import PaymentVerification from './pages/PaymentVerification';
 import DaftarTugas from './pages/DaftarTugas';
 import CreateSKPD from './pages/CreateSKPD';
 import About from './pages/About';
+import ParkingQuickCashier from './pages/ParkingQuickCashier';
 
 function HomeRoute() {
   const { isAuthenticated, loading } = useAuth();
@@ -138,6 +139,17 @@ function App() {
                 <ProtectedRoute allowedRoles={['super_admin', 'opd', 'petugas']}>
                   <Layout>
                     <OfficerPayment />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/parkir"
+              element={
+                <ProtectedRoute allowedRoles={['super_admin', 'opd', 'petugas']}>
+                  <Layout>
+                    <ParkingQuickCashier />
                   </Layout>
                 </ProtectedRoute>
               }

@@ -28,7 +28,8 @@ import {
   ClipboardList,
   Landmark,
   CreditCard,
-  Printer
+  Printer,
+  Car
 } from 'lucide-react';
 import { UserRole } from '../types';
 
@@ -78,6 +79,12 @@ const menuItems: MenuItem[] = [
     label: 'Bayar Lapangan',
     path: '/officer-payment',
     icon: <CreditCard className="w-5 h-5" />,
+    roles: ['super_admin', 'opd', 'petugas'],
+  },
+  {
+    label: 'Parkir Cepat',
+    path: '/parkir',
+    icon: <Car className="w-5 h-5" />,
     roles: ['super_admin', 'opd', 'petugas'],
   },
   {
