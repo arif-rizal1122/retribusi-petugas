@@ -21,6 +21,8 @@ import Profile from './pages/Profile';
 import FieldScanner from './pages/FieldScanner';
 import MyQrPetugas from './pages/MyQrPetugas';
 import PaymentConfirmation from './pages/PaymentConfirmation';
+import OfficerPayment from './pages/OfficerPayment';
+import MpadPrinter from './pages/MpadPrinter';
 import TaxCalculator from './pages/TaxCalculator';
 import UserGuide from './pages/UserGuide';
 import FieldInspection from './pages/FieldInspection';
@@ -125,6 +127,28 @@ function App() {
                 <ProtectedRoute allowedRoles={['super_admin', 'opd', 'petugas']}>
                   <Layout>
                     <PaymentConfirmation />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/officer-payment"
+              element={
+                <ProtectedRoute allowedRoles={['super_admin', 'opd', 'petugas']}>
+                  <Layout>
+                    <OfficerPayment />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/mpad-printer"
+              element={
+                <ProtectedRoute allowedRoles={['super_admin', 'opd', 'petugas']}>
+                  <Layout>
+                    <MpadPrinter />
                   </Layout>
                 </ProtectedRoute>
               }

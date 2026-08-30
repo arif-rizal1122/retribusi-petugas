@@ -103,6 +103,7 @@ export interface Billing {
   taxObjectId?: number | string;
   period?: string;
   penalty_amount?: number;
+  total_amount?: number;
   tax_object?: TaxObject;
   bank_accounts?: { bank_name: string; account_number: string; account_name?: string; qr_image_url?: string }[];
   metadata?: any;

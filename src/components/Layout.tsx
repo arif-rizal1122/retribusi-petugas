@@ -26,7 +26,9 @@ import {
   Download,
   CheckCircle,
   ClipboardList,
-  Landmark
+  Landmark,
+  CreditCard,
+  Printer
 } from 'lucide-react';
 import { UserRole } from '../types';
 
@@ -70,6 +72,18 @@ const menuItems: MenuItem[] = [
     label: 'Billing & Tagihan',
     path: '/billing',
     icon: <FileText className="w-5 h-5" />,
+    roles: ['super_admin', 'opd', 'petugas'],
+  },
+  {
+    label: 'Bayar Lapangan',
+    path: '/officer-payment',
+    icon: <CreditCard className="w-5 h-5" />,
+    roles: ['super_admin', 'opd', 'petugas'],
+  },
+  {
+    label: 'Printer Thermal',
+    path: '/mpad-printer',
+    icon: <Printer className="w-5 h-5" />,
     roles: ['super_admin', 'opd', 'petugas'],
   },
   {
