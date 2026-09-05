@@ -20,7 +20,6 @@ import {
   ShieldCheck,
   PlusCircle,
   AlertTriangle,
-  FileText,
   Search,
 } from 'lucide-react';
 import {
