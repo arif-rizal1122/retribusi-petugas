@@ -7,7 +7,17 @@ if (!API_URL) {
 export async function apiFetch(endpoint: string, options: RequestInit & { params?: Record<string, any> } = {}) {
     const token = localStorage.getItem('token');
 
-    let url = `${API_URL}${endpoint}`;
+    const baseUrl = (API_URL || '').replace(/\/+$/, '');
+    let normalizedEndpoint = endpoint;
+    if (!normalizedEndpoint.startsWith('http://') && !normalizedEndpoint.startsWith('https://')) {
+        if (!normalizedEndpoint.startsWith('/api/') && normalizedEndpoint !== '/api') {
+            normalizedEndpoint = normalizedEndpoint.startsWith('/') ? `/api${normalizedEndpoint}` : `/api/${normalizedEndpoint}`;
+        }
+    }
+
+    let url = normalizedEndpoint.startsWith('http://') || normalizedEndpoint.startsWith('https://')
+        ? normalizedEndpoint
+        : `${baseUrl}${normalizedEndpoint}`;
     if (options.params) {
         const searchParams = new URLSearchParams();
         Object.entries(options.params).forEach(([key, value]) => {

@@ -152,45 +152,45 @@ export interface SpotCheckData {
 
 export const parkingService = {
   async getLocations(): Promise<ParkingLocation[]> {
-    const res = await api.get('/parking/locations');
+    const res = await api.get('/api/parking/locations');
     return res.data || [];
   },
 
   async openShift(parkingLocationId: number): Promise<any> {
-    const res = await api.post('/parking/shift/open', {
+    const res = await api.post('/api/parking/shift/open', {
       parking_location_id: parkingLocationId,
     });
     return res.data;
   },
 
   async closeShift(): Promise<any> {
-    const res = await api.post('/parking/shift/close', {});
+    const res = await api.post('/api/parking/shift/close', {});
     return res.data;
   },
 
   async getShiftSummary(): Promise<ShiftSummaryData | null> {
-    const res = await api.get('/parking/shift-summary');
+    const res = await api.get('/api/parking/shift-summary');
     return res.data || null;
   },
 
   async recordSession(input: RecordSessionInput): Promise<any> {
-    const res = await api.post('/parking/sessions', input);
+    const res = await api.post('/api/parking/sessions', input);
     return res;
   },
 
   async getDashboard(): Promise<any> {
-    const res = await api.get('/parking/dashboard');
+    const res = await api.get('/api/parking/dashboard');
     return res.data;
   },
 
   // === QUADRUPLE-LOCK METHODS ===
   async getJukirProfile(): Promise<JukirProfileData> {
-    const res = await api.get('/parking/jukir/profile');
+    const res = await api.get('/api/parking/jukir/profile');
     return res.data?.data || res.data;
   },
 
   async topupDeposit(amount: number, paymentMethod: string = 'qris'): Promise<any> {
-    const res = await api.post('/parking/jukir/topup', {
+    const res = await api.post('/api/parking/jukir/topup', {
       amount,
       payment_method: paymentMethod,
     });
@@ -204,12 +204,12 @@ export const parkingService = {
     latitude?: number;
     longitude?: number;
   }): Promise<PrepaidCashResponse> {
-    const res = await api.post('/parking/sessions/prepaid-cash', input);
+    const res = await api.post('/api/parking/sessions/prepaid-cash', input);
     return res.data;
   },
 
   async getSpotCheck(locationId: number, physicalR2?: number, physicalR4?: number): Promise<SpotCheckData> {
-    const res = await api.get('/parking/inspector/spot-check', {
+    const res = await api.get('/api/parking/inspector/spot-check', {
       params: {
         parking_location_id: locationId,
         physical_r2: physicalR2 || 0,
@@ -220,7 +220,7 @@ export const parkingService = {
   },
 
   async submitSanction(jukirUserId: number, sanctionType: string, reason: string): Promise<any> {
-    const res = await api.post('/parking/inspector/sanction', {
+    const res = await api.post('/api/parking/inspector/sanction', {
       jukir_user_id: jukirUserId,
       sanction_type: sanctionType,
       reason,
