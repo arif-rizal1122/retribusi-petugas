@@ -21,6 +21,32 @@ export interface PbbReceiptData {
     date: string;
 }
 
+export interface TpiReceiptItem {
+    name: string;
+    qtyDetail?: string;
+    rateText?: string;
+    subtotal: number;
+}
+
+export interface TpiReceiptData {
+    transactionCode: string;
+    ntpd: string;
+    date: string;
+    location: string;
+    officerName: string;
+    shipName: string;
+    shipGt: number;
+    buyerName: string;
+    volumeKg: number;
+    auctionValueRp: number;
+    facilities: TpiReceiptItem[];
+    auctionFeeRp: number;
+    total: number;
+    paymentMethod: string;
+    bankRef?: string;
+}
+
+
 class ThermalPrintService {
     private device: any = null;
     private characteristic: any = null;
@@ -131,18 +157,91 @@ class ThermalPrintService {
 
     /**
      * Sends receipt data to the connected printer.
+    /**
+     * Generates a TPI (Tempat Pelelangan Ikan) specific receipt according to Dokumen (173).
      */
-    async print(data: ReceiptData | PbbReceiptData) {
+    generateTpiReceiptText(data: TpiReceiptData): string {
+        const separator = "--------------------------------\n";
+        const doubleSep = "================================\n";
+
+        const header = doubleSep +
+            "     PEMERINTAH KOTA BAUBAU     \n" +
+            "    BADAN PENDAPATAN DAERAH     \n" +
+            "        DINAS PERIKANAN         \n" +
+            doubleSep +
+            " BUKTI PEMBAYARAN RETRIBUSI TPI \n" +
+            "      (SISTEM M-PAD BAUBAU)     \n" +
+            doubleSep;
+
+        const info = `No. Trans : ${data.transactionCode}\n` +
+            `No. NTPD  : ${data.ntpd}\n` +
+            `Tgl/Waktu : ${data.date}\n` +
+            `Lokasi    : ${data.location}\n` +
+            `Petugas   : ${data.officerName}\n` +
+            separator +
+            "DATA SUBJEK & OBJEK RETRIBUSI:\n" +
+            `Kapal/GT  : ${data.shipName} / ${data.shipGt} GT\n` +
+            `Bakul/Plg : ${data.buyerName}\n` +
+            `Vol Lelang: ${data.volumeKg.toLocaleString('id-ID')} Kg\n` +
+            `Nilai Trx : Rp ${data.auctionValueRp.toLocaleString('id-ID')}\n` +
+            separator +
+            "RINCIAN RETRIBUSI DAERAH:\n";
+
+        let itemsText = "";
+        for (const f of data.facilities) {
+            itemsText += `- ${f.name}${f.qtyDetail ? ` (${f.qtyDetail})` : ""}\n`;
+            if (f.rateText) {
+                itemsText += `  ${f.rateText}\n`;
+            }
+            itemsText += `  Subtotal: Rp ${f.subtotal.toLocaleString('id-ID')}\n`;
+        }
+
+        if (data.auctionFeeRp > 0) {
+            itemsText += `- Jasa Lelang TPI (1%)\n` +
+                `  1% x Rp ${data.auctionValueRp.toLocaleString('id-ID')}\n` +
+                `  Subtotal: Rp ${data.auctionFeeRp.toLocaleString('id-ID')}\n`;
+        }
+
+        const totalSection = separator +
+            `TOTAL RETRIBUSI: Rp ${data.total.toLocaleString('id-ID')}\n` +
+            separator +
+            `Metode Bayar   : ${data.paymentMethod}\n` +
+            `Bank/Kanal     : Bank Sultra / RKUD\n` +
+            `No. Ref        : ${data.bankRef || "-"}\n` +
+            `STATUS         : LUNAS / SAH\n` +
+            separator +
+            "     [ QR CODE VERIFIKASI ]     \n" +
+            " (Scan Cek Keabsahan NTPD Kasda)\n" +
+            ` validasi.mpad.baubaukota.go.id \n` +
+            separator +
+            " Pembayaran sah berdasarkan PERDA\n" +
+            " Pajak & Retribusi Daerah (PDRD)\n" +
+            "          Kota Baubau           \n" +
+            " -- Simpan Struk Sebagai Bukti --\n" +
+            doubleSep + "\n\n\n";
+
+        return header + info + itemsText + totalSection;
+    }
+
+    /**
+     * Sends receipt data to the connected printer.
+     */
+    async print(data: ReceiptData | PbbReceiptData | TpiReceiptData) {
         try {
             if (!this.characteristic) {
                 const connected = await this.connect();
                 if (!connected) throw new Error("Could not find a writable Bluetooth characteristic.");
             }
 
-            const text = 'nop' in data 
-                ? this.generatePbbReceiptText(data as PbbReceiptData)
-                : this.generateReceiptText(data as ReceiptData);
-                
+            let text = "";
+            if ('transactionCode' in data) {
+                text = this.generateTpiReceiptText(data as TpiReceiptData);
+            } else if ('nop' in data) {
+                text = this.generatePbbReceiptText(data as PbbReceiptData);
+            } else {
+                text = this.generateReceiptText(data as ReceiptData);
+            }
+
             const encoder = new TextEncoder();
             const bytes = encoder.encode(text);
 

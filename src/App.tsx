@@ -36,6 +36,7 @@ import DaftarTugas from './pages/DaftarTugas';
 import CreateSKPD from './pages/CreateSKPD';
 import About from './pages/About';
 import ParkingQuickCashier from './pages/ParkingQuickCashier';
+import TpiAuctionCashier from './pages/TpiAuctionCashier';
 
 function HomeRoute() {
   const { isAuthenticated, loading } = useAuth();
@@ -150,6 +151,17 @@ function App() {
                 <ProtectedRoute allowedRoles={['super_admin', 'opd', 'petugas']}>
                   <Layout>
                     <ParkingQuickCashier />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/tpi-lelang"
+              element={
+                <ProtectedRoute allowedRoles={['super_admin', 'opd', 'petugas']}>
+                  <Layout>
+                    <TpiAuctionCashier />
                   </Layout>
                 </ProtectedRoute>
               }
