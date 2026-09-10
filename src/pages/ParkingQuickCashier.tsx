@@ -325,32 +325,36 @@ export default function ParkingQuickCashier() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-5 pb-28">
-      {/* Tab Switcher: Kasir Jukir vs Mode Inspektur Patroli */}
-      <div className="flex bg-slate-100 dark:bg-slate-800 p-1.5 rounded-2xl gap-1">
+      {/* Tab Switcher: Kasir Jukir vs Mode Inspektur Patroli (Responsive & Modern) */}
+      <div className="flex bg-slate-100 dark:bg-slate-800/90 p-1 sm:p-1.5 rounded-2xl gap-1 border border-slate-200/70 dark:border-slate-700/60 shadow-inner">
         <button
+          type="button"
           onClick={() => setActiveTab('cashier')}
-          className={`flex-1 py-2.5 rounded-xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${
+          className={`flex-1 py-2 sm:py-2.5 px-2 sm:px-4 rounded-xl font-black text-[11px] sm:text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 sm:gap-2 transition-all min-w-0 select-none ${
             activeTab === 'cashier'
-              ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-md'
-              : 'text-slate-500 hover:text-slate-900'
+              ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm border border-slate-200/60 dark:border-slate-700/60'
+              : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
           }`}
         >
-          <Car size={16} />
-          <span>Kasir Jukir (Pre-Paid)</span>
+          <Car className="w-4 h-4 shrink-0" />
+          <span className="truncate sm:hidden">Kasir Jukir</span>
+          <span className="hidden sm:inline truncate">Kasir Jukir (Pre-Paid)</span>
         </button>
         <button
+          type="button"
           onClick={() => {
             setActiveTab('inspector');
             if (!spotCheckData) handleRunSpotCheck();
           }}
-          className={`flex-1 py-2.5 rounded-xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${
+          className={`flex-1 py-2 sm:py-2.5 px-2 sm:px-4 rounded-xl font-black text-[11px] sm:text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 sm:gap-2 transition-all min-w-0 select-none ${
             activeTab === 'inspector'
-              ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
-              : 'text-slate-500 hover:text-slate-900'
+              ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/30'
+              : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
           }`}
         >
-          <ShieldCheck size={16} />
-          <span>Inspektur Patroli (Sidak)</span>
+          <ShieldCheck className="w-4 h-4 shrink-0" />
+          <span className="truncate sm:hidden">Patroli Sidak</span>
+          <span className="hidden sm:inline truncate">Inspektur Patroli (Sidak)</span>
         </button>
       </div>
 
