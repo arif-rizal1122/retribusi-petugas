@@ -38,6 +38,10 @@ export interface AssetRentalSurveyItem {
   survey_lahan_luas?: boolean | null;
   survey_kesimpulan?: string | null;
   survey_foto_path?: string | null;
+  survey_rekomendasi_tronton?: string | null;
+  survey_penjebolan_akses?: boolean | null;
+  survey_penjebolan_catatan?: string | null;
+  survey_rekomendasi_alat?: string | null;
   survey_submitted_at?: string | null;
 }
 
@@ -67,6 +71,21 @@ export const AssetSurveyForm: React.FC<AssetSurveyFormProps> = ({
   const [kesimpulan, setKesimpulan] = useState<string>(
     rental.survey_kesimpulan || ''
   );
+
+  // Field tambahan SOP Tronton & Penjebolan Lokasi (Perda 1/2024 & Dokumen 05)
+  const [rekomendasiTronton, setRekomendasiTronton] = useState<string>(
+    rental.survey_rekomendasi_tronton || 'Wajib Tronton (Alat Bertapak Rantai Besi)'
+  );
+  const [penjebolanAkses, setPenjebolanAkses] = useState<boolean>(
+    rental.survey_penjebolan_akses ?? false
+  );
+  const [penjebolanCatatan, setPenjebolanCatatan] = useState<string>(
+    rental.survey_penjebolan_catatan || ''
+  );
+  const [rekomendasiAlat, setRekomendasiAlat] = useState<string>(
+    rental.survey_rekomendasi_alat || ''
+  );
+
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [gettingLocation, setGettingLocation] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -100,6 +119,10 @@ export const AssetSurveyForm: React.FC<AssetSurveyFormProps> = ({
         survey_dekat_jalan_raya: dekatJalanRaya,
         survey_keamanan: keamanan,
         survey_lahan_luas: lahanLuas,
+        survey_rekomendasi_tronton: rekomendasiTronton,
+        survey_penjebolan_akses: penjebolanAkses,
+        survey_penjebolan_catatan: penjebolanCatatan,
+        survey_rekomendasi_alat: rekomendasiAlat,
         survey_kesimpulan:
           kesimpulan ||
           (isAllEligible
@@ -110,7 +133,7 @@ export const AssetSurveyForm: React.FC<AssetSurveyFormProps> = ({
           : null,
       });
 
-      toast.success('Laporan 4 butir survey kelayakan berhasil disimpan!');
+      toast.success('Laporan lengkap survey kelayakan & tronton berhasil disimpan!');
       onSuccess();
     } catch (err: any) {
       const msg =
@@ -269,6 +292,78 @@ export const AssetSurveyForm: React.FC<AssetSurveyFormProps> = ({
                 <span>Rekomendasi: PERLU PENYESUAIAN LOKASI</span>
               </>
             )}
+          </div>
+
+          {/* Section: Evaluasi Mobilisasi Tronton (SOP PUPR & Perda 1/2024) */}
+          <div className="space-y-2 p-3.5 rounded-2xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200/70 dark:border-amber-900/40">
+            <label className="text-xs font-bold text-amber-900 dark:text-amber-300 flex items-center justify-between">
+              <span>Evaluasi Mobilisasi Tronton (Self-Loader):</span>
+              <span className="text-[10px] text-amber-700 dark:text-amber-400 font-normal">Min. Lebar 4.5m & Tinggi 4.8m</span>
+            </label>
+            <select
+              value={rekomendasiTronton}
+              onChange={(e) => setRekomendasiTronton(e.target.value)}
+              className="w-full text-xs p-2.5 rounded-xl border border-amber-300 dark:border-amber-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-amber-500 focus:outline-none font-medium"
+            >
+              <option value="Wajib Tronton (Alat Bertapak Rantai Besi)">
+                Wajib Tronton (Alat Rantai / Drum Besi — Zero Toliransi Aspal)
+              </option>
+              <option value="Rekomendasi Tronton (Jarak &gt; 10 Km / Jalan Protokol)">
+                Rekomendasi Tronton (Roda Karet tapi Jarak &gt; 10 Km / Jalur Padat)
+              </option>
+              <option value="Bisa Jalan Mandiri (Roda Karet < 10 Km)">
+                Bisa Jalan Mandiri (Roda Karet Jarak Dekat &lt; 10 Km)
+              </option>
+            </select>
+          </div>
+
+          {/* Section: Rekomendasi Penjebolan / Perintisan Akses Sementara */}
+          <div className="space-y-2.5 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-700/40 border border-slate-200 dark:border-slate-700">
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={penjebolanAkses}
+                onChange={(e) => setPenjebolanAkses(e.target.checked)}
+                className="mt-0.5 w-4 h-4 rounded text-amber-600 focus:ring-amber-500"
+              />
+              <div className="text-xs">
+                <p className="font-bold text-slate-800 dark:text-slate-200">
+                  Perlu Penjebolan / Perintisan Akses Sementara
+                </p>
+                <p className="text-slate-500 dark:text-slate-400 text-[11px]">
+                  Jika akses terhalang trotoar, tebing tanah, atau saluran drainase kota.
+                </p>
+              </div>
+            </label>
+
+            {penjebolanAkses && (
+              <div className="space-y-2 pt-1 border-t border-slate-200 dark:border-slate-600">
+                <textarea
+                  rows={2}
+                  value={penjebolanCatatan}
+                  onChange={(e) => setPenjebolanCatatan(e.target.value)}
+                  placeholder="Metode teknis (cth: Pasang Plat Baja di atas drainase / Urukan Sirtu sementara) & Penyewa bersedia Reinstatement (pemulihan kembali)."
+                  className="w-full text-xs p-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                />
+                <p className="text-[10px] text-amber-600 dark:text-amber-400 italic">
+                  *Dengan mencentang, diterbitkan klausul izin akses darurat & kewajiban pengembalian ke kondisi semula (Reinstatement).
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Section: Rekomendasi Tambahan / Penggantian Alat */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+              Rekomendasi Alat Tambahan / Penyesuaian Medan:
+            </label>
+            <input
+              type="text"
+              value={rekomendasiAlat}
+              onChange={(e) => setRekomendasiAlat(e.target.value)}
+              placeholder="Contoh: Disarankan ganti Excavator Breaker (batu cadas) atau tambah Dump Truck."
+              className="w-full text-xs p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+            />
           </div>
 
           {/* Input Kesimpulan / Catatan Tambahan */}
