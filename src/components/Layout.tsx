@@ -32,6 +32,7 @@ import {
   Car
 } from 'lucide-react';
 import { UserRole } from '../types';
+import { officerCanAccessPath } from '../lib/officerRoleUtils';
 
 interface LayoutProps {
   children: ReactNode;
@@ -147,7 +148,7 @@ export default function Layout({ children }: LayoutProps) {
   };
 
   const filteredMenu = menuItems.filter((item) =>
-    user ? item.roles.includes(user.role) : false
+    user ? item.roles.includes(user.role) && officerCanAccessPath(user, item.path) : false
   );
 
   return (

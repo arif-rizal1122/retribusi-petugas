@@ -1,6 +1,7 @@
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { UserRole } from '../types';
+import { officerCanAccessPath } from '../lib/officerRoleUtils';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -8,7 +9,8 @@ interface ProtectedRouteProps {
 }
 
 export default function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
-  const { isAuthenticated, hasRole, loading } = useAuth();
+  const { user, isAuthenticated, hasRole, loading } = useAuth();
+  const location = useLocation();
   
   if (loading) {
     return (
@@ -23,6 +25,10 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
   }
 
   if (allowedRoles && !hasRole(allowedRoles)) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  if (!officerCanAccessPath(user, location.pathname)) {
     return <Navigate to="/dashboard" replace />;
   }
 
