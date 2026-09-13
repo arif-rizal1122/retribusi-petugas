@@ -21,21 +21,29 @@ import {
   PlusCircle,
   AlertTriangle,
   Search,
+  Ship,
+  Anchor,
+  Truck,
 } from 'lucide-react';
 import {
   parkingService,
   ParkingLocation,
+  ParkingVehicleType,
   ShiftSummaryData,
   JukirProfileData,
   ThermalPrintPayload,
   SpotCheckData,
 } from '../services/parkingService';
+import { thermalPrintService } from '../services/ThermalPrintService';
 import { injectQrisTransaction, buildQrisDynamic } from '../services/qrisService';
 import { nextReference } from '../services/referralCounterService';
 
 export default function ParkingQuickCashier() {
   // Tabs: 'cashier' | 'inspector'
   const [activeTab, setActiveTab] = useState<'cashier' | 'inspector'>('cashier');
+
+  // Sector Switcher: 'road_parking' | 'jembatan_batu' | 'proxy_gt'
+  const [operationalSector, setOperationalSector] = useState<'road_parking' | 'jembatan_batu' | 'proxy_gt'>('road_parking');
 
   // State
   const [locations, setLocations] = useState<ParkingLocation[]>([]);
@@ -47,7 +55,8 @@ export default function ParkingQuickCashier() {
   const [submitting, setSubmitting] = useState(false);
 
   // Form State
-  const [vehicleType, setVehicleType] = useState<'r2' | 'r4'>('r2');
+  const [vehicleType, setVehicleType] = useState<ParkingVehicleType>('r2');
+  const [durationDays, setDurationDays] = useState<number>(1);
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'qris'>('cash');
   const [plateHint, setPlateHint] = useState('');
 
@@ -60,6 +69,7 @@ export default function ParkingQuickCashier() {
   // Receipt Modal State (Thermal Bluetooth ESC/POS)
   const [showReceiptModal, setShowReceiptModal] = useState(false);
   const [receiptPayload, setReceiptPayload] = useState<ThermalPrintPayload | null>(null);
+  const [isPrintingReceipt, setIsPrintingReceipt] = useState(false);
 
   // QRIS Modal State
   const [showQrisModal, setShowQrisModal] = useState(false);
@@ -173,6 +183,28 @@ export default function ParkingQuickCashier() {
     }
   };
 
+  const getVehicleRate = (type: ParkingVehicleType): number => {
+    switch (type) {
+      case 'r4':
+        return selectedLocation?.rate_r4 || 3000;
+      case 'truk_bus':
+        return 5000;
+      case 'inap_truk':
+        return 25000;
+      case 'proxy_gt_1':
+        return 1000;
+      case 'proxy_gt_2':
+        return 3000;
+      case 'proxy_gt_3':
+        return 5000;
+      case 'proxy_gt_4':
+        return 10000;
+      case 'r2':
+      default:
+        return selectedLocation?.rate_r2 || 2000;
+    }
+  };
+
   // Record Transaction (Cash Pre-Paid vs QRIS)
   const handleRecordTransaction = async () => {
     if (!selectedLocation || !shiftData?.wallet || shiftData.wallet.shift_status !== 'open') {
@@ -180,7 +212,9 @@ export default function ParkingQuickCashier() {
       return;
     }
 
-    const amount = vehicleType === 'r4' ? selectedLocation.rate_r4 : selectedLocation.rate_r2;
+    const isHarborProxy = vehicleType.startsWith('proxy_gt');
+    const unitRate = getVehicleRate(vehicleType);
+    const amount = isHarborProxy ? unitRate * Math.max(1, durationDays) : unitRate;
 
     if (paymentMethod === 'qris') {
       // Dynamic QRIS Generation
@@ -218,6 +252,7 @@ export default function ParkingQuickCashier() {
       const res = await parkingService.recordPrepaidCash({
         parking_location_id: selectedLocation.id,
         vehicle_type: vehicleType,
+        duration_days: isHarborProxy ? durationDays : undefined,
         plate_hint: plateHint.trim() || undefined,
       });
 
@@ -259,6 +294,7 @@ export default function ParkingQuickCashier() {
         vehicle_type: vehicleType,
         payment_method: 'qris',
         plate_hint: plateHint.trim() || undefined,
+        duration_days: vehicleType.startsWith('proxy_gt') ? durationDays : undefined,
         qris_reference: qrisRef,
       });
 
@@ -322,6 +358,10 @@ export default function ParkingQuickCashier() {
   const currentRateR2 = selectedLocation?.rate_r2 || 2000;
   const currentRateR4 = selectedLocation?.rate_r4 || 3000;
   const depositBalance = jukirProfile?.deposit_balance ?? 120000;
+  const isHarborSelected = vehicleType.startsWith('proxy_gt');
+  const activeUnitRate = getVehicleRate(vehicleType);
+  const activeTotalAmount = isHarborSelected ? activeUnitRate * Math.max(1, durationDays) : activeUnitRate;
+  const activeRkudShare = Math.round(activeTotalAmount * 0.7);
 
   return (
     <div className="max-w-2xl mx-auto space-y-5 pb-28">
@@ -526,82 +566,370 @@ export default function ParkingQuickCashier() {
               </button>
             </div>
           ) : (
-            /* Mode 2: Shift Sedang Aktif (Quick Tap UI) */
+            /* Mode 2: Shift Sedang Aktif (Multi-Sector Quick Cashier) */
             <div className="space-y-5">
-              {/* Quick-Tap Cards: R2 vs R4 */}
-              <div className="grid grid-cols-2 gap-4">
-                {/* R2 - Motor */}
+              {/* Sector Selector Tabs */}
+              <div className="flex bg-slate-100 dark:bg-slate-800 p-1.5 rounded-2xl gap-1.5 border border-slate-200 dark:border-slate-700/80 shadow-inner">
                 <button
                   type="button"
-                  onClick={() => setVehicleType('r2')}
-                  className={`p-5 rounded-3xl border-2 transition-all flex flex-col items-center text-center relative overflow-hidden ${
-                    vehicleType === 'r2'
-                      ? 'border-amber-500 bg-amber-500/10 dark:bg-amber-500/20 shadow-lg shadow-amber-500/10 scale-[1.02]'
-                      : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 opacity-70 hover:opacity-100'
+                  onClick={() => {
+                    setOperationalSector('road_parking');
+                    setVehicleType('r2');
+                  }}
+                  className={`flex-1 py-2.5 px-3 rounded-xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all ${
+                    operationalSector === 'road_parking'
+                      ? 'bg-[#0F2547] text-white shadow-md'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
-                  <div
-                    className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-3 transition-colors ${
-                      vehicleType === 'r2'
-                        ? 'bg-amber-500 text-white shadow-md shadow-amber-500/30'
-                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
-                    }`}
-                  >
-                    <Bike size={30} />
-                  </div>
-                  <span className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                    Roda 2 (Motor)
-                  </span>
-                  <span className="text-xl font-black text-slate-900 dark:text-white mt-1">
-                    Rp {currentRateR2.toLocaleString('id-ID')}
-                  </span>
-                  <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold mt-1">
-                    Potong Kuota: Rp 1.400 (70%)
-                  </span>
-                  {vehicleType === 'r2' && (
-                    <div className="absolute top-3 right-3 text-amber-500">
-                      <CheckCircle2 size={18} />
-                    </div>
-                  )}
+                  <Bike size={15} />
+                  <span className="truncate">Parkir Darat</span>
                 </button>
 
-                {/* R4 - Mobil */}
                 <button
                   type="button"
-                  onClick={() => setVehicleType('r4')}
-                  className={`p-5 rounded-3xl border-2 transition-all flex flex-col items-center text-center relative overflow-hidden ${
-                    vehicleType === 'r4'
-                      ? 'border-sky-500 bg-sky-500/10 dark:bg-sky-500/20 shadow-lg shadow-sky-500/10 scale-[1.02]'
-                      : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 opacity-70 hover:opacity-100'
+                  onClick={() => {
+                    setOperationalSector('jembatan_batu');
+                    setVehicleType('inap_truk');
+                  }}
+                  className={`flex-1 py-2.5 px-3 rounded-xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all ${
+                    operationalSector === 'jembatan_batu'
+                      ? 'bg-emerald-700 text-white shadow-md'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
-                  <div
-                    className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-3 transition-colors ${
-                      vehicleType === 'r4'
-                        ? 'bg-sky-500 text-white shadow-md shadow-sky-500/30'
-                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
-                    }`}
-                  >
-                    <Car size={30} />
-                  </div>
-                  <span className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                    Roda 4 (Mobil)
-                  </span>
-                  <span className="text-xl font-black text-slate-900 dark:text-white mt-1">
-                    Rp {currentRateR4.toLocaleString('id-ID')}
-                  </span>
-                  <span className="text-[10px] text-sky-600 dark:text-sky-400 font-bold mt-1">
-                    Potong Kuota: Rp 2.100 (70%)
-                  </span>
-                  {vehicleType === 'r4' && (
-                    <div className="absolute top-3 right-3 text-sky-500">
-                      <CheckCircle2 size={18} />
-                    </div>
-                  )}
+                  <Anchor size={15} />
+                  <span className="truncate">Penitipan Dermaga</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOperationalSector('proxy_gt');
+                    setVehicleType('proxy_gt_1');
+                  }}
+                  className={`flex-1 py-2.5 px-3 rounded-xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all ${
+                    operationalSector === 'proxy_gt'
+                      ? 'bg-blue-600 text-white shadow-md'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  <Ship size={15} />
+                  <span className="truncate">Tambat Labuh (GT)</span>
                 </button>
               </div>
 
-              {/* Payment Method Selector */}
+              {/* Sector 1: Parkir Darat (R2, R4, Truk/Bus) */}
+              {operationalSector === 'road_parking' && (
+                <div className="grid grid-cols-3 gap-3">
+                  {/* R2 - Motor */}
+                  <button
+                    type="button"
+                    onClick={() => setVehicleType('r2')}
+                    className={`p-4 rounded-3xl border-2 transition-all flex flex-col items-center text-center relative overflow-hidden ${
+                      vehicleType === 'r2'
+                        ? 'border-amber-500 bg-amber-500/10 dark:bg-amber-500/20 shadow-lg shadow-amber-500/10 scale-[1.02]'
+                        : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 opacity-70 hover:opacity-100'
+                    }`}
+                  >
+                    <div
+                      className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-2 transition-colors ${
+                        vehicleType === 'r2'
+                          ? 'bg-amber-500 text-white shadow-md shadow-amber-500/30'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                      }`}
+                    >
+                      <Bike size={26} />
+                    </div>
+                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                      R2 (Motor)
+                    </span>
+                    <span className="text-base font-black text-slate-900 dark:text-white mt-0.5">
+                      Rp {currentRateR2.toLocaleString('id-ID')}
+                    </span>
+                    <span className="text-[9px] text-amber-600 dark:text-amber-400 font-bold mt-0.5">
+                      Potong: Rp {Math.round(currentRateR2 * 0.7).toLocaleString('id-ID')}
+                    </span>
+                    {vehicleType === 'r2' && (
+                      <div className="absolute top-2.5 right-2.5 text-amber-500">
+                        <CheckCircle2 size={16} />
+                      </div>
+                    )}
+                  </button>
+
+                  {/* R4 - Mobil */}
+                  <button
+                    type="button"
+                    onClick={() => setVehicleType('r4')}
+                    className={`p-4 rounded-3xl border-2 transition-all flex flex-col items-center text-center relative overflow-hidden ${
+                      vehicleType === 'r4'
+                        ? 'border-sky-500 bg-sky-500/10 dark:bg-sky-500/20 shadow-lg shadow-sky-500/10 scale-[1.02]'
+                        : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 opacity-70 hover:opacity-100'
+                    }`}
+                  >
+                    <div
+                      className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-2 transition-colors ${
+                        vehicleType === 'r4'
+                          ? 'bg-sky-500 text-white shadow-md shadow-sky-500/30'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                      }`}
+                    >
+                      <Car size={26} />
+                    </div>
+                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                      R4 (Mobil)
+                    </span>
+                    <span className="text-base font-black text-slate-900 dark:text-white mt-0.5">
+                      Rp {currentRateR4.toLocaleString('id-ID')}
+                    </span>
+                    <span className="text-[9px] text-sky-600 dark:text-sky-400 font-bold mt-0.5">
+                      Potong: Rp {Math.round(currentRateR4 * 0.7).toLocaleString('id-ID')}
+                    </span>
+                    {vehicleType === 'r4' && (
+                      <div className="absolute top-2.5 right-2.5 text-sky-500">
+                        <CheckCircle2 size={16} />
+                      </div>
+                    )}
+                  </button>
+
+                  {/* Truk / Bus */}
+                  <button
+                    type="button"
+                    onClick={() => setVehicleType('truk_bus')}
+                    className={`p-4 rounded-3xl border-2 transition-all flex flex-col items-center text-center relative overflow-hidden ${
+                      vehicleType === 'truk_bus'
+                        ? 'border-purple-500 bg-purple-500/10 dark:bg-purple-500/20 shadow-lg shadow-purple-500/10 scale-[1.02]'
+                        : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 opacity-70 hover:opacity-100'
+                    }`}
+                  >
+                    <div
+                      className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-2 transition-colors ${
+                        vehicleType === 'truk_bus'
+                          ? 'bg-purple-500 text-white shadow-md shadow-purple-500/30'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                      }`}
+                    >
+                      <Truck size={26} />
+                    </div>
+                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                      Truk / Bus
+                    </span>
+                    <span className="text-base font-black text-slate-900 dark:text-white mt-0.5">
+                      Rp 5.000
+                    </span>
+                    <span className="text-[9px] text-purple-600 dark:text-purple-400 font-bold mt-0.5">
+                      Potong: Rp 3.500
+                    </span>
+                    {vehicleType === 'truk_bus' && (
+                      <div className="absolute top-2.5 right-2.5 text-purple-500">
+                        <CheckCircle2 size={16} />
+                      </div>
+                    )}
+                  </button>
+                </div>
+              )}
+
+              {/* Sector 2: Kawasan Jembatan Batu (Penitipan Inap Sisi Kiri Dermaga) */}
+              {operationalSector === 'jembatan_batu' && (
+                <div className="space-y-3">
+                  <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/40 text-xs text-emerald-900 dark:text-emerald-200 flex items-start gap-2.5">
+                    <Anchor size={18} className="text-emerald-600 shrink-0 mt-0.5" />
+                    <div>
+                      <span className="font-black uppercase tracking-wider text-[10px] block text-emerald-700 dark:text-emerald-300">
+                        Kawasan Terpadu Jembatan Batu (Studi Kasus V-Tax)
+                      </span>
+                      <p className="mt-0.5 leading-relaxed text-[11px]">
+                        Pencatatan resmi tarif penitipan inap kendaraan bermotor sisi kiri dermaga sesuai Perda No. 1 Tahun 2024 Pasal 88.
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setVehicleType('inap_truk')}
+                    className="w-full p-5 rounded-3xl border-2 border-emerald-500 bg-emerald-500/10 dark:bg-emerald-500/20 text-left relative overflow-hidden transition-all flex items-center justify-between"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-14 h-14 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shadow-lg shadow-emerald-600/30 shrink-0">
+                        <Truck size={28} />
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-300 block">
+                          Tarif Resmi Inap Dermaga
+                        </span>
+                        <h4 className="font-black text-base text-slate-900 dark:text-white">
+                          Penitipan Inap Truk / Bus Pelabuhan
+                        </h4>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                          Parkir inap bermalam di pelataran dermaga kiri
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-xl font-black text-emerald-600 dark:text-emerald-400 block">
+                        Rp 25.000
+                      </span>
+                      <span className="text-[10px] font-bold text-slate-500">
+                        Potong RKUD: Rp 17.500 (70%)
+                      </span>
+                    </div>
+                  </button>
+                </div>
+              )}
+
+              {/* Sector 3: Kalkulator Tambat Labuh Kapal Proxy GT (Perda 1/2024 Pasal 91) */}
+              {operationalSector === 'proxy_gt' && (
+                <div className="space-y-4">
+                  <div className="p-4 rounded-2xl bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/40 text-xs text-blue-900 dark:text-blue-200 flex items-start gap-2.5">
+                    <Ship size={18} className="text-blue-600 shrink-0 mt-0.5" />
+                    <div>
+                      <span className="font-black uppercase tracking-wider text-[10px] block text-blue-700 dark:text-blue-300">
+                        Kalkulator Tambat Labuh Kapal Rakyat (Perda 1/2024 Pasal 91)
+                      </span>
+                      <p className="mt-0.5 leading-relaxed text-[11px]">
+                        Tarif berjenjang berbasis estimasi tonase kotor (Proxy GT) menggantikan penarikan seragam. Bukti pembayaran resmi kas daerah.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* 4 Golongan Kapal Grid */}
+                  <div className="grid grid-cols-2 gap-3">
+                    {/* Gol I */}
+                    <button
+                      type="button"
+                      onClick={() => setVehicleType('proxy_gt_1')}
+                      className={`p-3.5 rounded-2xl border-2 text-left transition-all relative ${
+                        vehicleType === 'proxy_gt_1'
+                          ? 'border-blue-600 bg-blue-500/10 dark:bg-blue-500/20 shadow-md'
+                          : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 opacity-75'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-[9px] font-mono font-black">
+                          &lt; 5 GT
+                        </span>
+                        {vehicleType === 'proxy_gt_1' && <CheckCircle2 size={16} className="text-blue-600" />}
+                      </div>
+                      <p className="font-black text-xs text-slate-900 dark:text-white">Gol I: Katinting</p>
+                      <p className="text-[10px] text-slate-500 truncate">Perahu kayu / tempel</p>
+                      <p className="font-black text-sm text-blue-600 mt-1">Rp 1.000 <span className="text-[9px] font-normal text-slate-400">/hari</span></p>
+                    </button>
+
+                    {/* Gol II */}
+                    <button
+                      type="button"
+                      onClick={() => setVehicleType('proxy_gt_2')}
+                      className={`p-3.5 rounded-2xl border-2 text-left transition-all relative ${
+                        vehicleType === 'proxy_gt_2'
+                          ? 'border-blue-600 bg-blue-500/10 dark:bg-blue-500/20 shadow-md'
+                          : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 opacity-75'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-[9px] font-mono font-black">
+                          5 - 10 GT
+                        </span>
+                        {vehicleType === 'proxy_gt_2' && <CheckCircle2 size={16} className="text-blue-600" />}
+                      </div>
+                      <p className="font-black text-xs text-slate-900 dark:text-white">Gol II: Speedboat</p>
+                      <p className="text-[10px] text-slate-500 truncate">Penumpang antarpulau</p>
+                      <p className="font-black text-sm text-blue-600 mt-1">Rp 3.000 <span className="text-[9px] font-normal text-slate-400">/hari</span></p>
+                    </button>
+
+                    {/* Gol III */}
+                    <button
+                      type="button"
+                      onClick={() => setVehicleType('proxy_gt_3')}
+                      className={`p-3.5 rounded-2xl border-2 text-left transition-all relative ${
+                        vehicleType === 'proxy_gt_3'
+                          ? 'border-blue-600 bg-blue-500/10 dark:bg-blue-500/20 shadow-md'
+                          : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 opacity-75'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-[9px] font-mono font-black">
+                          11 - 20 GT
+                        </span>
+                        {vehicleType === 'proxy_gt_3' && <CheckCircle2 size={16} className="text-blue-600" />}
+                      </div>
+                      <p className="font-black text-xs text-slate-900 dark:text-white">Gol III: KLM Sedang</p>
+                      <p className="text-[10px] text-slate-500 truncate">Kapal kayu muatan barang</p>
+                      <p className="font-black text-sm text-blue-600 mt-1">Rp 5.000 <span className="text-[9px] font-normal text-slate-400">/hari</span></p>
+                    </button>
+
+                    {/* Gol IV */}
+                    <button
+                      type="button"
+                      onClick={() => setVehicleType('proxy_gt_4')}
+                      className={`p-3.5 rounded-2xl border-2 text-left transition-all relative ${
+                        vehicleType === 'proxy_gt_4'
+                          ? 'border-blue-600 bg-blue-500/10 dark:bg-blue-500/20 shadow-md'
+                          : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 opacity-75'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-[9px] font-mono font-black">
+                          &gt; 20 GT
+                        </span>
+                        {vehicleType === 'proxy_gt_4' && <CheckCircle2 size={16} className="text-blue-600" />}
+                      </div>
+                      <p className="font-black text-xs text-slate-900 dark:text-white">Gol IV: KM Besar</p>
+                      <p className="text-[10px] text-slate-500 truncate">Kapal muat antarprovinsi</p>
+                      <p className="font-black text-sm text-blue-600 mt-1">Rp 10.000 <span className="text-[9px] font-normal text-slate-400">/hari</span></p>
+                    </button>
+                  </div>
+
+                  {/* Stepper Durasi Tambat (Hari) */}
+                  <div className="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                    <div>
+                      <span className="text-[11px] font-black uppercase text-slate-500 dark:text-slate-400 block">
+                        Durasi Tambat Labuh:
+                      </span>
+                      <span className="text-xs text-slate-400">Pungutan dihitung per 24 jam</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setDurationDays(Math.max(1, durationDays - 1))}
+                        className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-black text-base flex items-center justify-center active:scale-95 transition-all"
+                      >
+                        -
+                      </button>
+                      <div className="px-4 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-900/30 text-blue-600 font-mono font-black text-sm">
+                        {durationDays} Hari
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setDurationDays(Math.min(30, durationDays + 1))}
+                        className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-black text-base flex items-center justify-center active:scale-95 transition-all"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Ringkasan Kalkulasi Otomatis */}
+                  <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-500/10 to-indigo-500/10 border border-blue-500/20 flex items-center justify-between text-xs">
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-500 uppercase block">Kalkulasi Tambat:</span>
+                      <span className="font-mono font-bold text-slate-700 dark:text-slate-300">
+                        Rp {activeUnitRate.toLocaleString('id-ID')} x {durationDays} Hari
+                      </span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[10px] font-bold text-slate-500 uppercase block">Total Retribusi:</span>
+                      <span className="text-base font-black text-blue-600 dark:text-blue-400">
+                        Rp {activeTotalAmount.toLocaleString('id-ID')}
+                      </span>
+                      <span className="text-[9px] font-bold text-slate-400 block">
+                        Alokasi RKUD (70%): Rp {activeRkudShare.toLocaleString('id-ID')}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Payment Method Selector & Inputs */}
               <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
                 <span className="text-xs font-black uppercase tracking-widest text-slate-400 block">
                   Metode Pembayaran
@@ -635,15 +963,25 @@ export default function ParkingQuickCashier() {
                   </button>
                 </div>
 
-                {/* Optional Plate Hint */}
+                {/* Optional Plate / Vessel Hint */}
                 <div className="pt-2">
                   <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1.5">
-                    Plat Nomor (Opsional):
+                    {operationalSector === 'proxy_gt'
+                      ? 'Nama Kapal / No. Lambung (Opsional):'
+                      : operationalSector === 'jembatan_batu'
+                      ? 'Nomor Polisi Truk/Bus Inap (Opsional):'
+                      : 'Plat Nomor Kendaraan (Opsional):'}
                   </label>
                   <input
                     type="text"
-                    maxLength={10}
-                    placeholder="Contoh: DT 1234 XX"
+                    maxLength={30}
+                    placeholder={
+                      operationalSector === 'proxy_gt'
+                        ? 'Contoh: KM. MEKAR SARI 01'
+                        : operationalSector === 'jembatan_batu'
+                        ? 'Contoh: DT 9876 BA'
+                        : 'Contoh: DT 1234 XX'
+                    }
                     value={plateHint}
                     onChange={(e) => setPlateHint(e.target.value.toUpperCase())}
                     className="w-full px-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-black text-slate-900 dark:text-white placeholder:text-slate-400 placeholder:font-normal focus:ring-2 focus:ring-[#0F2547] outline-none"
@@ -666,21 +1004,14 @@ export default function ParkingQuickCashier() {
                     <>
                       <Printer size={20} />
                       <span>
-                        Bayar Tunai & Cetak Struk (Rp{' '}
-                        {(vehicleType === 'r4' ? currentRateR4 : currentRateR2).toLocaleString(
-                          'id-ID'
-                        )}
-                        )
+                        Bayar Tunai & Cetak Struk (Rp {activeTotalAmount.toLocaleString('id-ID')})
                       </span>
                     </>
                   ) : (
                     <>
                       <QrCode size={20} />
                       <span>
-                        Tampilkan QRIS Rp{' '}
-                        {(vehicleType === 'r4' ? currentRateR4 : currentRateR2).toLocaleString(
-                          'id-ID'
-                        )}
+                        Tampilkan QRIS Rp {activeTotalAmount.toLocaleString('id-ID')}
                       </span>
                     </>
                   )}
@@ -1043,15 +1374,21 @@ export default function ParkingQuickCashier() {
                   <span>{receiptPayload.datetime}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Kendaraan:</span>
+                  <span>Objek:</span>
                   <span className="font-bold">{receiptPayload.vehicle_type}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Plat:</span>
+                  <span>Plat / Lambung:</span>
                   <span className="font-bold">{receiptPayload.plate_hint}</span>
                 </div>
+                {receiptPayload.duration_days && receiptPayload.duration_days > 1 && (
+                  <div className="flex justify-between">
+                    <span>Durasi:</span>
+                    <span className="font-bold text-blue-600">{receiptPayload.duration_days} Hari</span>
+                  </div>
+                )}
                 <div className="flex justify-between font-black text-sm pt-1">
-                  <span>TARIF:</span>
+                  <span>TARIF TOTAL:</span>
                   <span>Rp {receiptPayload.amount_total.toLocaleString('id-ID')}</span>
                 </div>
               </div>
@@ -1065,6 +1402,12 @@ export default function ParkingQuickCashier() {
                   Token: {receiptPayload.receipt_no}
                 </p>
               </div>
+
+              {receiptPayload.legal_notice && (
+                <div className="p-2 rounded-lg bg-amber-50 border border-amber-300 text-[9px] text-amber-950 font-bold leading-tight text-center">
+                  {receiptPayload.legal_notice}
+                </div>
+              )}
 
               <div className="text-center pt-1 border-t border-dashed border-slate-300 space-y-1">
                 <p className="font-black text-[10px] text-rose-600">
@@ -1084,16 +1427,25 @@ export default function ParkingQuickCashier() {
                 Selesai
               </button>
               <button
-                onClick={() => {
-                  toast.success('Mencetak ke Bluetooth Thermal Printer (58mm)...', {
-                    icon: '🖨️',
-                  });
-                  setTimeout(() => setShowReceiptModal(false), 1200);
+                onClick={async () => {
+                  try {
+                    setIsPrintingReceipt(true);
+                    await thermalPrintService.print(receiptPayload);
+                    toast.success('Struk berhasil dikirim ke Bluetooth Thermal Printer (58mm)!', {
+                      icon: '🖨️',
+                    });
+                    setTimeout(() => setShowReceiptModal(false), 1200);
+                  } catch (err: any) {
+                    toast.error(err.message || 'Gagal mencetak struk. Pastikan printer Bluetooth terhubung.');
+                  } finally {
+                    setIsPrintingReceipt(false);
+                  }
                 }}
-                className="py-3 px-3 rounded-xl bg-slate-950 text-white font-sans font-black text-xs uppercase tracking-wider shadow-lg flex items-center justify-center gap-1.5"
+                disabled={isPrintingReceipt}
+                className="py-3 px-3 rounded-xl bg-slate-950 text-white font-sans font-black text-xs uppercase tracking-wider shadow-lg flex items-center justify-center gap-1.5 disabled:opacity-50"
               >
-                <Printer size={16} />
-                <span>Cetak Struk</span>
+                <Printer size={16} className={isPrintingReceipt ? 'animate-spin' : ''} />
+                <span>{isPrintingReceipt ? 'Mencetak...' : 'Cetak Struk'}</span>
               </button>
             </div>
           </div>

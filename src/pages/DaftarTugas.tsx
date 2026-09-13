@@ -12,9 +12,11 @@ import {
   Wrench,
   ShieldCheck,
   CheckCircle2,
+  Gauge,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { AssetSurveyForm, type AssetRentalSurveyItem } from '../components/AssetSurveyForm';
+import { AssetInspectionModal } from '../components/AssetInspectionModal';
 
 interface Task {
   id: number;
@@ -42,6 +44,7 @@ export default function DaftarTugas() {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState<'pending' | 'completed' | 'asset_survey'>('pending');
   const [selectedRentalForSurvey, setSelectedRentalForSurvey] = useState<AssetRentalSurveyItem | null>(null);
+  const [selectedRentalForInspection, setSelectedRentalForInspection] = useState<AssetRentalSurveyItem | null>(null);
 
   useEffect(() => {
     if (activeTab === 'asset_survey') {
@@ -289,13 +292,20 @@ export default function DaftarTugas() {
                     </div>
                   </div>
 
-                  <div className="p-4 mt-auto bg-slate-50 dark:bg-slate-900/50">
+                  <div className="p-4 mt-auto bg-slate-50 dark:bg-slate-900/50 space-y-2">
                     <button
                       onClick={() => setSelectedRentalForSurvey(rental)}
-                      className="w-full flex items-center justify-center gap-2 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold uppercase tracking-wider text-xs transition-colors shadow-lg shadow-purple-600/20"
+                      className="w-full flex items-center justify-center gap-2 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold uppercase tracking-wider text-xs transition-colors shadow-lg shadow-purple-600/20"
                     >
                       <ShieldCheck className="w-4 h-4" />
-                      {rental.survey_submitted_at ? 'Edit / Tinjau Survey 4 Poin' : 'Isi Survey Kelayakan Lapangan'}
+                      {rental.survey_submitted_at ? 'Tinjau Survey 4 Poin' : 'Isi Survey Kelayakan'}
+                    </button>
+                    <button
+                      onClick={() => setSelectedRentalForInspection(rental)}
+                      className="w-full flex items-center justify-center gap-2 py-2.5 bg-slate-900 hover:bg-slate-800 dark:bg-purple-950 dark:hover:bg-purple-900 text-white rounded-xl font-bold uppercase tracking-wider text-xs transition-colors"
+                    >
+                      <Gauge className="w-4 h-4" />
+                      Inspeksi Hour Meter Pra/Pasca
                     </button>
                   </div>
                 </div>
@@ -417,6 +427,18 @@ export default function DaftarTugas() {
             fetchAssetRentals();
           }}
           onClose={() => setSelectedRentalForSurvey(null)}
+        />
+      )}
+
+      {/* Modal Inspeksi Hour Meter Pra/Pasca */}
+      {selectedRentalForInspection && (
+        <AssetInspectionModal
+          rental={selectedRentalForInspection}
+          onSuccess={() => {
+            setSelectedRentalForInspection(null);
+            fetchAssetRentals();
+          }}
+          onClose={() => setSelectedRentalForInspection(null)}
         />
       )}
     </div>

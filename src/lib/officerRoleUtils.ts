@@ -138,6 +138,11 @@ export const officerCanAccessPath = (user: User | null | undefined, path: string
     return isBapendaOfficer(user);
   }
 
+  // 4. Layanan Retribusi Persampahan Pasar & Kelurahan: Khusus DLH & Bapenda
+  if (path === '/dlh-collector' || path.startsWith('/dlh-collector/') || path === '/sampah-dlh') {
+    return isDlhOfficer(user) || isBapendaOfficer(user);
+  }
+
   // 4. Verifikasi Pembayaran & Penerbitan SKPD Mandiri
   if (path === '/verification' || path.startsWith('/verification/')) {
     return user.role === 'opd';

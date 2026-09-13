@@ -37,6 +37,7 @@ import CreateSKPD from './pages/CreateSKPD';
 import About from './pages/About';
 import ParkingQuickCashier from './pages/ParkingQuickCashier';
 import TpiAuctionCashier from './pages/TpiAuctionCashier';
+import DlhCollectorPage from './pages/DlhCollectorPage';
 
 function HomeRoute() {
   const { isAuthenticated, loading } = useAuth();
@@ -162,6 +163,28 @@ function App() {
                 <ProtectedRoute allowedRoles={['super_admin', 'opd', 'petugas']}>
                   <Layout>
                     <TpiAuctionCashier />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/dlh-collector"
+              element={
+                <ProtectedRoute allowedRoles={['super_admin', 'opd', 'petugas']}>
+                  <Layout>
+                    <DlhCollectorPage />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/sampah-dlh"
+              element={
+                <ProtectedRoute allowedRoles={['super_admin', 'opd', 'petugas']}>
+                  <Layout>
+                    <DlhCollectorPage />
                   </Layout>
                 </ProtectedRoute>
               }

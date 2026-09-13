@@ -46,6 +46,33 @@ export interface TpiReceiptData {
     bankRef?: string;
 }
 
+export interface ParkingReceiptData {
+    header: string;
+    sub_header: string;
+    location_name: string;
+    receipt_no: string;
+    datetime: string;
+    vehicle_type: string;
+    plate_hint: string;
+    amount_total: number;
+    qr_verification_url: string;
+    footer_notice?: string;
+    reward_notice?: string;
+    duration_days?: number;
+    legal_notice?: string;
+}
+
+export interface DlhReceiptData {
+    ticket_code: string;
+    market_name: string;
+    merchant_name?: string;
+    stall_number?: string;
+    amount: number;
+    payment_method: string;
+    qr_token: string;
+    datetime: string;
+    collector_name?: string;
+}
 
 class ThermalPrintService {
     private device: any = null;
@@ -224,9 +251,93 @@ class ThermalPrintService {
     }
 
     /**
+     * Generates receipt text for Parking & Harbor (M-PAD Parkir & Tambat Labuh).
+     */
+    generateParkingReceiptText(data: ParkingReceiptData): string {
+        const separator = "--------------------------------\n";
+        const doubleSep = "================================\n";
+
+        const header =
+            `      ${data.header || 'PEMERINTAH KOTA BAUBAU'}      \n` +
+            `      ${data.sub_header || 'DINAS PERHUBUNGAN'}        \n` +
+            `      ${data.location_name}      \n` +
+            doubleSep;
+
+        const body =
+            `NO. STRUK   : ${data.receipt_no}\n` +
+            `WAKTU       : ${data.datetime}\n` +
+            `KENDARAAN/OP: ${data.vehicle_type}\n` +
+            `IDENTITAS/PL: ${data.plate_hint || '-'}\n` +
+            (data.duration_days && data.duration_days > 1 ? `DURASI      : ${data.duration_days} Hari\n` : '') +
+            separator +
+            `TARIF TOTAL : Rp ${data.amount_total.toLocaleString('id-ID')}\n` +
+            separator +
+            `STATUS      : LUNAS / SAH (RKUD)\n` +
+            separator;
+
+        const qrSection =
+            "     [ QR CODE VERIFIKASI ]     \n" +
+            `  ${data.qr_verification_url}  \n` +
+            separator;
+
+        let legalNotice = "";
+        if (data.legal_notice) {
+            legalNotice =
+                `* ${data.legal_notice}\n` +
+                separator;
+        }
+
+        const footer =
+            `  ${data.footer_notice || 'MINTA STRUK RESMI M-PAD'}  \n` +
+            (data.reward_notice ? `  ${data.reward_notice}  \n` : '') +
+            doubleSep + "\n\n\n";
+
+        return header + body + qrSection + legalNotice + footer;
+    }
+
+    /**
+     * Generates a text-based receipt for DLH Market Trash Tickets (58mm).
+     */
+    generateDlhReceiptText(data: DlhReceiptData): string {
+        const separator = "--------------------------------\n";
+        const doubleSep = "================================\n";
+
+        const header =
+            "      PEMKOT BAUBAU - DLH       \n" +
+            "  RETRIBUSI PERSAMPAHAN PASAR   \n" +
+            "     PERDA NO. 1 TAHUN 2024     \n" +
+            doubleSep;
+
+        const body =
+            `No. Karcis : ${data.ticket_code}\n` +
+            `Lokasi     : ${data.market_name}\n` +
+            (data.stall_number ? `Kios/Lapak : ${data.stall_number}\n` : '') +
+            (data.merchant_name ? `Pedagang   : ${data.merchant_name}\n` : '') +
+            `Waktu      : ${data.datetime}\n` +
+            `Petugas    : ${data.collector_name || 'Juru Pungut Pasar'}\n` +
+            `Metode     : ${data.payment_method}\n` +
+            separator +
+            `TARIF RETRIBUSI : Rp ${data.amount.toLocaleString('id-ID')}\n` +
+            `TOTAL BAYAR     : Rp ${data.amount.toLocaleString('id-ID')}\n` +
+            separator;
+
+        const qrSection =
+            `Token: ${data.qr_token}\n` +
+            `Verifikasi: mpad.baubaukota.go.id\n` +
+            separator;
+
+        const footer =
+            "  TERIMA KASIH ATAS PARTISIPASI \n" +
+            "  MENJAGA KEBERSIHAN KOTA KITA  \n" +
+            doubleSep + "\n\n\n";
+
+        return header + body + qrSection + footer;
+    }
+
+    /**
      * Sends receipt data to the connected printer.
      */
-    async print(data: ReceiptData | PbbReceiptData | TpiReceiptData) {
+    async print(data: ReceiptData | PbbReceiptData | TpiReceiptData | ParkingReceiptData | DlhReceiptData) {
         try {
             if (!this.characteristic) {
                 const connected = await this.connect();
@@ -234,10 +345,14 @@ class ThermalPrintService {
             }
 
             let text = "";
-            if ('transactionCode' in data) {
+            if ('ticket_code' in data && 'market_name' in data) {
+                text = this.generateDlhReceiptText(data as DlhReceiptData);
+            } else if ('transactionCode' in data) {
                 text = this.generateTpiReceiptText(data as TpiReceiptData);
             } else if ('nop' in data) {
                 text = this.generatePbbReceiptText(data as PbbReceiptData);
+            } else if ('receipt_no' in data && 'header' in data) {
+                text = this.generateParkingReceiptText(data as ParkingReceiptData);
             } else {
                 text = this.generateReceiptText(data as ReceiptData);
             }

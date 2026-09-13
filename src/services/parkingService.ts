@@ -18,12 +18,22 @@ export interface ParkingLocation {
   classification?: { id: number; name: string; code: string };
 }
 
+export type ParkingVehicleType =
+  | 'r2'
+  | 'r4'
+  | 'truk_bus'
+  | 'inap_truk'
+  | 'proxy_gt_1'
+  | 'proxy_gt_2'
+  | 'proxy_gt_3'
+  | 'proxy_gt_4';
+
 export interface ParkingSession {
   id: number;
   parking_location_id: number;
   jukir_user_id: number;
   shift_date: string;
-  vehicle_type: 'r2' | 'r4';
+  vehicle_type: ParkingVehicleType;
   plate_hint?: string;
   amount: number;
   payment_method: 'cash' | 'qris';
@@ -63,9 +73,10 @@ export interface ShiftSummaryData {
 
 export interface RecordSessionInput {
   parking_location_id: number;
-  vehicle_type: 'r2' | 'r4';
+  vehicle_type: ParkingVehicleType;
   payment_method: 'cash' | 'qris';
   plate_hint?: string;
+  duration_days?: number;
   qris_reference?: string;
 }
 
@@ -97,6 +108,8 @@ export interface ThermalPrintPayload {
   qr_verification_url: string;
   footer_notice: string;
   reward_notice: string;
+  duration_days?: number;
+  legal_notice?: string;
 }
 
 export interface PrepaidCashResponse {
@@ -199,13 +212,19 @@ export const parkingService = {
 
   async recordPrepaidCash(input: {
     parking_location_id: number;
-    vehicle_type: 'r2' | 'r4';
+    vehicle_type: ParkingVehicleType;
+    duration_days?: number;
     plate_hint?: string;
     latitude?: number;
     longitude?: number;
   }): Promise<PrepaidCashResponse> {
     const res = await api.post('/api/parking/sessions/prepaid-cash', input);
     return res.data;
+  },
+
+  async getProxyGtRates(): Promise<any[]> {
+    const res = await api.get('/api/parking/harbor/proxy-gt-rates');
+    return res.data?.data || [];
   },
 
   async getSpotCheck(locationId: number, physicalR2?: number, physicalR4?: number): Promise<SpotCheckData> {
