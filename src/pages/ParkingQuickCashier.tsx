@@ -37,10 +37,13 @@ import {
 import { thermalPrintService } from '../services/ThermalPrintService';
 import { injectQrisTransaction, buildQrisDynamic } from '../services/qrisService';
 import { nextReference } from '../services/referralCounterService';
+import { useAuth } from '../contexts/AuthContext';
+import { canParkingInspect } from '../lib/officerRoleUtils';
 
 export default function ParkingQuickCashier() {
   // Tabs: 'cashier' | 'inspector'
   const [activeTab, setActiveTab] = useState<'cashier' | 'inspector'>('cashier');
+  const { user } = useAuth();
 
   // Sector Switcher: 'road_parking' | 'jembatan_batu' | 'proxy_gt'
   const [operationalSector, setOperationalSector] = useState<'road_parking' | 'jembatan_batu' | 'proxy_gt'>('road_parking');
@@ -314,6 +317,10 @@ export default function ParkingQuickCashier() {
 
   // Inspector: Run Spot Check
   const handleRunSpotCheck = async () => {
+    if (!canParkingInspect(user)) {
+      toast.error('Akses Sidak hanya untuk pengawas/OPD Dishub');
+      return;
+    }
     if (!spotCheckLocId) return;
     try {
       setSpotCheckLoading(true);
@@ -329,6 +336,10 @@ export default function ParkingQuickCashier() {
 
   // Inspector: Submit Sanction
   const handleSanction = async (type: string, reason: string) => {
+    if (!canParkingInspect(user)) {
+      toast.error('Akses Sidak hanya untuk pengawas/OPD Dishub');
+      return;
+    }
     if (!spotCheckData?.active_jukir?.id) {
       toast.error('Tidak ada jukir aktif di titik ini');
       return;
@@ -380,22 +391,24 @@ export default function ParkingQuickCashier() {
           <span className="truncate sm:hidden">Kasir Jukir</span>
           <span className="hidden sm:inline truncate">Kasir Jukir (Pre-Paid)</span>
         </button>
-        <button
-          type="button"
-          onClick={() => {
-            setActiveTab('inspector');
-            if (!spotCheckData) handleRunSpotCheck();
-          }}
-          className={`flex-1 py-2 sm:py-2.5 px-2 sm:px-4 rounded-xl font-black text-[11px] sm:text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 sm:gap-2 transition-all min-w-0 select-none ${
-            activeTab === 'inspector'
-              ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/30'
-              : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
-          }`}
-        >
-          <ShieldCheck className="w-4 h-4 shrink-0" />
-          <span className="truncate sm:hidden">Patroli Sidak</span>
-          <span className="hidden sm:inline truncate">Inspektur Patroli (Sidak)</span>
-        </button>
+        {canParkingInspect(user) && (
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTab('inspector');
+              if (!spotCheckData) handleRunSpotCheck();
+            }}
+            className={`flex-1 py-2 sm:py-2.5 px-2 sm:px-4 rounded-xl font-black text-[11px] sm:text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 sm:gap-2 transition-all min-w-0 select-none ${
+              activeTab === 'inspector'
+                ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/30'
+                : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
+            }`}
+          >
+            <ShieldCheck className="w-4 h-4 shrink-0" />
+            <span className="truncate sm:hidden">Patroli Sidak</span>
+            <span className="hidden sm:inline truncate">Inspektur Patroli (Sidak)</span>
+          </button>
+        )}
       </div>
 
       {activeTab === 'cashier' ? (

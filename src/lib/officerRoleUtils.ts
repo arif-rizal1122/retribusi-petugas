@@ -158,3 +158,15 @@ export const officerCanAccessPath = (user: User | null | undefined, path: string
 
   return true;
 };
+
+/**
+ * Gate akses tab Inspektur Patroli (Sidak) di modul Parkir Dishub.
+ * Hanya role opd / pengawas(kabid/kasubid) / super admin (matriks RBAC parkir).
+ */
+export const canParkingInspect = (user: User | null | undefined): boolean => {
+  if (!user) return false;
+  const role = user.role as string;
+  if (role === 'super_admin' || role === 'admin') return true;
+  if (!isDishubOfficer(user)) return false;
+  return ['opd', 'pengawas', 'kabid_pengawas', 'kasubid_pengawas'].includes(role);
+};
