@@ -38,6 +38,8 @@ import About from './pages/About';
 import ParkingQuickCashier from './pages/ParkingQuickCashier';
 import TpiAuctionCashier from './pages/TpiAuctionCashier';
 import DlhCollectorPage from './pages/DlhCollectorPage';
+import PuprInspectionPage from './pages/PuprInspectionPage';
+import HarborGtPage from './pages/HarborGtPage';
 
 function HomeRoute() {
   const { isAuthenticated, loading } = useAuth();
@@ -185,6 +187,39 @@ function App() {
                 <ProtectedRoute allowedRoles={['super_admin', 'opd', 'petugas']}>
                   <Layout>
                     <DlhCollectorPage />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/pupr-inspection"
+              element={
+                <ProtectedRoute allowedRoles={['super_admin', 'opd', 'petugas']}>
+                  <Layout>
+                    <PuprInspectionPage />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/harbor-gt"
+              element={
+                <ProtectedRoute allowedRoles={['super_admin', 'opd', 'petugas']}>
+                  <Layout>
+                    <HarborGtPage />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/tambat-labuh"
+              element={
+                <ProtectedRoute allowedRoles={['super_admin', 'opd', 'petugas']}>
+                  <Layout>
+                    <HarborGtPage />
                   </Layout>
                 </ProtectedRoute>
               }
