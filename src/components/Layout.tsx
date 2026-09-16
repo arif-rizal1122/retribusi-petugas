@@ -279,29 +279,30 @@ export default function Layout({ children }: LayoutProps) {
 
       {/* Sidebar Navigation (Desktop & Mobile) */}
       <aside
-        className={`fixed left-0 top-0 lg:top-20 bottom-0 w-72 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-r border-slate-100 dark:border-slate-800 z-[100] transform transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] lg:translate-x-0 ${
+        className={`fixed left-0 top-0 lg:top-20 bottom-0 w-64 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-r border-slate-100 dark:border-slate-800 z-[100] transform transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] lg:translate-x-0 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="h-full flex flex-col p-6 overflow-y-auto">
+        <div className="h-full flex flex-col p-3 overflow-y-auto">
           {/* Mobile Header in Sidebar */}
-          <div className="lg:hidden flex items-center justify-between mb-8">
-            <Link to="/dashboard" className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center border border-slate-100">
-                <img src="/mitra-logo.png" alt="Logo" className="w-5 h-5 object-contain" />
+          <div className="lg:hidden flex items-center justify-between mb-4 px-2 pt-1">
+            <Link to="/dashboard" className="flex items-center gap-2.5">
+              <div className="w-7 h-7 bg-white rounded-lg flex items-center justify-center border border-slate-100 shadow-sm">
+                <img src="/mitra-logo.png" alt="Logo" className="w-4 h-4 object-contain" />
               </div>
-              <h1 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tighter">MITRA PAD (M-PAD)</h1>
+              <h1 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-tight">MITRA PAD (M-PAD)</h1>
             </Link>
             <button 
               onClick={() => setSidebarOpen(false)}
-              className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all"
+              className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-slate-600 transition-colors"
+              aria-label="Tutup Menu"
             >
-              <X size={20} className="text-slate-400" />
+              <X size={18} />
             </button>
           </div>
 
-          <div className="flex-1 space-y-2">
-            <p className="px-4 py-2 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Main Navigation</p>
+          <div className="flex-1 space-y-1">
+            <p className="px-3 py-1.5 text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Menu Utama</p>
             {filteredMenu.map((item) => {
               const isActive = location.pathname === item.path;
               return (
@@ -309,21 +310,18 @@ export default function Layout({ children }: LayoutProps) {
                   key={item.path}
                   to={item.path}
                   onClick={() => setSidebarOpen(false)}
-                  className={`flex items-center gap-4 px-5 py-3.5 rounded-2xl transition-all relative group overflow-hidden ${
+                  className={`min-h-[44px] flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all relative group overflow-hidden active:scale-[0.98] ${
                     isActive
-                      ? 'text-white'
-                      : 'text-slate-500 hover:text-slate-900 hover:bg-white dark:hover:bg-slate-800 shadow-none'
+                      ? 'text-white bg-gradient-to-r from-[#0F2547] to-blue-500 shadow-sm font-bold'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60 font-medium'
                   }`}
                 >
-                  {isActive && (
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#0F2547] to-blue-400 z-0"></div>
-                  )}
-                  <span className={`relative z-10 ${isActive ? 'scale-110' : 'group-hover:scale-110'} transition-transform`}>
+                  <span className={`relative z-10 shrink-0 ${isActive ? 'scale-105' : 'group-hover:scale-105'} transition-transform`}>
                     {item.icon}
                   </span>
-                  <span className="relative z-10 font-bold text-sm tracking-tight">{item.label}</span>
+                  <span className="relative z-10 text-xs sm:text-[13px] tracking-tight truncate">{item.label}</span>
                   {isActive && (
-                    <div className="absolute right-4 w-1.5 h-1.5 bg-white rounded-full z-10 shadow-[0_0_8px_white]"></div>
+                    <div className="ml-auto w-1.5 h-1.5 bg-white rounded-full z-10 shadow-[0_0_6px_white] shrink-0"></div>
                   )}
                 </Link>
               );
@@ -331,16 +329,16 @@ export default function Layout({ children }: LayoutProps) {
           </div>
 
           {/* Sidebar Footer Account Card */}
-          <div className="mt-auto pt-8 border-t border-slate-100 dark:border-slate-800">
+          <div className="mt-auto pt-3 border-t border-slate-100 dark:border-slate-800">
             <button 
               onClick={handleLogout}
-              className="w-full flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 hover:bg-rose-50 hover:text-rose-600 rounded-2xl transition-all group"
+              className="w-full min-h-[44px] flex items-center justify-between px-3 py-2.5 bg-slate-50 dark:bg-slate-800/60 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-slate-600 hover:text-rose-600 dark:text-slate-300 dark:hover:text-rose-400 rounded-xl transition-all group active:scale-[0.98]"
             >
-              <div className="flex items-center gap-3">
-                <LogOut size={18} className="text-slate-400 group-hover:text-rose-600" />
-                <span className="font-bold text-sm text-slate-600 group-hover:text-rose-600">Sign Out</span>
+              <div className="flex items-center gap-2.5">
+                <LogOut size={16} className="text-slate-400 group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors" />
+                <span className="font-bold text-xs text-slate-600 dark:text-slate-300 group-hover:text-rose-600 dark:group-hover:text-rose-400">Sign Out</span>
               </div>
-              <ChevronLeft size={16} className="text-slate-300 transform rotate-180 group-hover:translate-x-1 transition-transform" />
+              <ChevronLeft size={14} className="text-slate-300 transform rotate-180 group-hover:translate-x-0.5 transition-transform" />
             </button>
           </div>
         </div>
@@ -355,7 +353,7 @@ export default function Layout({ children }: LayoutProps) {
       )}
 
       {/* Main Content Area */}
-      <main className="lg:pt-20 lg:pl-72 min-h-screen">
+      <main className="lg:pt-20 lg:pl-64 min-h-screen">
         <div className="p-4 sm:p-6 lg:p-10 max-w-full overflow-hidden">
           {children}
         </div>
