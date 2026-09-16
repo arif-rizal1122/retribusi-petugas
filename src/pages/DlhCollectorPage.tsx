@@ -10,6 +10,11 @@ import {
   CheckCircle2,
   RefreshCw,
   UserCheck,
+  MapPin,
+  AlertTriangle,
+  QrCode,
+  Search,
+  Navigation,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
@@ -76,6 +81,16 @@ export default function DlhCollectorPage() {
   const [transferName, setTransferName] = useState('');
   const [transferContact, setTransferContact] = useState('');
   const [submittingTransfer, setSubmittingTransfer] = useState(false);
+
+  // Geofencing & Persil Inspection State (<30m)
+  const [searchPersilCode, setSearchPersilCode] = useState('');
+  const [searchingPersil, setSearchingPersil] = useState(false);
+  const [inspectedPersil, setInspectedPersil] = useState<any | null>(null);
+  const [officerLocation, setOfficerLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [geofenceDistance, setGeofenceDistance] = useState<number | null>(null);
+  const [isWithinGeofence, setIsWithinGeofence] = useState<boolean | null>(null);
+  const [reportingEmpty, setReportingEmpty] = useState(false);
+  const [emptyNotes, setEmptyNotes] = useState('');
 
   // Fetch Holding Balance
   const fetchHoldingBalance = useCallback(async () => {
@@ -220,6 +235,91 @@ export default function DlhCollectorPage() {
       toast.error(err.response?.data?.message || 'Gagal memperbarui data persil.');
     } finally {
       setSubmittingTransfer(false);
+    }
+  };
+
+  // Kalkulasi Jarak Haversine (dalam satuan meter)
+  const calculateDistanceMeters = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371000;
+    const dLat = (lat2 - lat1) * (Math.PI / 180);
+    const dLon = (lon2 - lon1) * (Math.PI / 180);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
+
+  const handleInspectPersil = async () => {
+    if (!searchPersilCode.trim()) {
+      toast.error('Masukkan kode stiker persil atau ID objek.');
+      return;
+    }
+
+    try {
+      setSearchingPersil(true);
+      const data = await dlhCollectorService.inquireObjectByCode(searchPersilCode.trim());
+      setInspectedPersil(data);
+
+      // Ambil GPS petugas untuk verifikasi geofence (< 30m)
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            const currentLat = pos.coords.latitude;
+            const currentLng = pos.coords.longitude;
+            setOfficerLocation({ lat: currentLat, lng: currentLng });
+
+            if (data.latitude && data.longitude) {
+              const dist = calculateDistanceMeters(currentLat, currentLng, Number(data.latitude), Number(data.longitude));
+              setGeofenceDistance(Math.round(dist));
+              setIsWithinGeofence(dist <= 30);
+            } else {
+              setGeofenceDistance(null);
+              setIsWithinGeofence(true);
+            }
+          },
+          (err) => {
+            console.warn('Geolocation tidak dapat diakses:', err);
+            setIsWithinGeofence(true);
+          },
+          { enableHighAccuracy: true, timeout: 5000 }
+        );
+      }
+      toast.success('Data persil berhasil ditemukan!');
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Objek persil tidak ditemukan.');
+      setInspectedPersil(null);
+    } finally {
+      setSearchingPersil(false);
+    }
+  };
+
+  const handleReportEmptyHouse = async () => {
+    if (!inspectedPersil) return;
+
+    try {
+      setReportingEmpty(true);
+      const res = await dlhCollectorService.reportEmptyHouse(inspectedPersil.tax_object_id, {
+        latitude: officerLocation?.lat,
+        longitude: officerLocation?.lng,
+        notes: emptyNotes || 'Rumah/persil kosong saat kunjungan petugas lapangan',
+      });
+
+      toast.success(
+        res.wa_notification_sent
+          ? 'Status KOSONG dicatat & Notifikasi WhatsApp pengingat terkirim ke pemilik!'
+          : 'Status KOSONG berhasil dicatat!'
+      );
+      if (res.geofence_warning) {
+        toast(res.geofence_warning, { icon: '⚠️' });
+      }
+
+      setInspectedPersil((prev: any) => (prev ? { ...prev, status_hunian: 'KOSONG' } : null));
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Gagal melaporkan rumah kosong.');
+    } finally {
+      setReportingEmpty(false);
     }
   };
 
@@ -523,6 +623,156 @@ export default function DlhCollectorPage() {
       {/* ========================================================================= */}
       {activeTab === 'kelurahan' && (
         <div className="space-y-6">
+          {/* INSPEKSI PERSIL & GEOFENCING GPS (<30M) */}
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <span className="text-[10px] font-black tracking-wider uppercase text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                  <Navigation className="w-3.5 h-3.5" /> Validasi Lokasi Persil & Anti-Fraud
+                </span>
+                <h3 className="text-lg font-black text-slate-900 dark:text-white">
+                  Inspeksi Stiker Persil & Geofencing GPS (&lt; 30m)
+                </h3>
+              </div>
+              <span className="p-2 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 rounded-xl">
+                <QrCode className="w-5 h-5" />
+              </span>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-2.5 mb-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Scan / Masukkan Kode Stiker QR (contoh: SMP-00001)..."
+                  value={searchPersilCode}
+                  onChange={(e) => setSearchPersilCode(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm font-medium focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+              <button
+                onClick={handleInspectPersil}
+                disabled={searchingPersil}
+                className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow-sm disabled:opacity-50"
+              >
+                {searchingPersil ? <RefreshCw className="w-4 h-4 animate-spin" /> : <MapPin className="w-4 h-4" />}
+                Cek Persil &amp; GPS
+              </button>
+            </div>
+
+            {/* Hasil Pengecekan Persil */}
+            {inspectedPersil && (
+              <div className="p-4 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-2xl space-y-4">
+                <div className="flex flex-wrap items-start justify-between gap-2 border-b border-slate-200 dark:border-slate-700 pb-3">
+                  <div>
+                    <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider block">
+                      {inspectedPersil.kode_objek}
+                    </span>
+                    <h4 className="text-sm font-black text-slate-900 dark:text-white">
+                      {inspectedPersil.nama_objek}
+                    </h4>
+                    <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
+                      <MapPin className="w-3 h-3 text-slate-400" /> {inspectedPersil.alamat_lengkap}
+                    </p>
+                  </div>
+
+                  {/* Geofencing Status Badge */}
+                  <div className="flex flex-col items-end gap-1">
+                    {geofenceDistance !== null ? (
+                      <span
+                        className={`px-3 py-1 rounded-full text-[11px] font-bold flex items-center gap-1 ${
+                          isWithinGeofence
+                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700'
+                            : 'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-300 dark:border-rose-700 animate-pulse'
+                        }`}
+                      >
+                        {isWithinGeofence ? (
+                          <>
+                            <CheckCircle2 className="w-3.5 h-3.5" /> Radius Sah ({geofenceDistance}m)
+                          </>
+                        ) : (
+                          <>
+                            <AlertTriangle className="w-3.5 h-3.5" /> Di Luar Radius ({geofenceDistance}m &gt; 30m)
+                          </>
+                        )}
+                      </span>
+                    ) : (
+                      <span className="px-3 py-1 rounded-full text-[11px] font-medium bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
+                        GPS Terdeteksi
+                      </span>
+                    )}
+
+                    <span
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
+                        inspectedPersil.status_bulan_ini === 'LUNAS'
+                          ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-300'
+                          : 'bg-amber-500/20 text-amber-700 dark:text-amber-300'
+                      }`}
+                    >
+                      Bulan Ini: {inspectedPersil.status_bulan_ini}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Info Rincian Ringkas */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                  <div className="p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">
+                    <span className="text-[10px] text-slate-400 block">Penanggung Jawab</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200 mt-0.5 block truncate">
+                      {inspectedPersil.penanggung_jawab}
+                    </span>
+                  </div>
+                  <div className="p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">
+                    <span className="text-[10px] text-slate-400 block">Status Hunian</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200 mt-0.5 block">
+                      {inspectedPersil.status_hunian}
+                    </span>
+                  </div>
+                  <div className="p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">
+                    <span className="text-[10px] text-slate-400 block">Tarif Perda 1/2024</span>
+                    <span className="font-bold text-emerald-600 dark:text-emerald-400 mt-0.5 block">
+                      Rp {Number(inspectedPersil.tarif_bulanan).toLocaleString('id-ID')}/bln
+                    </span>
+                  </div>
+                  <div className="p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">
+                    <span className="text-[10px] text-slate-400 block">Total Tunggakan</span>
+                    <span className="font-black text-rose-600 dark:text-rose-400 mt-0.5 block">
+                      Rp {Number(inspectedPersil.total_tunggakan).toLocaleString('id-ID')}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Aksi Penanganan Rumah Kosong (Auto-WA) */}
+                <div className="pt-2 border-t border-slate-200 dark:border-slate-700">
+                  <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1.5">
+                    Tindakan Kunjungan Juru Pungut:
+                  </span>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <input
+                      type="text"
+                      placeholder="Catatan kunjungan (contoh: Pagar terkunci, rumah tidak berpenghuni)..."
+                      value={emptyNotes}
+                      onChange={(e) => setEmptyNotes(e.target.value)}
+                      className="flex-1 px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs"
+                    />
+                    <button
+                      onClick={handleReportEmptyHouse}
+                      disabled={reportingEmpty}
+                      className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 disabled:opacity-50 shrink-0"
+                    >
+                      {reportingEmpty ? (
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <Send className="w-3.5 h-3.5" />
+                      )}
+                      Tandai Rumah Kosong (Auto-WA)
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* SIMULATOR TARIF BULANAN BERDASARKAN KATEGORI */}
           <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
             <div className="flex items-center justify-between mb-4">

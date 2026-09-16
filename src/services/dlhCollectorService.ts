@@ -113,4 +113,27 @@ export const dlhCollectorService = {
     const res = await api.post(`/api/v1/dlh/trash/transfer-occupant/${taxObjectId}`, data);
     return res.data;
   },
+
+  /**
+   * Cari data objek persil berdasarkan kode stiker QR atau ID
+   */
+  async inquireObjectByCode(code: string) {
+    const res = await api.get(`/api/v1/public/objects/${encodeURIComponent(code)}/bill`);
+    return res.data?.data || res.data;
+  },
+
+  /**
+   * Lapor rumah/persil kosong dengan validasi GPS geofencing (<30m) & auto-WA notice
+   */
+  async reportEmptyHouse(
+    taxObjectId: number | string,
+    data: {
+      latitude?: number;
+      longitude?: number;
+      notes?: string;
+    }
+  ) {
+    const res = await api.post(`/api/v1/dlh/trash/empty-house-notice/${taxObjectId}`, data);
+    return res.data?.data || res.data;
+  },
 };
