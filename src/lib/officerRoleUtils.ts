@@ -138,9 +138,10 @@ export const officerCanAccessPath = (user: User | null | undefined, path: string
     return isBapendaOfficer(user);
   }
 
-  // 4. Layanan Retribusi Persampahan Pasar & Kelurahan: Khusus DLH & Bapenda
+  // 4. Layanan Retribusi Persampahan Pasar & Kelurahan: KHUSUS petugas OPD DLH.
+  //    Super admin tetap lolos lewat guard di atas; Bapenda/petugas lain DITOLAK.
   if (path === '/dlh-collector' || path.startsWith('/dlh-collector/') || path === '/sampah-dlh') {
-    return isDlhOfficer(user) || isBapendaOfficer(user);
+    return isDlhOfficer(user);
   }
 
   // 4. Verifikasi Pembayaran & Penerbitan SKPD Mandiri
@@ -148,7 +149,7 @@ export const officerCanAccessPath = (user: User | null | undefined, path: string
     return user.role === 'opd';
   }
   if (path === '/create-skpd' || path.startsWith('/create-skpd/')) {
-    return user.role === 'opd' || isBapendaOfficer(user) || isDlhOfficer(user);
+    return user.role === 'opd' || isDlhOfficer(user);
   }
 
   // 5. Reporting
