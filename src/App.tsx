@@ -36,6 +36,8 @@ import DaftarTugas from './pages/DaftarTugas';
 import CreateSKPD from './pages/CreateSKPD';
 import About from './pages/About';
 import ParkingQuickCashier from './pages/ParkingQuickCashier';
+import QuickTapPosPage from './pages/QuickTapPosPage';
+import HeadcountScannerPage from './pages/HeadcountScannerPage';
 import TpiAuctionCashier from './pages/TpiAuctionCashier';
 import DlhCollectorPage from './pages/DlhCollectorPage';
 import PuprInspectionPage from './pages/PuprInspectionPage';
@@ -154,6 +156,28 @@ function App() {
                 <ProtectedRoute allowedRoles={['super_admin', 'opd', 'petugas']}>
                   <Layout>
                     <ParkingQuickCashier />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/tiket-wisata"
+              element={
+                <ProtectedRoute allowedRoles={['super_admin', 'opd', 'petugas']}>
+                  <Layout>
+                    <QuickTapPosPage />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/pindai-rombongan"
+              element={
+                <ProtectedRoute allowedRoles={['super_admin', 'opd', 'petugas']}>
+                  <Layout>
+                    <HeadcountScannerPage />
                   </Layout>
                 </ProtectedRoute>
               }
