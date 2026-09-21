@@ -30,7 +30,8 @@ import {
   CreditCard,
   Printer,
   Car,
-  Trash2
+  Trash2,
+  Store
 } from 'lucide-react';
 import { UserRole } from '../types';
 import { officerCanAccessPath } from '../lib/officerRoleUtils';
@@ -93,6 +94,12 @@ const menuItems: MenuItem[] = [
     label: 'Sampah DLH',
     path: '/dlh-collector',
     icon: <Trash2 className="w-5 h-5" />,
+    roles: ['super_admin', 'opd', 'petugas'],
+  },
+  {
+    label: 'Pasar Disperindag',
+    path: '/pasar',
+    icon: <Store className="w-5 h-5" />,
     roles: ['super_admin', 'opd', 'petugas'],
   },
   {

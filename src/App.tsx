@@ -42,6 +42,7 @@ import TpiAuctionCashier from './pages/TpiAuctionCashier';
 import DlhCollectorPage from './pages/DlhCollectorPage';
 import PuprInspectionPage from './pages/PuprInspectionPage';
 import HarborGtPage from './pages/HarborGtPage';
+import PasarDisperindagPage from './pages/PasarDisperindagPage';
 
 function HomeRoute() {
   const { isAuthenticated, loading } = useAuth();
@@ -211,6 +212,28 @@ function App() {
                 <ProtectedRoute allowedRoles={['super_admin', 'opd', 'petugas']}>
                   <Layout>
                     <DlhCollectorPage />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/pasar"
+              element={
+                <ProtectedRoute allowedRoles={['super_admin', 'opd', 'petugas']}>
+                  <Layout>
+                    <PasarDisperindagPage />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/disperindag-pasar"
+              element={
+                <ProtectedRoute allowedRoles={['super_admin', 'opd', 'petugas']}>
+                  <Layout>
+                    <PasarDisperindagPage />
                   </Layout>
                 </ProtectedRoute>
               }

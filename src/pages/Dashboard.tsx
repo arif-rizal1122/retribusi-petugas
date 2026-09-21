@@ -26,13 +26,15 @@ import {
   ShieldCheck,
   Home as HomeIcon,
   User as UserIcon,
-  MapPin
+  MapPin,
+  Store
 } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { api } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
+import { isDisperindagOfficer } from '../lib/officerRoleUtils';
 import ZoomControl from '../components/ZoomControl';
 
 // Fix for default marker icon
@@ -566,6 +568,29 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* Disperindag Special Officer Banner */}
+        {isDisperindagOfficer(user) && (
+          <div 
+            onClick={() => navigate('/pasar')}
+            className="bg-gradient-to-r from-emerald-600 via-emerald-700 to-teal-800 text-white rounded-2xl p-4 shadow-md cursor-pointer hover:shadow-lg transition-all flex items-center justify-between"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm shrink-0">
+                <Store className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <div className="flex items-center gap-1.5 mb-1">
+                  <span className="text-[9px] font-black uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded">Petugas Pasar Disperindag</span>
+                  <span className="text-[9px] font-bold bg-amber-400 text-slate-950 px-1.5 py-0.5 rounded">Perda 1/2024</span>
+                </div>
+                <h4 className="font-extrabold text-sm leading-tight">Terminal Retribusi Pasar</h4>
+                <p className="text-[11px] text-emerald-100 font-medium leading-tight mt-0.5">Karcis PKL Rp 1.000 • Los Bulanan • Kios Sewa</p>
+              </div>
+            </div>
+            <ChevronRight className="w-5 h-5 text-emerald-200 shrink-0 ml-2" />
+          </div>
+        )}
+
         {/* Aksi Cepat Section (4 Cards Grid) */}
         <div>
           <div className="flex items-center justify-between mb-3 px-1">
@@ -748,6 +773,32 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
+
+        {/* Disperindag Special Officer Desktop Banner */}
+        {isDisperindagOfficer(user) && (
+          <div className="bg-gradient-to-r from-emerald-600 via-emerald-700 to-teal-800 text-white rounded-[2rem] p-6 shadow-lg flex items-center justify-between">
+            <div className="flex items-center gap-5">
+              <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md shrink-0">
+                <Store className="w-8 h-8 text-white" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className="text-xs font-black uppercase tracking-widest bg-white/20 px-3 py-1 rounded-full">Petugas Khusus Disperindag</span>
+                  <span className="text-xs font-bold bg-amber-400 text-slate-950 px-2.5 py-1 rounded-full">Perda No. 1 Thn 2024</span>
+                  <span className="text-xs font-bold bg-emerald-500/50 text-white px-2.5 py-1 rounded-full">Pasar Wameo &amp; Karya Baru</span>
+                </div>
+                <h3 className="text-2xl font-black tracking-tight">Terminal Retribusi Pasar &amp; Los Pedagang</h3>
+                <p className="text-sm text-emerald-100 mt-1">Penerbitan Karcis PKL Harian Rp 1.000, Penagihan Meja Los Bulanan Rp 40.000, &amp; Manajemen Kios Sewa.</p>
+              </div>
+            </div>
+            <button
+              onClick={() => navigate('/pasar')}
+              className="bg-white text-emerald-900 hover:bg-emerald-50 px-6 py-3.5 rounded-xl font-black text-sm transition-all shadow-md active:scale-95 flex items-center gap-2 shrink-0"
+            >
+              Buka Terminal Pasar <ChevronRight size={18} />
+            </button>
+          </div>
+        )}
 
         {/* Desktop Revenue Card + KPIs */}
         <div className="grid grid-cols-12 gap-8">

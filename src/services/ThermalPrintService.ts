@@ -74,6 +74,22 @@ export interface DlhReceiptData {
     collector_name?: string;
 }
 
+export interface MarketReceiptData {
+    ticket_code: string;
+    market_name: string;
+    building_name?: string;
+    stall_number?: string;
+    stall_type?: 'kios' | 'los' | 'pelataran';
+    merchant_name?: string;
+    amount: number;
+    payment_method: string;
+    period?: string;
+    datetime: string;
+    officer_name?: string;
+    ntpd?: string;
+    qr_token?: string;
+}
+
 class ThermalPrintService {
     private device: any = null;
     private characteristic: any = null;
@@ -335,9 +351,51 @@ class ThermalPrintService {
     }
 
     /**
+     * Generates a text-based receipt for Disperindag market stalls/tickets.
+     */
+    generateMarketReceiptText(data: MarketReceiptData): string {
+        const separator = "--------------------------------\n";
+        const doubleSep = "================================\n";
+
+        const typeLabel = data.stall_type === 'kios'
+            ? 'SEWA KIOS (JASA USAHA)'
+            : data.stall_type === 'los'
+            ? 'LOS PASAR (JASA UMUM)'
+            : 'KARCIS PASAR (PKL/SUBUH)';
+
+        const header =
+            "  PEMKOT BAUBAU - DISPERINDAG   \n" +
+            `   ${typeLabel}   \n` +
+            "     PERDA NO. 1 TAHUN 2024     \n" +
+            doubleSep;
+
+        const body =
+            `No. Dok  : ${data.ticket_code || data.ntpd || '-'}\n` +
+            `Pasar    : ${data.market_name}\n` +
+            (data.building_name ? `Gedung   : ${data.building_name}\n` : '') +
+            (data.stall_number ? `No. Unit : ${data.stall_number}\n` : '') +
+            (data.merchant_name ? `Pedagang : ${data.merchant_name}\n` : '') +
+            (data.period ? `Periode  : ${data.period}\n` : '') +
+            `Waktu    : ${data.datetime}\n` +
+            `Petugas  : ${data.officer_name || 'Petugas Pasar'}\n` +
+            `Metode   : ${data.payment_method}\n` +
+            separator +
+            `TOTAL BAYAR : Rp ${data.amount.toLocaleString('id-ID')}\n` +
+            separator;
+
+        const footer =
+            "     BUKTI SAH RETRIBUSI PASAR  \n" +
+            "    TERIMA KASIH ATAS KETAATAN  \n" +
+            "   MEMBAYAR RETRIBUSI DAERAH    \n" +
+            doubleSep + "\n\n\n";
+
+        return header + body + footer;
+    }
+
+    /**
      * Sends receipt data to the connected printer.
      */
-    async print(data: ReceiptData | PbbReceiptData | TpiReceiptData | ParkingReceiptData | DlhReceiptData) {
+    async print(data: ReceiptData | PbbReceiptData | TpiReceiptData | ParkingReceiptData | DlhReceiptData | MarketReceiptData) {
         try {
             if (!this.characteristic) {
                 const connected = await this.connect();
@@ -345,7 +403,9 @@ class ThermalPrintService {
             }
 
             let text = "";
-            if ('ticket_code' in data && 'market_name' in data) {
+            if ('stall_type' in data || ('ticket_code' in data && 'market_name' in data && !('qr_token' in data && (data as any).collector_name?.includes('DLH')))) {
+                text = this.generateMarketReceiptText(data as MarketReceiptData);
+            } else if ('ticket_code' in data && 'market_name' in data) {
                 text = this.generateDlhReceiptText(data as DlhReceiptData);
             } else if ('transactionCode' in data) {
                 text = this.generateTpiReceiptText(data as TpiReceiptData);

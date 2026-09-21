@@ -144,6 +144,11 @@ export const officerCanAccessPath = (user: User | null | undefined, path: string
     return isDlhOfficer(user);
   }
 
+  // 5. Layanan Retribusi Pasar & Kios: KHUSUS petugas OPD Disperindag
+  if (path === '/pasar' || path.startsWith('/pasar/') || path === '/disperindag-pasar') {
+    return isDisperindagOfficer(user);
+  }
+
   // 4. Verifikasi Pembayaran & Penerbitan SKPD Mandiri
   if (path === '/verification' || path.startsWith('/verification/')) {
     return user.role === 'opd';
