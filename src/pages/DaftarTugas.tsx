@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import api from '../lib/api';
+import api, { API_URL } from '../lib/api';
 import { 
   ClipboardList, 
   CheckCircle, 
@@ -13,6 +13,12 @@ import {
   ShieldCheck,
   CheckCircle2,
   Gauge,
+  Building2,
+  Camera,
+  Navigation,
+  ExternalLink,
+  X,
+  Loader2,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { AssetSurveyForm, type AssetRentalSurveyItem } from '../components/AssetSurveyForm';
@@ -23,6 +29,8 @@ interface Task {
   user_id: number;
   zone_id: number | null;
   taxpayer_id: number | null;
+  tax_object_id?: number | null;
+  task_type?: string;
   due_date: string;
   notes: string;
   status: 'pending' | 'completed';
@@ -30,29 +38,180 @@ interface Task {
   created_at: string;
   taxpayer?: {
     name: string;
-    npwpd: string;
+    npwpd?: string | null;
   };
+  tax_object?: {
+    id: number;
+    name: string;
+    address?: string;
+    latitude?: string | number | null;
+    longitude?: string | number | null;
+    metadata?: any;
+    classification?: {
+      id: number;
+      name: string;
+      code: string;
+    };
+  } | null;
+  verification?: {
+    id: number;
+    status: string;
+    proof_file_url?: string;
+    notes?: string;
+  } | null;
   zone?: {
     name: string;
   };
 }
 
+interface PbbNopApplication {
+  id: number;
+  user_id: number;
+  nik: string;
+  name: string;
+  address: string;
+  land_area: string | number;
+  building_area: string | number | null;
+  latitude: number | string | null;
+  longitude: number | string | null;
+  registered_for?: string;
+  owner_name?: string | null;
+  owner_address?: string | null;
+  status: string;
+  survey_notes?: string | null;
+  survey_photo_path?: string | null;
+  imb_file_path?: string | null;
+  akte_file_path?: string | null;
+  ktp_file_path?: string | null;
+  nop?: string | null;
+  created_at: string;
+  metadata?: {
+    building_photo_path?: string;
+    certificate_number?: string;
+    pbg_number?: string;
+    pbg_date?: string;
+    building_floors?: string | number;
+    building_usage?: string;
+    is_fasum?: boolean;
+    has_building?: boolean;
+    survey_recommendation?: 'RECOMMENDED' | 'NEEDS_REVISION';
+    survey_physical_condition?: string;
+    survey_location_match?: boolean;
+    assigned_petugas_name?: string;
+    [key: string]: any;
+  } | null;
+}
+
 export default function DaftarTugas() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [assetRentals, setAssetRentals] = useState<AssetRentalSurveyItem[]>([]);
+  const [pbbApplications, setPbbApplications] = useState<PbbNopApplication[]>([]);
   const [loading, setLoading] = useState(true);
+  const [pbbLoading, setPbbLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState<'pending' | 'completed' | 'asset_survey'>('pending');
+  const [activeTab, setActiveTab] = useState<'pending' | 'completed' | 'asset_survey' | 'pbb_survey'>('pending');
   const [selectedRentalForSurvey, setSelectedRentalForSurvey] = useState<AssetRentalSurveyItem | null>(null);
   const [selectedRentalForInspection, setSelectedRentalForInspection] = useState<AssetRentalSurveyItem | null>(null);
+  
+  // PBB Survey Modal State
+  const [selectedPbbForSurvey, setSelectedPbbForSurvey] = useState<PbbNopApplication | null>(null);
+  const [surveyNotesInput, setSurveyNotesInput] = useState('');
+  const [surveyPhotoFile, setSurveyPhotoFile] = useState<File | null>(null);
+  const [surveyPhotoPreview, setSurveyPhotoPreview] = useState<string | null>(null);
+  const [surveyRecommendation, setSurveyRecommendation] = useState<'RECOMMENDED' | 'NEEDS_REVISION'>('RECOMMENDED');
+  const [surveyPhysicalCondition, setSurveyPhysicalCondition] = useState<string>('HUNIAN_SEDERHANA');
+  const [surveyLocationMatch, setSurveyLocationMatch] = useState<boolean>(true);
+  const [submittingSurvey, setSubmittingSurvey] = useState(false);
+
+  const getFileUrl = (path?: string | null) => {
+    if (!path) return '';
+    if (path.startsWith('http://') || path.startsWith('https://')) return path;
+    const baseUrl = (API_URL || '').replace(/\/+$/, '');
+    const clean = path.startsWith('/') ? path : `/${path}`;
+    return clean.startsWith('/storage/') ? `${baseUrl}${clean}` : `${baseUrl}/storage${clean}`;
+  };
+
+  const fetchPbbApplications = async () => {
+    try {
+      setPbbLoading(true);
+      const res = await api.get('/api/pbb/bapenda/nop-applications', {
+        params: { status: 'SURVEY' }
+      });
+      const list = res.data?.data || (Array.isArray(res.data) ? res.data : []);
+      setPbbApplications(list);
+    } catch (err) {
+      console.error('Error fetching PBB applications for survey:', err);
+    } finally {
+      setPbbLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPbbApplications();
+  }, []);
 
   useEffect(() => {
     if (activeTab === 'asset_survey') {
       fetchAssetRentals();
+    } else if (activeTab === 'pbb_survey') {
+      fetchPbbApplications();
     } else {
       fetchTasks();
     }
   }, [activeTab]);
+
+  const handleOpenPbbSurveyModal = (app: PbbNopApplication) => {
+    setSelectedPbbForSurvey(app);
+    setSurveyNotesInput(app.survey_notes || '');
+    setSurveyPhotoFile(null);
+    setSurveyPhotoPreview(app.survey_photo_path ? getFileUrl(app.survey_photo_path) : null);
+    setSurveyRecommendation(app.metadata?.survey_recommendation || 'RECOMMENDED');
+    setSurveyPhysicalCondition(app.metadata?.survey_physical_condition || (
+      Number(app.building_area || 0) > 0 
+        ? (Number(app.building_area || 0) <= 100 ? 'HUNIAN_SEDERHANA' : 'BANGUNAN_BESAR') 
+        : 'TANAH_KOSONG'
+    ));
+    setSurveyLocationMatch(app.metadata?.survey_location_match ?? true);
+  };
+
+  const handleSubmitPbbSurvey = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedPbbForSurvey) return;
+
+    let finalNotes = surveyNotesInput.trim();
+    if (!finalNotes) {
+      if (surveyRecommendation === 'RECOMMENDED') {
+        finalNotes = 'Fisik objek telah diverifikasi faktual di lapangan. Kondisi fisik bangunan dan koordinat sesuai permohonan. Direkomendasikan untuk penetapan NOP SISMIOP.';
+      } else {
+        toast.error('Mohon cantumkan catatan koreksi atau ketidaksesuaian di lapangan.');
+        return;
+      }
+    }
+
+    setSubmittingSurvey(true);
+    try {
+      const formData = new FormData();
+      formData.append('status', 'SURVEY');
+      formData.append('survey_notes', finalNotes);
+      formData.append('survey_recommendation', surveyRecommendation);
+      formData.append('survey_physical_condition', surveyPhysicalCondition);
+      formData.append('survey_location_match', String(surveyLocationMatch));
+      if (surveyPhotoFile) formData.append('survey_photo', surveyPhotoFile);
+
+      await api.post(`/api/pbb/bapenda/nop-applications/${selectedPbbForSurvey.id}/status`, formData);
+      toast.success(`Hasil survei permohonan #${selectedPbbForSurvey.id} berhasil dikirim ke Admin Bapenda!`);
+      setSelectedPbbForSurvey(null);
+      setSurveyNotesInput('');
+      setSurveyPhotoFile(null);
+      setSurveyPhotoPreview(null);
+      fetchPbbApplications();
+    } catch (err: any) {
+      console.error('Error submitting survey:', err);
+      toast.error(err.message || 'Gagal menyimpan hasil survei');
+    } finally {
+      setSubmittingSurvey(false);
+    }
+  };
 
   const [uploadingId, setUploadingId] = useState<number | null>(null);
 
@@ -75,9 +234,8 @@ export default function DaftarTugas() {
       const res = await api.get('/api/petugas-tasks', {
         params: { status: activeTab }
       });
-      if (res.data?.data) {
-        setTasks(res.data.data);
-      }
+      const list = res.data?.data || res.data || (Array.isArray(res) ? res : []);
+      setTasks(Array.isArray(list) ? list : []);
     } catch (err) {
       console.error('Error fetching tasks:', err);
     } finally {
@@ -121,6 +279,7 @@ export default function DaftarTugas() {
     return (
       task.notes?.toLowerCase().includes(searchLower) ||
       task.taxpayer?.name?.toLowerCase().includes(searchLower) ||
+      task.tax_object?.name?.toLowerCase().includes(searchLower) ||
       task.zone?.name?.toLowerCase().includes(searchLower)
     );
   });
@@ -162,6 +321,38 @@ export default function DaftarTugas() {
         </div>
       </div>
 
+      {/* Banner PBB Survei Objek Baru */}
+      {pbbApplications.length > 0 && activeTab !== 'pbb_survey' && (
+        <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 text-white rounded-3xl p-4 sm:p-5 shadow-xl shadow-blue-600/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-blue-400/30">
+          <div className="flex items-center gap-3.5">
+            <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center shrink-0 border border-white/30">
+              <Building2 className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-400 text-amber-950">
+                  Perlu Ditindaklanjuti
+                </span>
+                <span className="text-xs font-semibold text-blue-100">PBB Bapenda</span>
+              </div>
+              <h3 className="text-base font-black tracking-tight mt-0.5">
+                Ada {pbbApplications.length} Penugasan Survei Lapangan NOP Baru
+              </h3>
+              <p className="text-xs text-blue-100 mt-0.5">
+                Admin/Kasubid telah mendisposisikan verifikasi fisik bangunan & koordinat lapangan.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setActiveTab('pbb_survey')}
+            className="px-5 py-2.5 bg-white hover:bg-blue-50 text-blue-700 rounded-2xl text-xs font-black shrink-0 transition-all shadow-md active:scale-95 flex items-center justify-center gap-2"
+          >
+            <span>Buka Survei PBB ({pbbApplications.length})</span>
+            <ExternalLink className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
       {/* Tabs */}
       <div className="flex flex-wrap p-1 bg-slate-100/50 dark:bg-slate-800/50 rounded-2xl w-fit backdrop-blur-xl border border-slate-200 dark:border-slate-700 gap-1">
         <button
@@ -174,6 +365,22 @@ export default function DaftarTugas() {
         >
           <Clock className="w-4 h-4" />
           Tugas Aktif
+        </button>
+        <button
+          onClick={() => setActiveTab('pbb_survey')}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all relative ${
+            activeTab === 'pbb_survey'
+              ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm'
+              : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+          }`}
+        >
+          <Building2 className="w-4 h-4" />
+          <span>Survei Objek Baru PBB</span>
+          {pbbApplications.length > 0 && (
+            <span className="ml-1 px-2 py-0.5 text-[11px] font-black rounded-full bg-rose-500 text-white animate-pulse">
+              {pbbApplications.length}
+            </span>
+          )}
         </button>
         <button
           onClick={() => setActiveTab('completed')}
@@ -210,12 +417,146 @@ export default function DaftarTugas() {
         />
       </div>
 
-      {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-64 bg-slate-100 dark:bg-slate-800 rounded-3xl"></div>
-          ))}
-        </div>
+      {activeTab === 'pbb_survey' ? (
+        pbbLoading ? (
+          <div className="flex flex-col items-center justify-center py-20 bg-white/50 dark:bg-slate-800/50 rounded-3xl border border-dashed border-slate-200 dark:border-slate-700">
+            <Loader2 className="w-8 h-8 text-blue-600 animate-spin mb-3" />
+            <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">Memuat berkas survei PBB...</p>
+          </div>
+        ) : pbbApplications.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 bg-white/50 dark:bg-slate-800/50 rounded-3xl border border-dashed border-slate-200 dark:border-slate-700">
+            <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center mb-4">
+              <Building2 className="w-8 h-8 text-slate-400" />
+            </div>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">
+              Tidak Ada Permohonan Survei PBB
+            </h3>
+            <p className="text-slate-500 dark:text-slate-400 text-center max-w-sm">
+              Semua permohonan pendaftaran NOP baru telah disurvei.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {pbbApplications
+              .filter((app) => {
+                const s = searchTerm.toLowerCase();
+                return (
+                  app.name?.toLowerCase().includes(s) ||
+                  app.nik?.toLowerCase().includes(s) ||
+                  app.address?.toLowerCase().includes(s) ||
+                  app.survey_notes?.toLowerCase().includes(s)
+                );
+              })
+              .map((app) => {
+                const bgnArea = Number(app.building_area || 0);
+                const photoUrl = app.metadata?.building_photo_path ? getFileUrl(app.metadata.building_photo_path) : null;
+
+                return (
+                  <div
+                    key={app.id}
+                    className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700 overflow-hidden hover:shadow-xl hover:shadow-slate-200/20 dark:hover:shadow-none transition-all flex flex-col"
+                  >
+                    <div className="p-6 pb-5 border-b border-slate-50 dark:border-slate-700/50 space-y-3">
+                      <div className="flex items-start justify-between">
+                        <span className="px-3 py-1 rounded-lg text-xs font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
+                          NOP App #{app.id}
+                        </span>
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-800 border border-amber-300">
+                          Survei Lapangan
+                        </span>
+                      </div>
+
+                      <div>
+                        <h4 className="text-base font-bold text-slate-900 dark:text-white">
+                          {app.name}
+                        </h4>
+                        <p className="text-xs font-mono text-slate-400 mt-0.5">
+                          NIK: {app.nik}
+                        </p>
+                      </div>
+
+                      <div className="space-y-1.5 pt-1 border-t border-slate-100 dark:border-slate-700/60 text-xs">
+                        <div className="flex items-start gap-2 text-slate-700 dark:text-slate-300">
+                          <MapPin size={14} className="text-slate-400 shrink-0 mt-0.5" />
+                          <span className="line-clamp-2">{app.address}</span>
+                        </div>
+                        <div className="flex items-center justify-between text-slate-600 dark:text-slate-400 font-semibold pt-1">
+                          <span>Luas Tanah: <strong className="text-slate-900 dark:text-white">{app.land_area} m²</strong></span>
+                          <span>Luas Bgn: <strong className="text-slate-900 dark:text-white">{bgnArea > 0 ? `${bgnArea} m²` : 'Tanah Kosong'}</strong></span>
+                        </div>
+                      </div>
+
+                      {/* Foto Bangunan dari WP */}
+                      {photoUrl && (
+                        <div className="p-2.5 bg-amber-50/70 dark:bg-amber-950/30 rounded-2xl border border-amber-200 dark:border-amber-800/60 flex items-center gap-3">
+                          <img
+                            src={photoUrl}
+                            alt="Foto Fisik Bangunan"
+                            className="w-16 h-16 object-cover rounded-xl border border-amber-300 shrink-0 bg-amber-100"
+                            onError={(e) => {
+                              const target = e.currentTarget;
+                              if (app.metadata?.building_photo_path?.startsWith('http')) {
+                                target.src = app.metadata.building_photo_path;
+                              }
+                            }}
+                          />
+                          <div className="min-w-0 flex-1 text-xs">
+                            <span className="font-bold text-amber-950 dark:text-amber-200 block truncate">
+                              Foto Fisik dari WP
+                            </span>
+                            <span className="text-[11px] text-amber-800 dark:text-amber-300 line-clamp-2 mt-0.5">
+                              {app.metadata?.building_usage || 'Bangunan Eksisting'} • {app.metadata?.pbg_number ? `PBG: ${app.metadata.pbg_number}` : 'Tanpa PBG'}
+                            </span>
+                            <a
+                              href={photoUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-[10px] text-blue-600 hover:underline font-bold inline-flex items-center gap-0.5 mt-1"
+                            >
+                              Lihat Penuh <ExternalLink size={10} />
+                            </a>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Catatan Disposisi Admin */}
+                      {app.survey_notes && (
+                        <div className="p-2.5 bg-blue-50/60 dark:bg-blue-950/30 rounded-xl border border-blue-200 dark:border-blue-900/50 text-xs">
+                          <span className="font-bold text-blue-900 dark:text-blue-300 block text-[11px] mb-0.5">
+                            Instruksi dari Admin/Kasubid:
+                          </span>
+                          <p className="text-blue-950 dark:text-blue-200 italic font-medium">"{app.survey_notes}"</p>
+                        </div>
+                      )}
+
+                      {/* Koordinat GPS & Arah */}
+                      {app.latitude && app.longitude && (
+                        <a
+                          href={`https://www.google.com/maps/dir/?api=1&destination=${app.latitude},${app.longitude}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-full py-2 bg-slate-100 dark:bg-slate-700/60 hover:bg-slate-200 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors"
+                        >
+                          <Navigation size={13} className="text-indigo-600" />
+                          <span>Navigasi Peta ({app.latitude}, {app.longitude})</span>
+                        </a>
+                      )}
+                    </div>
+
+                    <div className="p-4 mt-auto bg-slate-50 dark:bg-slate-900/50">
+                      <button
+                        onClick={() => handleOpenPbbSurveyModal(app)}
+                        className="w-full flex items-center justify-center gap-2 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold uppercase tracking-wider text-xs transition-colors shadow-lg shadow-blue-600/20 active:scale-98"
+                      >
+                        <Camera className="w-4 h-4" />
+                        <span>Input Hasil Survei / BASL</span>
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+        )
       ) : activeTab === 'asset_survey' ? (
         assetRentals.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 bg-white/50 dark:bg-slate-800/50 rounded-3xl border border-dashed border-slate-200 dark:border-slate-700">
@@ -312,6 +653,11 @@ export default function DaftarTugas() {
               ))}
           </div>
         )
+      ) : loading ? (
+        <div className="flex flex-col items-center justify-center py-20 bg-white/50 dark:bg-slate-800/50 rounded-3xl border border-dashed border-slate-200 dark:border-slate-700">
+          <Loader2 className="w-8 h-8 text-blue-600 animate-spin mb-3" />
+          <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">Memuat daftar tugas...</p>
+        </div>
       ) : filteredTasks.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 bg-white/50 dark:bg-slate-800/50 rounded-3xl border border-dashed border-slate-200 dark:border-slate-700">
           <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center mb-4">
@@ -371,6 +717,61 @@ export default function DaftarTugas() {
                         <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-0.5">Wilayah</p>
                         <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{task.zone.name}</p>
                       </div>
+                    </div>
+                  )}
+
+                  {task.tax_object && (
+                    <div className="p-3 bg-blue-50/70 dark:bg-blue-950/30 rounded-2xl border border-blue-100 dark:border-blue-900/40 space-y-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <p className="text-[10px] font-bold text-blue-500 uppercase tracking-wider">Objek Pajak / Reklame</p>
+                          <p className="text-xs font-bold text-blue-950 dark:text-blue-200">{task.tax_object.name}</p>
+                          {task.tax_object.classification && (
+                            <span className="inline-block mt-0.5 px-2 py-0.5 rounded text-[10px] font-black bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                              {task.tax_object.classification.name}
+                            </span>
+                          )}
+                        </div>
+                        {task.task_type === 'field_survey' && (
+                          <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-amber-200 text-amber-900">
+                            Survei Lapangan
+                          </span>
+                        )}
+                      </div>
+
+                      {task.tax_object.address && (
+                        <p className="text-[11px] text-slate-600 dark:text-slate-300 line-clamp-2">
+                          {task.tax_object.address}
+                        </p>
+                      )}
+
+                      {/* Navigation Link if GPS Available */}
+                      {task.tax_object.latitude && task.tax_object.longitude && (
+                        <a
+                          href={`https://www.google.com/maps/dir/?api=1&destination=${task.tax_object.latitude},${task.tax_object.longitude}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-full py-1.5 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-blue-700 dark:text-blue-300 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors border border-blue-200 dark:border-blue-800 shadow-sm"
+                        >
+                          <Navigation size={12} className="text-blue-600" />
+                          <span>Navigasi Titik Objek ({Number(task.tax_object.latitude).toFixed(4)}, {Number(task.tax_object.longitude).toFixed(4)})</span>
+                          <ExternalLink size={11} />
+                        </a>
+                      )}
+
+                      {/* Materi Reklame Link if Available */}
+                      {(task.tax_object.metadata?.materi_reklame || task.verification?.proof_file_url) && (
+                        <a
+                          href={task.tax_object.metadata?.materi_reklame || task.verification?.proof_file_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-full py-1.5 bg-amber-50 dark:bg-amber-950/30 hover:bg-amber-100 text-amber-800 dark:text-amber-300 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors border border-amber-200 dark:border-amber-800"
+                        >
+                          <Camera size={12} className="text-amber-600" />
+                          <span>Lihat Materi / Desain Reklame</span>
+                          <ExternalLink size={11} />
+                        </a>
+                      )}
                     </div>
                   )}
                 </div>
@@ -440,6 +841,270 @@ export default function DaftarTugas() {
           }}
           onClose={() => setSelectedRentalForInspection(null)}
         />
+      )}
+
+      {/* Modal Input Hasil Survei Lapangan PBB */}
+      {selectedPbbForSurvey && (
+        <div className="fixed inset-0 z-[120] bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-gray-800 rounded-3xl max-w-lg w-full p-4 sm:p-6 shadow-2xl max-h-[85vh] flex flex-col border border-gray-100 dark:border-gray-700 my-auto">
+            {/* Header Modal */}
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-gray-700 shrink-0">
+              <div>
+                <h3 className="font-bold text-gray-900 dark:text-white text-base flex items-center gap-2">
+                  <Camera className="w-5 h-5 text-blue-600" />
+                  <span>Tinjauan Lapangan NOP #{selectedPbbForSurvey.id}</span>
+                </h3>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Pemohon: <strong>{selectedPbbForSurvey.name}</strong> • Alamat: {selectedPbbForSurvey.address}
+                </p>
+              </div>
+              <button
+                onClick={() => setSelectedPbbForSurvey(null)}
+                className="p-2 rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmitPbbSurvey} className="space-y-4 text-xs sm:text-sm overflow-y-auto pr-1 flex-1 py-1">
+              {/* Komparasi Visual Foto Warga */}
+              {selectedPbbForSurvey.metadata?.building_photo_path && (
+                <div className="p-3 bg-amber-50/70 dark:bg-amber-950/30 rounded-xl border border-amber-200 dark:border-amber-800 space-y-1.5">
+                  <div className="flex items-center justify-between text-xs font-bold text-amber-900 dark:text-amber-200">
+                    <span className="flex items-center gap-1.5">
+                      <Camera className="w-4 h-4 text-amber-600" />
+                      <span>Foto Bangunan dari Wajib Pajak:</span>
+                    </span>
+                    <a
+                      href={getFileUrl(selectedPbbForSurvey.metadata.building_photo_path)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-[10px] text-amber-700 dark:text-amber-300 underline font-bold"
+                    >
+                      Buka Asli ↗
+                    </a>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={getFileUrl(selectedPbbForSurvey.metadata.building_photo_path)}
+                      alt="Foto WP"
+                      className="w-20 h-20 object-cover rounded-xl border border-amber-300 shrink-0 bg-amber-100"
+                      onError={(e) => {
+                        const target = e.currentTarget;
+                        if (selectedPbbForSurvey.metadata?.building_photo_path?.startsWith('http')) {
+                          target.src = selectedPbbForSurvey.metadata.building_photo_path;
+                        }
+                      }}
+                    />
+                    <div className="flex-1 text-[11px] text-amber-900 dark:text-amber-200 space-y-0.5">
+                      <p>Cocokkan foto ini dengan bangunan riil di depan Anda saat ini.</p>
+                      <p className="font-semibold text-gray-700 dark:text-gray-300">
+                        Luas Tanah: {selectedPbbForSurvey.land_area} m² • Luas Bgn: {selectedPbbForSurvey.building_area || 0} m²
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 1: Titik GPS */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-gray-800 dark:text-gray-200 flex items-center justify-between">
+                  <span>1. Kesesuaian Titik Lokasi GPS</span>
+                  {selectedPbbForSurvey.latitude && selectedPbbForSurvey.longitude && (
+                    <a
+                      href={`https://www.google.com/maps/dir/?api=1&destination=${selectedPbbForSurvey.latitude},${selectedPbbForSurvey.longitude}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold hover:underline inline-flex items-center gap-1"
+                    >
+                      <Navigation size={11} /> Cek di Peta
+                    </a>
+                  )}
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSurveyLocationMatch(true)}
+                    className={`p-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+                      surveyLocationMatch
+                        ? 'bg-emerald-50 border-emerald-500 text-emerald-800 ring-2 ring-emerald-500/20'
+                        : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+                    }`}
+                  >
+                    <CheckCircle2 size={14} className={surveyLocationMatch ? 'text-emerald-600' : 'text-gray-400'} />
+                    <span>✓ Sesuai Koordinat</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSurveyLocationMatch(false)}
+                    className={`p-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+                      !surveyLocationMatch
+                        ? 'bg-rose-50 border-rose-500 text-rose-800 ring-2 ring-rose-500/20'
+                        : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+                    }`}
+                  >
+                    <X size={14} className={!surveyLocationMatch ? 'text-rose-600' : 'text-gray-400'} />
+                    <span>✕ Beda Lokasi / Titik Geser</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Step 2: Karakteristik Fisik */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-gray-800 dark:text-gray-200 block">
+                  2. Kondisi Fisik Faktual di Lapangan
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { id: 'TANAH_KOSONG', label: 'Tanah Kosong (0 m²)', desc: 'Belum ada bangunan' },
+                    { id: 'HUNIAN_SEDERHANA', label: 'Hunian Sederhana', desc: '≤ 100 m² (Kategori A)' },
+                    { id: 'BANGUNAN_BESAR', label: 'Bangunan Menengah/Besar', desc: '> 100 m² (Kategori B)' },
+                    { id: 'FASUM', label: 'Fasilitas Umum / Sosial', desc: 'Masjid/Gereja/Balai' },
+                  ].map((cond) => (
+                    <button
+                      key={cond.id}
+                      type="button"
+                      onClick={() => setSurveyPhysicalCondition(cond.id)}
+                      className={`p-2 rounded-xl border text-left transition-all ${
+                        surveyPhysicalCondition === cond.id
+                          ? 'bg-blue-50 border-blue-500 ring-2 ring-blue-500/20'
+                          : 'bg-white border-gray-200 hover:bg-gray-50'
+                      }`}
+                    >
+                      <div className="font-bold text-xs text-gray-800 dark:text-gray-200">{cond.label}</div>
+                      <div className="text-[10px] text-gray-400">{cond.desc}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Step 3: Kamera Lapangan */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-gray-800 dark:text-gray-200 block">
+                  3. Foto Bukti Lapangan (Kamera Petugas)
+                </label>
+                <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-3 text-center bg-gray-50/50 dark:bg-gray-700/30">
+                  {surveyPhotoPreview ? (
+                    <div className="space-y-2">
+                      <img
+                        src={surveyPhotoPreview}
+                        alt="Preview Survei"
+                        className="w-full max-h-48 object-cover rounded-lg mx-auto border border-gray-200"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSurveyPhotoFile(null);
+                          setSurveyPhotoPreview(null);
+                        }}
+                        className="text-[11px] text-rose-600 hover:underline font-semibold inline-flex items-center gap-1"
+                      >
+                        <X size={12} /> Hapus &amp; Ambil Ulang
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="cursor-pointer block py-2">
+                      <Camera className="w-8 h-8 text-blue-500 mx-auto mb-1" />
+                      <span className="text-xs font-bold text-blue-600 block">
+                        Ambil Foto Langsung dari Kamera HP
+                      </span>
+                      <span className="text-[10px] text-gray-400 block mt-0.5">
+                        Format JPG, PNG (Maks 5MB)
+                      </span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        capture="environment"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            setSurveyPhotoFile(file);
+                            setSurveyPhotoPreview(URL.createObjectURL(file));
+                          }
+                        }}
+                        className="hidden"
+                      />
+                    </label>
+                  )}
+                </div>
+              </div>
+
+              {/* Step 4: Rekomendasi */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-gray-800 dark:text-gray-200 block">
+                  4. Rekomendasi Hasil Survei untuk Admin Bapenda
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSurveyRecommendation('RECOMMENDED')}
+                    className={`p-3 rounded-xl border text-center transition-all ${
+                      surveyRecommendation === 'RECOMMENDED'
+                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-md ring-2 ring-emerald-600/30 font-bold'
+                        : 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100 font-bold'
+                    }`}
+                  >
+                    <div className="text-xs">✓ LAYAK TERBIT NOP</div>
+                    <div className="text-[10px] opacity-90 font-normal">Sesuai Faktual Lapangan</div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSurveyRecommendation('NEEDS_REVISION')}
+                    className={`p-3 rounded-xl border text-center transition-all ${
+                      surveyRecommendation === 'NEEDS_REVISION'
+                        ? 'bg-rose-600 text-white border-rose-600 shadow-md ring-2 ring-rose-600/30 font-bold'
+                        : 'bg-rose-50 text-rose-800 border-rose-200 hover:bg-rose-100 font-bold'
+                    }`}
+                  >
+                    <div className="text-xs">✕ PERLU KOREKSI</div>
+                    <div className="text-[10px] opacity-90 font-normal">Terdapat Ketidaksesuaian</div>
+                  </button>
+                </div>
+              </div>
+
+              {/* Catatan Tambahan */}
+              <div className="space-y-1">
+                <label className="text-[11px] font-semibold text-gray-600 dark:text-gray-300 block">
+                  Catatan Tambahan (Otomatis / Khusus):
+                </label>
+                <textarea
+                  rows={2}
+                  value={surveyNotesInput}
+                  onChange={(e) => setSurveyNotesInput(e.target.value)}
+                  placeholder={
+                    surveyRecommendation === 'RECOMMENDED'
+                      ? 'Catatan standar otomatis terisi...'
+                      : 'Contoh: Luas fisik bangunan berbeda (riil 120 m²), atau tanah berada di luar batas sertifikat.'
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl text-xs bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                />
+              </div>
+
+              {/* Tombol Simpan (Sticky / Pinned Footer) */}
+              <div className="pt-3 border-t border-gray-100 dark:border-gray-700 flex justify-end gap-2 shrink-0 bg-white dark:bg-gray-800">
+                <button
+                  type="button"
+                  onClick={() => setSelectedPbbForSurvey(null)}
+                  className="px-4 py-2.5 rounded-xl text-xs font-semibold text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={submittingSurvey}
+                  className={`px-5 py-2.5 rounded-xl text-xs font-bold text-white flex items-center gap-2 transition-all shadow-md ${
+                    surveyRecommendation === 'RECOMMENDED'
+                      ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20'
+                      : 'bg-rose-600 hover:bg-rose-700 shadow-rose-600/20'
+                  } disabled:opacity-50`}
+                >
+                  {submittingSurvey ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
+                  <span>Kirim Hasil Survei ke Admin</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

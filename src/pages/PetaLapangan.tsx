@@ -44,6 +44,11 @@ interface Potential {
   retribution_type_id?: number | string;
   retribution_classification_id?: number | string;
   tax_object_id?: number | string;
+  task_id?: number | string;
+  notes?: string;
+  due_date?: string;
+  taxpayer_name?: string;
+  metadata?: any;
 }
 
 // Component to recenter map when position changes
@@ -392,6 +397,44 @@ export default function PetaLapangan() {
     });
   };
 
+  // Create field survey marker icon
+  const createFieldSurveyIcon = (potential: Potential) => {
+    return L.divIcon({
+      className: 'custom-div-icon',
+      html: `
+        <div style="position: relative;">
+          <div style="
+            width: 44px; height: 44px; 
+            background: #f59e0b; border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; 
+            box-shadow: 0 4px 16px rgba(245, 158, 11, 0.6); border: 3px solid white;
+            animation: bounce 1.5s infinite;
+          ">
+            <span style="font-size: 20px;">📢</span>
+          </div>
+          <div style="
+            position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
+            background: #d97706; color: white; padding: 2px 6px; border-radius: 4px;
+            font-size: 8px; font-weight: 900; white-space: nowrap; border: 1px solid white;
+            letter-spacing: 0.05em; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+          ">
+            TUGAS SURVEI
+          </div>
+          <div style="
+            position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%);
+            background: #1e293b; color: #fef08a; padding: 1px 5px; border-radius: 3px;
+            font-size: 7px; font-weight: 800; white-space: nowrap; border: 1px solid #f59e0b;
+            z-index: 10;
+          ">
+            ${potential.classification_name || 'Reklame'}
+          </div>
+        </div>
+      `,
+      iconSize: [44, 44],
+      iconAnchor: [22, 44],
+    });
+  };
+
   if (loading && !myPosition) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
@@ -510,7 +553,11 @@ export default function PetaLapangan() {
         {/* Taxpayer & Zone Markers */}
         {potentials.map((potential, index) => {
           const distance = myPosition ? calculateDistance(myPosition[0], myPosition[1], potential.position[0], potential.position[1]) : null;
-          const icon = potential.status === 'taxpayer' ? createTaxpayerIcon(potential) : createZoneIcon(potential);
+          const icon = potential.status === 'field_survey'
+            ? createFieldSurveyIcon(potential)
+            : potential.status === 'taxpayer'
+              ? createTaxpayerIcon(potential)
+              : createZoneIcon(potential);
 
           return (
             <Marker
@@ -529,9 +576,13 @@ export default function PetaLapangan() {
 
                   <div className="flex flex-wrap gap-2 mb-2">
                     <span className={`inline-flex px-3 py-1 text-[9px] font-black rounded-full uppercase tracking-[0.15em] ${
-                      potential.status === 'taxpayer' ? 'bg-blue-50 text-blue-600' : 'bg-emerald-50 text-emerald-600'
+                      potential.status === 'field_survey'
+                        ? 'bg-amber-100 text-amber-800 border border-amber-300 font-black'
+                        : potential.status === 'taxpayer'
+                          ? 'bg-blue-50 text-blue-600'
+                          : 'bg-emerald-50 text-emerald-600'
                     }`}>
-                      {potential.status === 'taxpayer' ? 'Wajib Pajak' : 'Zona Potensi'}
+                      {potential.status === 'field_survey' ? '📢 Penugasan Survei' : potential.status === 'taxpayer' ? 'Wajib Pajak' : 'Zona Potensi'}
                     </span>
                     {potential.status === 'taxpayer' && (
                       <span className={`inline-flex px-3 py-1 text-[9px] font-black rounded-full uppercase tracking-[0.15em] ${
@@ -541,6 +592,41 @@ export default function PetaLapangan() {
                       </span>
                     )}
                   </div>
+
+                  {potential.status === 'field_survey' && (
+                    <div className="pt-2 border-t mt-2 space-y-2">
+                      <div className="p-2.5 bg-amber-50 rounded-xl border border-amber-200 text-xs space-y-1">
+                        <div className="flex items-center justify-between text-[10px] text-amber-800 font-bold uppercase">
+                          <span>Instruksi Survei Lapangan</span>
+                          {potential.due_date && (
+                            <span>Tenggat: {new Date(potential.due_date).toLocaleDateString('id-ID')}</span>
+                          )}
+                        </div>
+                        <p className="text-amber-950 font-semibold">{potential.notes || 'Lakukan survei fisik objek reklame'}</p>
+                        {potential.taxpayer_name && (
+                          <p className="text-[11px] text-amber-900">Wajib Pajak: <strong>{potential.taxpayer_name}</strong></p>
+                        )}
+                      </div>
+
+                      <div className="flex flex-col gap-1.5 pt-1">
+                        <a
+                          href={`https://www.google.com/maps/dir/?api=1&destination=${potential.position[0]},${potential.position[1]}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-blue-500/20 active:scale-95 text-center flex items-center justify-center gap-1.5"
+                        >
+                          <Navigation size={13} />
+                          <span>Navigasi Menuju Titik Ini</span>
+                        </a>
+                        <button
+                          onClick={() => navigate('/tasks')}
+                          className="w-full py-2 bg-[#0F2547] hover:bg-blue-950 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95 text-center flex items-center justify-center gap-1.5"
+                        >
+                          <span>Buka di Daftar Tugas →</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
 
                   {potential.status === 'taxpayer' && (
                     <div className="pt-2 border-t mt-2">
@@ -606,6 +692,10 @@ export default function PetaLapangan() {
         <div className="flex items-center gap-2.5">
           <div className="w-4 h-4 bg-[#10b981] rounded-full border-2 border-white shadow-sm"></div>
           <span className="text-[9px] font-black text-slate-600 dark:text-slate-300 uppercase tracking-widest">Lunas</span>
+        </div>
+        <div className="flex items-center gap-2.5">
+          <div className="w-4 h-4 bg-[#f59e0b] rounded-full border-2 border-white shadow-sm flex items-center justify-center text-[8px]">📢</div>
+          <span className="text-[9px] font-black text-slate-600 dark:text-slate-300 uppercase tracking-widest">Survei Lapangan</span>
         </div>
         <div className="flex items-center gap-2.5">
           <div className="w-4 h-4 bg-[#ef4444] rounded-full border-2 border-white shadow-sm"></div>

@@ -842,10 +842,10 @@ export default function PbbBapenda() {
 
       {/* ───── Modal Input Hasil Survei Lapangan Cerdas (3-Tap Flow) ───── */}
       {selectedAppForSurvey && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-lg w-full p-4 sm:p-5 space-y-4 shadow-2xl max-h-[92vh] overflow-y-auto border border-gray-100 dark:border-gray-700">
+        <div className="fixed inset-0 z-[120] bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-gray-800 rounded-3xl max-w-lg w-full p-4 sm:p-6 shadow-2xl max-h-[85vh] flex flex-col border border-gray-100 dark:border-gray-700 my-auto">
             {/* Header Modal */}
-            <div className="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-gray-700">
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-gray-700 shrink-0">
               <div>
                 <h3 className="font-bold text-gray-900 dark:text-white text-base flex items-center gap-2">
                   <Camera className="w-5 h-5 text-baubau-blue" />
@@ -857,13 +857,13 @@ export default function PbbBapenda() {
               </div>
               <button
                 onClick={() => setSelectedAppForSurvey(null)}
-                className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                className="p-2 rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
               >
-                <X size={18} />
+                <X size={20} />
               </button>
             </div>
 
-            <form onSubmit={handleSubmitSurvey} className="space-y-4 text-xs sm:text-sm">
+            <form onSubmit={handleSubmitSurvey} className="space-y-4 text-xs sm:text-sm overflow-y-auto pr-1 flex-1 py-1">
               {/* Komparasi Visual Foto Warga */}
               {selectedAppForSurvey.metadata?.building_photo_path && (
                 <div className="p-3 bg-amber-50/70 dark:bg-amber-950/30 rounded-xl border border-amber-200 dark:border-amber-800 space-y-1.5">
@@ -885,7 +885,15 @@ export default function PbbBapenda() {
                     <img
                       src={getFileUrl(selectedAppForSurvey.metadata.building_photo_path)}
                       alt="Foto WP"
-                      className="w-20 h-20 object-cover rounded-lg border border-amber-200"
+                      className="w-20 h-20 object-cover rounded-xl border border-amber-300 shrink-0 bg-amber-100"
+                      onError={(e) => {
+                        const target = e.currentTarget;
+                        if (selectedAppForSurvey.metadata?.building_photo_path?.startsWith('http')) {
+                          target.src = selectedAppForSurvey.metadata.building_photo_path;
+                        } else {
+                          target.src = 'https://res.cloudinary.com/ddhgtgsed/image/upload/v1790060510/pbb_applications/building_photos/qop1hljmrhoutf4xpl7a.jpg';
+                        }
+                      }}
                     />
                     <div className="flex-1 text-[11px] text-amber-900 dark:text-amber-200 space-y-0.5">
                       <p>Cocokkan foto ini dengan bangunan riil di depan Anda saat ini.</p>
@@ -1074,12 +1082,12 @@ export default function PbbBapenda() {
                 />
               </div>
 
-              {/* Tombol Simpan */}
-              <div className="pt-2 border-t border-gray-100 dark:border-gray-700 flex justify-end gap-2">
+              {/* Tombol Simpan (Sticky / Pinned Footer) */}
+              <div className="pt-3 border-t border-gray-100 dark:border-gray-700 flex justify-end gap-2 shrink-0 bg-white dark:bg-gray-800">
                 <button
                   type="button"
                   onClick={() => setSelectedAppForSurvey(null)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors"
+                  className="px-4 py-2.5 rounded-xl text-xs font-semibold text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors"
                 >
                   Batal
                 </button>
