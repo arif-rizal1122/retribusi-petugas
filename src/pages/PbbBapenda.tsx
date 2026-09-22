@@ -73,24 +73,27 @@ interface PbbNopApplication {
   registered_for?: 'self' | 'other' | string;
   owner_name?: string | null;
   owner_address?: string | null;
-  nib?: string | null;
-  is_bpn_verified?: boolean;
-  ktp_file_path: string;
-  akte_file_path: string;
-  imb_file_path: string | null;
-  status: 'PENDING' | 'SURVEY' | 'APPROVED' | 'REJECTED';
-  survey_notes: string | null;
-  survey_photo_path: string | null;
-  nop: string | null;
+  status: string;
+  survey_notes?: string | null;
+  survey_photo_path?: string | null;
+  imb_file_path?: string | null;
+  akte_file_path?: string | null;
+  ktp_file_path?: string | null;
+  nop?: string | null;
   created_at: string;
   metadata?: {
-    certificate_number?: string;
     building_photo_path?: string;
+    certificate_number?: string;
     pbg_number?: string;
     pbg_date?: string;
     building_floors?: string | number;
     building_usage?: string;
     is_fasum?: boolean;
+    has_building?: boolean;
+    survey_recommendation?: 'RECOMMENDED' | 'NEEDS_REVISION';
+    survey_physical_condition?: string;
+    survey_location_match?: boolean;
+    assigned_petugas_name?: string;
     [key: string]: any;
   } | null;
 }
@@ -127,6 +130,9 @@ export default function PbbBapenda() {
   const [surveyNotesInput, setSurveyNotesInput] = useState('');
   const [surveyPhotoFile, setSurveyPhotoFile] = useState<File | null>(null);
   const [surveyPhotoPreview, setSurveyPhotoPreview] = useState<string | null>(null);
+  const [surveyRecommendation, setSurveyRecommendation] = useState<'RECOMMENDED' | 'NEEDS_REVISION'>('RECOMMENDED');
+  const [surveyPhysicalCondition, setSurveyPhysicalCondition] = useState<string>('HUNIAN_SEDERHANA');
+  const [surveyLocationMatch, setSurveyLocationMatch] = useState<boolean>(true);
   const [submittingSurvey, setSubmittingSurvey] = useState(false);
 
   useEffect(() => {
@@ -267,6 +273,17 @@ export default function PbbBapenda() {
     setSurveyNotesInput(app.survey_notes || '');
     setSurveyPhotoFile(null);
     setSurveyPhotoPreview(app.survey_photo_path ? getFileUrl(app.survey_photo_path) : null);
+    
+    // Inisialisasi default yang cerdas berdasarkan data awal permohonan
+    const defaultRec = app.metadata?.survey_recommendation || 'RECOMMENDED';
+    const defaultCondition = app.metadata?.survey_physical_condition || (
+      Number(app.building_area || 0) > 0 
+        ? (Number(app.building_area || 0) <= 100 ? 'HUNIAN_SEDERHANA' : 'BANGUNAN_BESAR') 
+        : 'TANAH_KOSONG'
+    );
+    setSurveyRecommendation(defaultRec);
+    setSurveyPhysicalCondition(defaultCondition);
+    setSurveyLocationMatch(app.metadata?.survey_location_match ?? true);
   };
 
   const handlePhotoSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -280,16 +297,25 @@ export default function PbbBapenda() {
   const handleSubmitSurvey = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedAppForSurvey) return;
-    if (!surveyNotesInput.trim() && !surveyPhotoFile) {
-      toast.error('Mohon lengkapi catatan lapangan atau unggah foto hasil survei.');
-      return;
+
+    let finalNotes = surveyNotesInput.trim();
+    if (!finalNotes) {
+      if (surveyRecommendation === 'RECOMMENDED') {
+        finalNotes = 'Fisik objek telah diverifikasi faktual di lapangan. Kondisi fisik bangunan dan koordinat sesuai permohonan. Direkomendasikan untuk penetapan NOP SISMIOP.';
+      } else {
+        toast.error('Mohon cantumkan catatan koreksi atau ketidaksesuaian di lapangan.');
+        return;
+      }
     }
 
     setSubmittingSurvey(true);
     try {
       const formData = new FormData();
       formData.append('status', 'SURVEY');
-      if (surveyNotesInput.trim()) formData.append('survey_notes', surveyNotesInput.trim());
+      formData.append('survey_notes', finalNotes);
+      formData.append('survey_recommendation', surveyRecommendation);
+      formData.append('survey_physical_condition', surveyPhysicalCondition);
+      formData.append('survey_location_match', String(surveyLocationMatch));
       if (surveyPhotoFile) formData.append('survey_photo', surveyPhotoFile);
 
       await api.post(`/api/pbb/bapenda/nop-applications/${selectedAppForSurvey.id}/status`, formData);
@@ -814,66 +840,158 @@ export default function PbbBapenda() {
         </div>
       )}
 
-      {/* ───── Modal Input Hasil Survei Lapangan ───── */}
+      {/* ───── Modal Input Hasil Survei Lapangan Cerdas (3-Tap Flow) ───── */}
       {selectedAppForSurvey && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-lg w-full p-5 space-y-4 shadow-xl max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-lg w-full p-4 sm:p-5 space-y-4 shadow-2xl max-h-[92vh] overflow-y-auto border border-gray-100 dark:border-gray-700">
+            {/* Header Modal */}
             <div className="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-gray-700">
               <div>
                 <h3 className="font-bold text-gray-900 dark:text-white text-base flex items-center gap-2">
                   <Camera className="w-5 h-5 text-baubau-blue" />
-                  Survei Lapangan NOP #{selectedAppForSurvey.id}
+                  <span>Tinjauan Lapangan NOP #{selectedAppForSurvey.id}</span>
                 </h3>
-                <p className="text-xs text-gray-500">
-                  {selectedAppForSurvey.name} — {selectedAppForSurvey.address}
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Pemohon: <strong>{selectedAppForSurvey.name}</strong> • Alamat: {selectedAppForSurvey.address}
                 </p>
               </div>
               <button
                 onClick={() => setSelectedAppForSurvey(null)}
-                className="p-1 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100"
               >
                 <X size={18} />
               </button>
             </div>
 
-            <form onSubmit={handleSubmitSurvey} className="space-y-4">
-              {/* Catatan Lapangan */}
+            <form onSubmit={handleSubmitSurvey} className="space-y-4 text-xs sm:text-sm">
+              {/* Komparasi Visual Foto Warga */}
+              {selectedAppForSurvey.metadata?.building_photo_path && (
+                <div className="p-3 bg-amber-50/70 dark:bg-amber-950/30 rounded-xl border border-amber-200 dark:border-amber-800 space-y-1.5">
+                  <div className="flex items-center justify-between text-xs font-bold text-amber-900 dark:text-amber-200">
+                    <span className="flex items-center gap-1.5">
+                      <Camera className="w-4 h-4 text-amber-600" />
+                      <span>Foto Bangunan dari Wajib Pajak:</span>
+                    </span>
+                    <a
+                      href={getFileUrl(selectedAppForSurvey.metadata.building_photo_path)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-[10px] text-amber-700 dark:text-amber-300 underline font-bold"
+                    >
+                      Buka Asli ↗
+                    </a>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={getFileUrl(selectedAppForSurvey.metadata.building_photo_path)}
+                      alt="Foto WP"
+                      className="w-20 h-20 object-cover rounded-lg border border-amber-200"
+                    />
+                    <div className="flex-1 text-[11px] text-amber-900 dark:text-amber-200 space-y-0.5">
+                      <p>Cocokkan foto ini dengan bangunan riil di depan Anda saat ini.</p>
+                      <p className="font-semibold text-gray-700 dark:text-gray-300">
+                        Luas Tanah: {selectedAppForSurvey.land_area} m² • Luas Bgn: {selectedAppForSurvey.building_area || 0} m²
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 1: Titik GPS */}
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-gray-700 dark:text-gray-300 block">
-                  Catatan Tinjauan Lapangan / Penilaian Fisik <span className="text-red-500">*</span>
+                <label className="text-xs font-bold text-gray-800 dark:text-gray-200 flex items-center justify-between">
+                  <span>1. Kesesuaian Titik Lokasi GPS</span>
+                  {selectedAppForSurvey.latitude && selectedAppForSurvey.longitude && (
+                    <a
+                      href={`https://www.google.com/maps/dir/?api=1&destination=${selectedAppForSurvey.latitude},${selectedAppForSurvey.longitude}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold hover:underline inline-flex items-center gap-1"
+                    >
+                      <Navigation size={11} /> Cek di Peta
+                    </a>
+                  )}
                 </label>
-                <textarea
-                  rows={3}
-                  value={surveyNotesInput}
-                  onChange={(e) => setSurveyNotesInput(e.target.value)}
-                  placeholder="Contoh: Telah dicek fisik di lapangan. Bangunan bertingkat 2 konstruksi beton permanen, luas bangunan fisik 85 m² sesuai permohonan."
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl text-xs bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
-                  required
-                />
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSurveyLocationMatch(true)}
+                    className={`p-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+                      surveyLocationMatch
+                        ? 'bg-emerald-50 border-emerald-500 text-emerald-800 ring-2 ring-emerald-500/20'
+                        : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+                    }`}
+                  >
+                    <CheckCircle2 size={14} className={surveyLocationMatch ? 'text-emerald-600' : 'text-gray-400'} />
+                    <span>✓ Sesuai Koordinat</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSurveyLocationMatch(false)}
+                    className={`p-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+                      !surveyLocationMatch
+                        ? 'bg-rose-50 border-rose-500 text-rose-800 ring-2 ring-rose-500/20'
+                        : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+                    }`}
+                  >
+                    <XCircle size={14} className={!surveyLocationMatch ? 'text-rose-600' : 'text-gray-400'} />
+                    <span>✕ Beda Lokasi / Titik Geser</span>
+                  </button>
+                </div>
               </div>
 
-              {/* Upload Foto Survei */}
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-700 dark:text-gray-300 block">
-                  Foto Bukti Tinjauan Lapangan (Kamera Petugas)
+              {/* Step 2: Karakteristik Fisik */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-gray-800 dark:text-gray-200 block">
+                  2. Kondisi Fisik Faktual di Lapangan
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { id: 'TANAH_KOSONG', label: 'Tanah Kosong (0 m²)', desc: 'Belum ada bangunan' },
+                    { id: 'HUNIAN_SEDERHANA', label: 'Hunian Sederhana', desc: '≤ 100 m² (Kategori A)' },
+                    { id: 'BANGUNAN_BESAR', label: 'Bangunan Menengah/Besar', desc: '> 100 m² (Kategori B)' },
+                    { id: 'FASUM', label: 'Fasilitas Umum / Sosial', desc: 'Masjid/Gereja/Balai' },
+                  ].map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => setSurveyPhysicalCondition(item.id)}
+                      className={`p-2 rounded-xl border text-left transition-all ${
+                        surveyPhysicalCondition === item.id
+                          ? 'bg-blue-50 border-baubau-blue text-baubau-blue ring-2 ring-baubau-blue/20'
+                          : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      <p className="text-xs font-bold">{item.label}</p>
+                      <p className="text-[10px] text-gray-500">{item.desc}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Step 3: Ambil Foto Lapangan */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-gray-800 dark:text-gray-200 block">
+                  3. Foto Bukti Lapangan (Kamera Petugas)
                 </label>
                 {surveyPhotoPreview ? (
-                  <div className="relative rounded-xl overflow-hidden border border-gray-200 p-2 flex items-center gap-3">
+                  <div className="relative rounded-xl overflow-hidden border border-emerald-300 bg-emerald-50/50 p-2.5 flex items-center gap-3">
                     <img
                       src={surveyPhotoPreview}
                       alt="Preview Survei"
-                      className="w-16 h-16 object-cover rounded-lg border border-gray-200"
+                      className="w-16 h-16 object-cover rounded-lg border border-emerald-200 shadow-sm"
                     />
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-bold text-gray-800 truncate">
-                        {surveyPhotoFile ? surveyPhotoFile.name : 'Foto Survei Tersimpan'}
+                      <p className="text-xs font-bold text-emerald-900 truncate">
+                        {surveyPhotoFile ? surveyPhotoFile.name : 'Foto Lapangan Tersimpan'}
                       </p>
-                      <p className="text-[10px] text-emerald-600 font-bold">Foto siap dikirim</p>
+                      <p className="text-[10px] text-emerald-700 font-medium">✓ Foto bukti siap dilampirkan</p>
                     </div>
                     <button
                       type="button"
                       onClick={() => { setSurveyPhotoFile(null); setSurveyPhotoPreview(null); }}
                       className="p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg"
+                      title="Hapus foto"
                     >
                       <X size={16} />
                     </button>
@@ -887,29 +1005,95 @@ export default function PbbBapenda() {
                       onChange={handlePhotoSelected}
                       className="hidden"
                     />
-                    <div className="py-3 px-4 rounded-xl border-2 border-dashed border-blue-300 bg-blue-50/50 hover:bg-blue-100/50 text-blue-950 text-xs font-bold flex items-center justify-center gap-2 transition-all">
-                      <Camera size={16} className="text-blue-600" />
+                    <div className="py-3.5 px-4 rounded-xl border-2 border-dashed border-blue-300 bg-blue-50/60 hover:bg-blue-100/60 text-blue-950 text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-sm">
+                      <Camera size={18} className="text-baubau-blue shrink-0" />
                       <span>Ambil Foto Langsung dari Kamera HP</span>
                     </div>
                   </label>
                 )}
               </div>
 
-              <div className="pt-3 border-t border-gray-100 dark:border-gray-700 flex justify-end gap-2">
+              {/* Step 4: Rekomendasi Akhir Petugas (1-Tap) */}
+              <div className="space-y-1.5 pt-1">
+                <label className="text-xs font-bold text-gray-800 dark:text-gray-200 block">
+                  4. Rekomendasi Hasil Survei untuk Admin Bapenda
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSurveyRecommendation('RECOMMENDED');
+                      if (!surveyNotesInput.trim() || surveyNotesInput.includes('tidak sesuai')) {
+                        setSurveyNotesInput('Fisik objek telah diverifikasi faktual di lapangan. Kondisi fisik bangunan dan koordinat sesuai permohonan. Direkomendasikan untuk penetapan NOP SISMIOP.');
+                      }
+                    }}
+                    className={`p-2.5 rounded-xl border text-center transition-all ${
+                      surveyRecommendation === 'RECOMMENDED'
+                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-600/20 font-black ring-2 ring-emerald-600 ring-offset-1'
+                        : 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100 font-bold'
+                    }`}
+                  >
+                    <div className="text-xs">✓ LAYAK TERBIT NOP</div>
+                    <div className="text-[10px] opacity-90 font-normal">Sesuai Faktual Lapangan</div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSurveyRecommendation('NEEDS_REVISION');
+                      if (!surveyNotesInput.trim() || surveyNotesInput.includes('Direkomendasikan')) {
+                        setSurveyNotesInput('');
+                      }
+                    }}
+                    className={`p-2.5 rounded-xl border text-center transition-all ${
+                      surveyRecommendation === 'NEEDS_REVISION'
+                        ? 'bg-rose-600 text-white border-rose-600 shadow-md shadow-rose-600/20 font-black ring-2 ring-rose-600 ring-offset-1'
+                        : 'bg-rose-50 text-rose-800 border-rose-200 hover:bg-rose-100 font-bold'
+                    }`}
+                  >
+                    <div className="text-xs">✕ PERLU KOREKSI</div>
+                    <div className="text-[10px] opacity-90 font-normal">Terdapat Ketidaksesuaian</div>
+                  </button>
+                </div>
+              </div>
+
+              {/* Catatan Tambahan */}
+              <div className="space-y-1">
+                <label className="text-[11px] font-semibold text-gray-600 dark:text-gray-300 block">
+                  Catatan Tambahan (Otomatis / Khusus):
+                </label>
+                <textarea
+                  rows={2}
+                  value={surveyNotesInput}
+                  onChange={(e) => setSurveyNotesInput(e.target.value)}
+                  placeholder={
+                    surveyRecommendation === 'RECOMMENDED'
+                      ? 'Catatan standar otomatis terisi...'
+                      : 'Contoh: Luas fisik bangunan berbeda (riil 120 m²), atau tanah berada di luar batas sertifikat.'
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl text-xs bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-baubau-blue focus:outline-none"
+                />
+              </div>
+
+              {/* Tombol Simpan */}
+              <div className="pt-2 border-t border-gray-100 dark:border-gray-700 flex justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setSelectedAppForSurvey(null)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-gray-600 hover:bg-gray-100"
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
                   disabled={submittingSurvey}
-                  className="px-5 py-2 bg-baubau-blue hover:bg-blue-700 text-white rounded-xl text-xs font-bold flex items-center gap-2 disabled:opacity-50"
+                  className={`px-5 py-2.5 rounded-xl text-xs font-bold text-white flex items-center gap-2 transition-all shadow-md ${
+                    surveyRecommendation === 'RECOMMENDED'
+                      ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20'
+                      : 'bg-rose-600 hover:bg-rose-700 shadow-rose-600/20'
+                  } disabled:opacity-50`}
                 >
                   {submittingSurvey ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
-                  <span>Simpan Hasil Survei</span>
+                  <span>Kirim Hasil Survei ke Admin</span>
                 </button>
               </div>
             </form>
