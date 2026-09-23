@@ -21,8 +21,6 @@ import {
   Loader2,
   Filter,
   Layers,
-  FileText,
-  Phone,
   LayoutGrid,
   List,
 } from 'lucide-react';
@@ -85,6 +83,8 @@ interface Task {
   task_type?: string;
   due_date: string;
   notes: string;
+  latitude?: string | number | null;
+  longitude?: string | number | null;
   status: 'pending' | 'completed';
   completed_at: string | null;
   completion_photo_path?: string | null;
@@ -192,6 +192,7 @@ export default function DaftarTugas() {
   const [mutationSurveyCoords, setMutationSurveyCoords] = useState<OfficerLocation | null>(null);
   const [mutationRecommendation, setMutationRecommendation] = useState<'RECOMMENDED' | 'NEEDS_REVISION'>('RECOMMENDED');
   const [submittingMutationSurvey, setSubmittingMutationSurvey] = useState(false);
+  const [selectedTaskForCamera, setSelectedTaskForCamera] = useState<Task | null>(null);
 
   const getFileUrl = (path?: string | null) => {
     if (!path) return '';
@@ -324,8 +325,8 @@ export default function DaftarTugas() {
 
       if (mutationSurveyCoords && targetLat !== null && targetLng !== null) {
         distanceMeters = calculateDistanceMeters(
-          mutationSurveyCoords.latitude,
-          mutationSurveyCoords.longitude,
+          mutationSurveyCoords.lat,
+          mutationSurveyCoords.lng,
           targetLat,
           targetLng
         );
@@ -337,8 +338,8 @@ export default function DaftarTugas() {
       formData.append('survey_metadata', JSON.stringify({
         recommendation: mutationRecommendation,
         surveyed_at: new Date().toISOString(),
-        officer_latitude: mutationSurveyCoords?.latitude ?? null,
-        officer_longitude: mutationSurveyCoords?.longitude ?? null,
+        officer_latitude: mutationSurveyCoords?.lat ?? null,
+        officer_longitude: mutationSurveyCoords?.lng ?? null,
         officer_accuracy: mutationSurveyCoords?.accuracy ?? null,
         target_latitude: targetLat,
         target_longitude: targetLng,
@@ -402,14 +403,17 @@ export default function DaftarTugas() {
     }
 
     const targetTask = tasks.find(t => t.id === id);
-    if (targetTask?.latitude && targetTask?.longitude) {
+    const taskLat = targetTask?.latitude ?? targetTask?.tax_object?.latitude;
+    const taskLng = targetTask?.longitude ?? targetTask?.tax_object?.longitude;
+
+    if (taskLat && taskLng) {
       try {
         const officerLoc = await getOfficerCurrentPosition();
         const dist = calculateDistanceMeters(
           officerLoc.lat,
           officerLoc.lng,
-          parseFloat(targetTask.latitude),
-          parseFloat(targetTask.longitude)
+          parseFloat(String(taskLat)),
+          parseFloat(String(taskLng))
         );
         if (dist > DEFAULT_MAX_RADIUS_METERS) {
           toast.error(`Validasi radius gagal: Anda berjarak ${dist} m dari lokasi objek. Maksimal radius adalah ${DEFAULT_MAX_RADIUS_METERS} m.`);
@@ -1487,28 +1491,20 @@ export default function DaftarTugas() {
               <div className="p-4 mt-auto bg-slate-50 dark:bg-slate-900/50">
                 {task.status === 'pending' ? (
                   <div className="flex flex-col gap-2">
-                    <input
-                      type="file"
-                      id={`photo-${task.id}`}
-                      accept="image/*"
-                      capture="environment"
-                      className="hidden"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) markAsCompleted(task.id, file);
-                      }}
-                    />
                     <button
-                      onClick={() => document.getElementById(`photo-${task.id}`)?.click()}
+                      onClick={() => setSelectedTaskForCamera(task)}
                       disabled={uploadingId === task.id}
-                      className="w-full flex items-center justify-center gap-2 py-3 bg-[#0F2547] hover:bg-blue-600 disabled:bg-slate-400 text-white rounded-xl font-bold uppercase tracking-wider text-xs transition-colors shadow-lg shadow-blue-500/20"
+                      className="w-full flex items-center justify-center gap-2 py-3 bg-[#0F2547] hover:bg-blue-600 disabled:bg-slate-400 text-white rounded-xl font-bold uppercase tracking-wider text-xs transition-colors shadow-lg shadow-blue-500/20 active:scale-98"
                     >
                       {uploadingId === task.id ? (
-                        <>Uploading...</>
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>Mengunggah Foto...</span>
+                        </>
                       ) : (
                         <>
-                          <CheckCircle className="w-4 h-4" />
-                          Ambil Foto & Selesai
+                          <Camera className="w-4 h-4" />
+                          <span>Ambil Foto & Selesai</span>
                         </>
                       )}
                     </button>
@@ -1694,8 +1690,8 @@ export default function DaftarTugas() {
               {/* Step 3: Kamera Lapangan & Validasi Radius */}
               <div className="space-y-1.5">
                 <FieldCameraCapture
-                  targetLat={selectedPbbForSurvey.latitude}
-                  targetLng={selectedPbbForSurvey.longitude}
+                  targetLat={selectedPbbForSurvey.latitude != null ? Number(selectedPbbForSurvey.latitude) : null}
+                  targetLng={selectedPbbForSurvey.longitude != null ? Number(selectedPbbForSurvey.longitude) : null}
                   targetLabel={`NOP Baru #${selectedPbbForSurvey.id} (${selectedPbbForSurvey.name})`}
                   label="3. Foto Bukti Fisik Lapangan (Wajib Kamera & Radius Terverifikasi)"
                   currentPhotoPreview={surveyPhotoPreview}
@@ -2007,6 +2003,59 @@ export default function DaftarTugas() {
                 <span>Buka Ukuran Asli</span>
                 <ExternalLink size={12} />
               </a>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Kamera Lapangan Khusus Kunjungan Tugas (Wajib Kamera Langsung) */}
+      {selectedTaskForCamera && (
+        <div className="fixed inset-0 z-[120] bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="relative bg-white dark:bg-slate-800 rounded-3xl max-w-lg w-full p-5 shadow-2xl border border-slate-200 dark:border-slate-700 max-h-[90vh] overflow-y-auto space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-700">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                  <Camera className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-slate-900 dark:text-white">
+                    Foto Bukti Kunjungan Lapangan
+                  </h4>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate max-w-xs">
+                    {selectedTaskForCamera.tax_object?.name || selectedTaskForCamera.taxpayer?.name || `Tugas #${selectedTaskForCamera.id}`}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedTaskForCamera(null)}
+                className="p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <FieldCameraCapture
+              targetLat={selectedTaskForCamera.latitude ? parseFloat(String(selectedTaskForCamera.latitude)) : (selectedTaskForCamera.tax_object?.latitude ? parseFloat(String(selectedTaskForCamera.tax_object.latitude)) : null)}
+              targetLng={selectedTaskForCamera.longitude ? parseFloat(String(selectedTaskForCamera.longitude)) : (selectedTaskForCamera.tax_object?.longitude ? parseFloat(String(selectedTaskForCamera.tax_object.longitude)) : null)}
+              targetLabel={selectedTaskForCamera.tax_object?.name || selectedTaskForCamera.taxpayer?.name || `Tugas #${selectedTaskForCamera.id}`}
+              label="Kamera Lapangan (Wajib Kamera & GPS Valid)"
+              onPhotoCaptured={(file) => {
+                const targetId = selectedTaskForCamera.id;
+                setSelectedTaskForCamera(null);
+                markAsCompleted(targetId, file);
+              }}
+              required={true}
+            />
+
+            <div className="flex justify-end pt-2 border-t border-slate-100 dark:border-slate-700">
+              <button
+                type="button"
+                onClick={() => setSelectedTaskForCamera(null)}
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700 transition-colors"
+              >
+                Batal
+              </button>
             </div>
           </div>
         </div>

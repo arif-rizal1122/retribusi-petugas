@@ -8,7 +8,6 @@ import {
   Loader2, 
   QrCode, 
   Plus, 
-  ImagePlus,
   Camera
 } from 'lucide-react';
 import SearchableSelect from '../components/SearchableSelect';

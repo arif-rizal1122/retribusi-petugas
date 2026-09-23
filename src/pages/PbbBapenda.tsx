@@ -287,14 +287,6 @@ export default function PbbBapenda() {
     setSurveyLocationMatch(app.metadata?.survey_location_match ?? true);
   };
 
-  const handlePhotoSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setSurveyPhotoFile(file);
-    const url = URL.createObjectURL(file);
-    setSurveyPhotoPreview(url);
-  };
-
   const handleSubmitSurvey = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedAppForSurvey) return;
