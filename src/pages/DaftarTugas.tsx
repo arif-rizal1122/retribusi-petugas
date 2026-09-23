@@ -30,7 +30,7 @@ import toast from 'react-hot-toast';
 import { AssetSurveyForm, type AssetRentalSurveyItem } from '../components/AssetSurveyForm';
 import { AssetInspectionModal } from '../components/AssetInspectionModal';
 import { FieldCameraCapture } from '../components/FieldCameraCapture';
-import { getOfficerCurrentPosition, calculateDistanceMeters, DEFAULT_MAX_RADIUS_METERS } from '../utils/geoValidation';
+import { getOfficerCurrentPosition, calculateDistanceMeters, DEFAULT_MAX_RADIUS_METERS, type OfficerLocation } from '../utils/geoValidation';
 
 interface PbbMutationItem {
   id: number;
@@ -40,6 +40,8 @@ interface PbbMutationItem {
   applicant_name: string;
   applicant_phone?: string | null;
   applicant_address?: string | null;
+  latitude?: number | string | null;
+  longitude?: number | string | null;
   parent_nop?: string | null;
   status: string;
   notes?: string | null;
@@ -187,6 +189,7 @@ export default function DaftarTugas() {
   const [mutationSurveyNotes, setMutationSurveyNotes] = useState('');
   const [mutationSurveyPhotoFile, setMutationSurveyPhotoFile] = useState<File | null>(null);
   const [mutationSurveyPhotoPreview, setMutationSurveyPhotoPreview] = useState<string | null>(null);
+  const [mutationSurveyCoords, setMutationSurveyCoords] = useState<OfficerLocation | null>(null);
   const [mutationRecommendation, setMutationRecommendation] = useState<'RECOMMENDED' | 'NEEDS_REVISION'>('RECOMMENDED');
   const [submittingMutationSurvey, setSubmittingMutationSurvey] = useState(false);
 
@@ -207,15 +210,18 @@ export default function DaftarTugas() {
       ]);
 
       if (nopRes.status === 'fulfilled') {
-        const list = nopRes.value.data?.data || (Array.isArray(nopRes.value.data) ? nopRes.value.data : []);
+        const data = nopRes.value.data?.data || nopRes.value.data || [];
+        const list = Array.isArray(data) ? data : (data.data || []);
         setPbbApplications(list);
       }
+
       if (mutRes.status === 'fulfilled') {
-        const list = mutRes.value.data?.data || (Array.isArray(mutRes.value.data) ? mutRes.value.data : []);
+        const data = mutRes.value.data?.data || mutRes.value.data || [];
+        const list = Array.isArray(data) ? data : (data.data || []);
         setPbbMutations(list);
       }
     } catch (err) {
-      console.error('Error fetching PBB applications for survey:', err);
+      console.error('Error fetching PBB applications:', err);
     } finally {
       setPbbLoading(false);
     }
@@ -312,12 +318,32 @@ export default function DaftarTugas() {
 
     setSubmittingMutationSurvey(true);
     try {
+      let distanceMeters: number | null = null;
+      const targetLat = selectedMutationForSurvey.latitude != null ? Number(selectedMutationForSurvey.latitude) : null;
+      const targetLng = selectedMutationForSurvey.longitude != null ? Number(selectedMutationForSurvey.longitude) : null;
+
+      if (mutationSurveyCoords && targetLat !== null && targetLng !== null) {
+        distanceMeters = calculateDistanceMeters(
+          mutationSurveyCoords.latitude,
+          mutationSurveyCoords.longitude,
+          targetLat,
+          targetLng
+        );
+      }
+
       const formData = new FormData();
       formData.append('status', 'SURVEY');
       formData.append('survey_notes', finalNotes);
       formData.append('survey_metadata', JSON.stringify({
         recommendation: mutationRecommendation,
         surveyed_at: new Date().toISOString(),
+        officer_latitude: mutationSurveyCoords?.latitude ?? null,
+        officer_longitude: mutationSurveyCoords?.longitude ?? null,
+        officer_accuracy: mutationSurveyCoords?.accuracy ?? null,
+        target_latitude: targetLat,
+        target_longitude: targetLng,
+        distance_meters: distanceMeters !== null ? Math.round(distanceMeters) : null,
+        verified_on_site: distanceMeters !== null ? distanceMeters <= DEFAULT_MAX_RADIUS_METERS : true,
       }));
       if (mutationSurveyPhotoFile) {
         formData.append('survey_photo', mutationSurveyPhotoFile);
@@ -329,6 +355,7 @@ export default function DaftarTugas() {
       setMutationSurveyNotes('');
       setMutationSurveyPhotoFile(null);
       setMutationSurveyPhotoPreview(null);
+      setMutationSurveyCoords(null);
       fetchPbbApplications();
     } catch (err: any) {
       console.error('Error submitting mutation survey:', err);
@@ -1822,21 +1849,44 @@ export default function DaftarTugas() {
                 )}
               </div>
 
+              {/* Titik Lokasi Target Input Warga */}
+              {selectedMutationForSurvey.latitude && selectedMutationForSurvey.longitude && (
+                <div className="p-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 text-xs flex items-center justify-between">
+                  <div>
+                    <span className="text-gray-500 block text-[10px]">Titik Patok Target (Input Warga):</span>
+                    <span className="font-mono font-bold text-baubau-blue dark:text-blue-300">
+                      {Number(selectedMutationForSurvey.latitude).toFixed(6)}, {Number(selectedMutationForSurvey.longitude).toFixed(6)}
+                    </span>
+                  </div>
+                  <a
+                    href={`https://www.google.com/maps/@?api=1&map_action=map&center=${selectedMutationForSurvey.latitude},${selectedMutationForSurvey.longitude}&zoom=18&basemap=satellite`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-2.5 py-1 rounded-lg bg-white dark:bg-gray-800 text-baubau-blue dark:text-blue-400 font-bold text-[11px] border border-blue-200 shadow-xs flex items-center gap-1"
+                  >
+                    <MapPin className="w-3 h-3 text-red-500" />
+                    <span>Buka Rute Maps</span>
+                  </a>
+                </div>
+              )}
+
               {/* Kamera Lapangan & Validasi Radius Survei Mutasi */}
               <div className="space-y-1.5">
                 <FieldCameraCapture
-                  targetLat={selectedMutationForSurvey.latitude || (selectedMutationForSurvey as any).survey_metadata?.latitude}
-                  targetLng={selectedMutationForSurvey.longitude || (selectedMutationForSurvey as any).survey_metadata?.longitude}
+                  targetLat={selectedMutationForSurvey.latitude != null ? Number(selectedMutationForSurvey.latitude) : null}
+                  targetLng={selectedMutationForSurvey.longitude != null ? Number(selectedMutationForSurvey.longitude) : null}
                   targetLabel={`Mutasi ${selectedMutationForSurvey.ticket_no}`}
                   label="1. Foto Hasil Survei / Patok Lapangan (Wajib Kamera & Radius Terverifikasi)"
                   currentPhotoPreview={mutationSurveyPhotoPreview}
-                  onPhotoCaptured={(file) => {
+                  onPhotoCaptured={(file, coords) => {
                     setMutationSurveyPhotoFile(file);
                     setMutationSurveyPhotoPreview(URL.createObjectURL(file));
+                    setMutationSurveyCoords(coords);
                   }}
                   onClearPhoto={() => {
                     setMutationSurveyPhotoFile(null);
                     setMutationSurveyPhotoPreview(null);
+                    setMutationSurveyCoords(null);
                   }}
                   required={true}
                 />

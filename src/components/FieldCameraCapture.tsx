@@ -6,9 +6,10 @@ import {
   AlertTriangle,
   RefreshCw,
   X,
-  Navigation,
   ShieldAlert,
   Loader2,
+  SwitchCamera,
+  Zap,
 } from 'lucide-react';
 import {
   calculateDistanceMeters,
@@ -48,7 +49,15 @@ export const FieldCameraCapture: React.FC<FieldCameraCaptureProps> = ({
   const [gpsError, setGpsError] = useState<string | null>(null);
   const [distance, setDistance] = useState<number | null>(null);
 
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  // In-App Camera Viewfinder State
+  const [isCameraOpen, setIsCameraOpen] = useState<boolean>(false);
+  const [cameraLoading, setCameraLoading] = useState<boolean>(false);
+  const [facingMode, setFacingMode] = useState<'environment' | 'user'>('environment');
+  const [hasTorch, setHasTorch] = useState<boolean>(false);
+  const [isTorchOn, setIsTorchOn] = useState<boolean>(false);
+
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
   const hasTargetCoords =
     targetLat !== undefined &&
@@ -90,27 +99,178 @@ export const FieldCameraCapture: React.FC<FieldCameraCaptureProps> = ({
     fetchLocation();
   }, [targetLat, targetLng]);
 
+  // Cleanup camera stream on unmount
+  useEffect(() => {
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
+      }
+    };
+  }, []);
+
   // Evaluasi Radius
   const isWithinRadius =
     !hasTargetCoords || (distance !== null && distance <= maxRadiusMeters);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-    // Pastikan koordinat tersimpan
-    const coords: OfficerLocation = officerLocation || {
-      lat: validTargetLat || 0,
-      lng: validTargetLng || 0,
-      timestamp: Date.now(),
-    };
+  // Start In-App Camera Viewfinder (Wajib Kamera Belakang jika HP)
+  const startCamera = async (mode: 'environment' | 'user' = 'environment') => {
+    setCameraLoading(true);
+    setIsCameraOpen(true);
 
-    onPhotoCaptured(file, coords);
+    try {
+      // Hentikan stream sebelumnya jika ada
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((t) => t.stop());
+        streamRef.current = null;
+      }
 
-    // Reset input agar bisa ambil ulang jika diinginkan
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('Browser atau perangkat ini tidak mendukung akses kamera langsung.');
+      }
+
+      let stream: MediaStream;
+      // Jika HP / Mobile, wajib prioritaskan kamera belakang (exact environment)
+      if (isMobile) {
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+              facingMode: { exact: 'environment' },
+              width: { ideal: 1920 },
+              height: { ideal: 1080 },
+            },
+            audio: false,
+          });
+        } catch (exactErr) {
+          console.warn('Exact rear camera unavailable, falling back to ideal environment:', exactErr);
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+              facingMode: { ideal: 'environment' },
+              width: { ideal: 1920 },
+              height: { ideal: 1080 },
+            },
+            audio: false,
+          });
+        }
+      } else {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: { ideal: mode },
+            width: { ideal: 1920 },
+            height: { ideal: 1080 },
+          },
+          audio: false,
+        });
+      }
+
+      streamRef.current = stream;
+
+      // Cek apakah ada fitur torch/flashlight
+      const videoTrack = stream.getVideoTracks()[0];
+      const capabilities = (videoTrack?.getCapabilities ? videoTrack.getCapabilities() : {}) as any;
+      setHasTorch(Boolean(capabilities?.torch));
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+      }
+    } catch (err: any) {
+      console.error('Camera stream error:', err);
+      alert('Gagal membuka kamera belakang: ' + (err.message || 'Izin kamera ditolak oleh browser/sistem.'));
+      stopCamera();
+    } finally {
+      setCameraLoading(false);
     }
+  };
+
+  const stopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+    setIsCameraOpen(false);
+    setIsTorchOn(false);
+  };
+
+  const toggleCameraFacing = () => {
+    const nextMode = facingMode === 'environment' ? 'user' : 'environment';
+    setFacingMode(nextMode);
+    startCamera(nextMode);
+  };
+
+  const toggleTorch = async () => {
+    if (!streamRef.current) return;
+    const track = streamRef.current.getVideoTracks()[0];
+    if (track && (track as any).applyConstraints) {
+      try {
+        const nextState = !isTorchOn;
+        await (track as any).applyConstraints({
+          advanced: [{ torch: nextState }],
+        });
+        setIsTorchOn(nextState);
+      } catch (e) {
+        console.warn('Torch toggle failed:', e);
+      }
+    }
+  };
+
+  // Jepret Foto dari Live Video
+  const takeSnapshot = () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth || 1280;
+    canvas.height = video.videoHeight || 720;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Draw raw camera frame
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    // Watermark Geotag Burn-in
+    const bannerH = Math.max(90, Math.round(canvas.height * 0.12));
+    const gradient = ctx.createLinearGradient(0, canvas.height - bannerH, 0, canvas.height);
+    gradient.addColorStop(0, 'rgba(0,0,0,0)');
+    gradient.addColorStop(0.3, 'rgba(0,0,0,0.75)');
+    gradient.addColorStop(1, 'rgba(0,0,0,0.92)');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, canvas.height - bannerH, canvas.width, bannerH);
+
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = `bold ${Math.round(canvas.width * 0.024)}px sans-serif`;
+    ctx.fillText('M-PAD KOTA BAUBAU • VERIFIKASI SURVEI LAPANGAN', 24, canvas.height - bannerH * 0.55);
+
+    ctx.fillStyle = '#E2E8F0';
+    ctx.font = `500 ${Math.round(canvas.width * 0.018)}px monospace`;
+    const timeStr = new Date().toLocaleString('id-ID');
+    const locStr = officerLocation
+      ? `GPS: ${officerLocation.lat.toFixed(6)}, ${officerLocation.lng.toFixed(6)} (±${Math.round(
+          officerLocation.accuracy || 0
+        )}m)`
+      : 'GPS: Terkunci di Objek';
+    const distStr = distance !== null ? ` | Jarak: ${formatDistance(distance)}` : '';
+    ctx.fillText(`${timeStr} | ${locStr}${distStr}`, 24, canvas.height - bannerH * 0.2);
+
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) return;
+        const file = new File([blob], `survei_${Date.now()}.jpg`, { type: 'image/jpeg' });
+        stopCamera();
+
+        const coords: OfficerLocation = officerLocation || {
+          lat: validTargetLat || 0,
+          lng: validTargetLng || 0,
+          timestamp: Date.now(),
+        };
+
+        onPhotoCaptured(file, coords);
+      },
+      'image/jpeg',
+      0.92
+    );
   };
 
   const handleOpenKamera = () => {
@@ -124,7 +284,7 @@ export const FieldCameraCapture: React.FC<FieldCameraCaptureProps> = ({
       );
       return;
     }
-    fileInputRef.current?.click();
+    startCamera('environment');
   };
 
   return (
@@ -188,9 +348,7 @@ export const FieldCameraCapture: React.FC<FieldCameraCaptureProps> = ({
               </div>
               <span
                 className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
-                  isWithinRadius
-                    ? 'bg-emerald-600 text-white'
-                    : 'bg-rose-600 text-white'
+                  isWithinRadius ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white'
                 }`}
               >
                 {formatDistance(distance)} / Maks {formatDistance(maxRadiusMeters)}
@@ -241,23 +399,13 @@ export const FieldCameraCapture: React.FC<FieldCameraCaptureProps> = ({
         )}
       </div>
 
-      {/* Hidden strictly camera input */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        capture="environment"
-        onChange={handleFileChange}
-        className="hidden"
-      />
-
-      {/* Photo Preview or Camera Button */}
+      {/* Photo Preview or Open Camera Trigger */}
       {currentPhotoPreview ? (
         <div className="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-black/5 dark:bg-slate-900 group">
           <img
             src={currentPhotoPreview}
             alt="Bukti Foto Lapangan"
-            className="w-full h-44 object-cover"
+            className="w-full h-48 object-cover"
           />
 
           {/* Watermark Tag Info */}
@@ -319,8 +467,113 @@ export const FieldCameraCapture: React.FC<FieldCameraCaptureProps> = ({
             </span>
           </button>
           <p className="text-[10px] text-center text-slate-400 dark:text-slate-500 mt-1.5">
-            Wajib menggunakan kamera langsung di lokasi objek. Upload galeri/berkas tidak diperkenankan.
+            Wajib foto langsung via kamera perangkat di lokasi objek (Upload file/galeri tidak diizinkan).
           </p>
+        </div>
+      )}
+
+      {/* FULLSCREEN IN-APP LIVE CAMERA VIEWFINDER MODAL */}
+      {isCameraOpen && (
+        <div className="fixed inset-0 z-[100] bg-black flex flex-col justify-between animate-in fade-in duration-200 select-none">
+          {/* Top Bar Overlay */}
+          <div className="p-4 bg-gradient-to-b from-black/80 to-transparent flex items-center justify-between text-white z-20">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse" />
+              <div className="leading-tight">
+                <span className="text-xs font-bold block">KAMERA SURVEI LAPANGAN</span>
+                <span className="text-[10px] text-slate-300 font-mono">
+                  {officerLocation
+                    ? `GPS: ${officerLocation.lat.toFixed(5)}, ${officerLocation.lng.toFixed(5)}`
+                    : 'GPS Aktif'}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {hasTorch && (
+                <button
+                  type="button"
+                  onClick={toggleTorch}
+                  className={`p-2 rounded-full transition-colors ${
+                    isTorchOn ? 'bg-amber-400 text-slate-900' : 'bg-white/20 text-white'
+                  }`}
+                  title="Lampu Kilat / Senter"
+                >
+                  <Zap className="w-4 h-4" />
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={toggleCameraFacing}
+                className="p-2 rounded-full bg-white/20 hover:bg-white/30 text-white transition-colors"
+                title="Ganti Kamera Depan / Belakang"
+              >
+                <SwitchCamera className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={stopCamera}
+                className="p-2 rounded-full bg-white/20 hover:bg-white/30 text-white transition-colors"
+                title="Tutup Kamera"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* Center Viewfinder with Grid */}
+          <div className="relative flex-1 flex items-center justify-center overflow-hidden bg-black">
+            {cameraLoading && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 text-white z-10 gap-3">
+                <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+                <span className="text-xs font-bold">Mengaktifkan Sensor Kamera...</span>
+              </div>
+            )}
+
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              className="w-full h-full object-cover"
+            />
+
+            {/* Viewfinder Rule-of-Thirds Grid */}
+            <div className="absolute inset-8 border border-white/25 pointer-events-none rounded-xl">
+              <div className="absolute inset-x-0 top-1/3 border-t border-white/15" />
+              <div className="absolute inset-x-0 top-2/3 border-t border-white/15" />
+              <div className="absolute inset-y-0 left-1/3 border-l border-white/15" />
+              <div className="absolute inset-y-0 left-2/3 border-l border-white/15" />
+            </div>
+
+            {/* In-Viewfinder Target & Distance HUD */}
+            <div className="absolute top-4 inset-x-6 flex justify-center pointer-events-none z-10">
+              <div className="px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white text-[11px] font-bold flex items-center gap-2">
+                <MapPin className="w-3.5 h-3.5 text-blue-400" />
+                <span>{targetLabel}</span>
+                {distance !== null && (
+                  <span className="px-1.5 py-0.2 rounded-full bg-emerald-500 text-white text-[10px]">
+                    {formatDistance(distance)}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom Shutter Controls */}
+          <div className="p-6 bg-gradient-to-t from-black/90 to-transparent flex items-center justify-center z-20">
+            <button
+              type="button"
+              onClick={takeSnapshot}
+              disabled={cameraLoading}
+              className="w-20 h-20 rounded-full border-4 border-white flex items-center justify-center bg-white/20 hover:bg-white/30 active:scale-95 transition-all shadow-2xl focus:outline-none"
+              title="Ambil Foto"
+            >
+              <div className="w-14 h-14 rounded-full bg-white shadow-inner flex items-center justify-center">
+                <Camera className="w-6 h-6 text-slate-900" />
+              </div>
+            </button>
+          </div>
         </div>
       )}
     </div>
