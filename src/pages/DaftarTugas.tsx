@@ -455,16 +455,16 @@ export default function DaftarTugas() {
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-24">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="space-y-4 max-w-7xl mx-auto pb-24 px-1 sm:px-0">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400">
-              <ClipboardList className="w-5 h-5" />
+          <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400">
+              <ClipboardList className="w-4 h-4" />
             </div>
             Daftar Tugas
           </h1>
-          <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-0.5">
             Kelola dan pantau penugasan lapangan Anda
           </p>
         </div>
@@ -472,135 +472,135 @@ export default function DaftarTugas() {
 
       {/* Banner Penugasan PBB */}
       {(pbbApplications.length + pbbMutations.length) > 0 && activeTab !== 'pbb_survey' && (
-        <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 text-white rounded-3xl p-4 sm:p-5 shadow-xl shadow-blue-600/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-blue-400/30">
-          <div className="flex items-center gap-3.5">
-            <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center shrink-0 border border-white/30">
-              <Building2 className="w-6 h-6 text-white" />
+        <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 text-white rounded-2xl p-3.5 sm:p-4 shadow-lg shadow-blue-600/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border border-blue-400/30">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center shrink-0 border border-white/30">
+              <Building2 className="w-4 h-4 text-white" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-400 text-amber-950">
+              <div className="flex items-center gap-1.5">
+                <span className="px-1.5 py-0.2 rounded-full text-[9px] font-black uppercase tracking-wider bg-amber-400 text-amber-950">
                   Perlu Ditindaklanjuti
                 </span>
-                <span className="text-xs font-semibold text-blue-100">PBB Bapenda</span>
+                <span className="text-[11px] font-semibold text-blue-100">PBB Bapenda</span>
               </div>
-              <h3 className="text-base font-black tracking-tight mt-0.5">
+              <h3 className="text-sm font-black tracking-tight mt-0.5">
                 Ada {pbbApplications.length + pbbMutations.length} Penugasan Survei Lapangan PBB
                 {pbbMutations.length > 0 && ` (${pbbMutations.length} Mutasi)`}
               </h3>
-              <p className="text-xs text-blue-100 mt-0.5">
+              <p className="text-[11px] text-blue-100 mt-0.5">
                 Admin/Kasubid telah mendisposisikan verifikasi fisik objek baru &amp; mutasi PBB.
               </p>
             </div>
           </div>
           <button
             onClick={() => setActiveTab('pbb_survey')}
-            className="px-5 py-2.5 bg-white hover:bg-blue-50 text-blue-700 rounded-2xl text-xs font-black shrink-0 transition-all shadow-md active:scale-95 flex items-center justify-center gap-2"
+            className="px-3.5 py-1.5 bg-white hover:bg-blue-50 text-blue-700 rounded-xl text-xs font-bold shrink-0 transition-all shadow-sm active:scale-95 flex items-center justify-center gap-1.5"
           >
-            <span>Buka Penugasan PBB ({pbbApplications.length + pbbMutations.length})</span>
-            <ExternalLink className="w-3.5 h-3.5" />
+            <span>Buka Penugasan ({pbbApplications.length + pbbMutations.length})</span>
+            <ExternalLink className="w-3 h-3" />
           </button>
         </div>
       )}
 
-      {/* Tabs */}
-      <div className="flex flex-wrap p-1 bg-slate-100/50 dark:bg-slate-800/50 rounded-2xl w-fit backdrop-blur-xl border border-slate-200 dark:border-slate-700 gap-1">
+      {/* Tabs — Compact & Horizontally Scrollable on Mobile */}
+      <div className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800/60 rounded-xl border border-slate-200/80 dark:border-slate-700/80 overflow-x-auto no-scrollbar w-full sm:w-fit">
         <button
           onClick={() => setActiveTab('pending')}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all ${
             activeTab === 'pending'
               ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-white shadow-sm'
               : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
           }`}
         >
-          <Clock className="w-4 h-4" />
-          Tugas Aktif
+          <Clock className="w-3.5 h-3.5" />
+          <span>Tugas Aktif</span>
         </button>
         <button
           onClick={() => setActiveTab('pbb_survey')}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all relative ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all relative ${
             activeTab === 'pbb_survey'
               ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm'
               : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
           }`}
         >
-          <Building2 className="w-4 h-4" />
+          <Building2 className="w-3.5 h-3.5" />
           <span>Penugasan PBB</span>
           {(pbbApplications.length + pbbMutations.length) > 0 && (
-            <span className="ml-1 px-2 py-0.5 text-[11px] font-black rounded-full bg-rose-500 text-white animate-pulse">
+            <span className="px-1.5 py-0.2 text-[10px] font-black rounded-full bg-rose-500 text-white animate-pulse">
               {pbbApplications.length + pbbMutations.length}
             </span>
           )}
         </button>
         <button
           onClick={() => setActiveTab('completed')}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all ${
             activeTab === 'completed'
               ? 'bg-white dark:bg-slate-700 text-emerald-600 dark:text-white shadow-sm'
               : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
           }`}
         >
-          <CheckCircle className="w-4 h-4" />
+          <CheckCircle className="w-3.5 h-3.5" />
           <span>Riwayat Kunjungan</span>
         </button>
         <button
           onClick={() => setActiveTab('asset_survey')}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all ${
             activeTab === 'asset_survey'
               ? 'bg-white dark:bg-slate-700 text-purple-600 dark:text-white shadow-sm'
               : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
           }`}
         >
-          <Wrench className="w-4 h-4" />
-          Survey Alat Berat PUPR
+          <Wrench className="w-3.5 h-3.5" />
+          <span>Survey Alat PUPR</span>
         </button>
       </div>
 
-      {/* Sub-filter Penugasan PBB (NOP Baru vs Mutasi) */}
+      {/* Sub-filter Penugasan PBB (NOP Baru vs Mutasi) — Sleek Chips */}
       {activeTab === 'pbb_survey' && (
-        <div className="flex flex-wrap items-center gap-2 pt-1 animate-in fade-in duration-200">
-          <span className="text-xs font-bold text-slate-500 dark:text-slate-400 mr-1 flex items-center gap-1.5">
-            <Filter className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-            <span>Kategori PBB:</span>
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 animate-in fade-in duration-200">
+          <span className="text-[11px] font-bold text-slate-400 mr-1 flex items-center gap-1 shrink-0">
+            <Filter className="w-3 h-3 text-blue-500" />
+            <span>Kategori:</span>
           </span>
           <button
             onClick={() => setPbbSubFilter('all')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+            className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1 ${
               pbbSubFilter === 'all'
                 ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-sm'
                 : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:bg-slate-50'
             }`}
           >
             <span>Semua PBB</span>
-            <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-slate-200/60 dark:bg-slate-700 text-slate-700 dark:text-slate-200">
+            <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-slate-200/60 dark:bg-slate-700 text-slate-700 dark:text-slate-200">
               {pbbApplications.length + pbbMutations.length}
             </span>
           </button>
           <button
             onClick={() => setPbbSubFilter('nop_baru')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+            className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1 ${
               pbbSubFilter === 'nop_baru'
                 ? 'bg-blue-600 text-white shadow-sm'
                 : 'bg-white dark:bg-slate-800 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800/60 hover:bg-blue-50'
             }`}
           >
-            <Building2 className="w-3.5 h-3.5" />
+            <Building2 className="w-3 h-3" />
             <span>NOP Baru</span>
-            <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200">
+            <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200">
               {pbbApplications.length}
             </span>
           </button>
           <button
             onClick={() => setPbbSubFilter('mutasi')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+            className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1 ${
               pbbSubFilter === 'mutasi'
                 ? 'bg-indigo-600 text-white shadow-sm'
                 : 'bg-white dark:bg-slate-800 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/60 hover:bg-indigo-50'
             }`}
           >
-            <Layers className="w-3.5 h-3.5" />
+            <Layers className="w-3 h-3" />
             <span>Mutasi PBB</span>
-            <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-indigo-100 dark:bg-indigo-900/60 text-indigo-800 dark:text-indigo-200">
+            <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-indigo-100 dark:bg-indigo-900/60 text-indigo-800 dark:text-indigo-200">
               {pbbMutations.length}
             </span>
           </button>
@@ -609,63 +609,64 @@ export default function DaftarTugas() {
 
       {/* Sub-filter Riwayat Kunjungan Petugas */}
       {activeTab === 'completed' && (
-        <div className="flex flex-wrap items-center gap-2 pt-1 animate-in fade-in duration-200">
-          <span className="text-xs font-bold text-slate-500 dark:text-slate-400 mr-1 flex items-center gap-1.5">
-            <Filter className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-            <span>Status Verifikasi:</span>
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 animate-in fade-in duration-200">
+          <span className="text-[11px] font-bold text-slate-400 mr-1 flex items-center gap-1 shrink-0">
+            <Filter className="w-3 h-3 text-blue-500" />
+            <span>Status:</span>
           </span>
           <button
             onClick={() => setVerificationFilter('all')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+            className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1 ${
               verificationFilter === 'all'
                 ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-sm'
                 : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:bg-slate-50'
             }`}
           >
-            <span>Semua Riwayat</span>
-            <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-slate-200/60 dark:bg-slate-700 text-slate-700 dark:text-slate-200">
+            <span>Semua</span>
+            <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-slate-200/60 dark:bg-slate-700 text-slate-700 dark:text-slate-200">
               {tasks.length}
             </span>
           </button>
           <button
             onClick={() => setVerificationFilter('verified')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+            className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1 ${
               verificationFilter === 'verified'
                 ? 'bg-emerald-600 text-white shadow-sm'
                 : 'bg-white dark:bg-slate-800 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60 hover:bg-emerald-50'
             }`}
           >
-            <CheckCircle2 className="w-3.5 h-3.5" />
-            <span>Sudah Diverifikasi</span>
-            <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200">
+            <CheckCircle2 className="w-3 h-3" />
+            <span>Terverifikasi</span>
+            <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200">
               {verifiedCount}
             </span>
           </button>
           <button
             onClick={() => setVerificationFilter('unverified')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+            className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1 ${
               verificationFilter === 'unverified'
                 ? 'bg-amber-600 text-white shadow-sm'
                 : 'bg-white dark:bg-slate-800 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/60 hover:bg-amber-50'
             }`}
           >
-            <Clock className="w-3.5 h-3.5" />
-            <span>Belum Diverifikasi</span>
-            <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-200">
+            <Clock className="w-3 h-3" />
+            <span>Belum</span>
+            <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-200">
               {unverifiedCount}
             </span>
           </button>
         </div>
       )}
 
+      {/* Search Input — Sleek & Compact */}
       <div className="relative group max-w-md">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5 group-focus-within:text-blue-500" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 group-focus-within:text-blue-500" />
         <input
           type="text"
-          placeholder={activeTab === 'asset_survey' ? "Cari kode, nama alat, lokasi, atau pemohon..." : activeTab === 'pbb_survey' ? "Cari tiket mutasi, NOP, NIK, catatan, atau pemohon..." : "Cari tugas berdasarkan catatan, zona, atau wp..."}
+          placeholder={activeTab === 'asset_survey' ? "Cari kode, alat, lokasi, pemohon..." : activeTab === 'pbb_survey' ? "Cari tiket mutasi, NOP, NIK, catatan..." : "Cari tugas berdasarkan catatan, zona, WP..."}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-2xl py-3 pl-12 pr-4 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium placeholder:font-normal"
+          className="w-full bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl py-2 pl-9 pr-3 text-xs focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium placeholder:font-normal"
         />
       </div>
 
@@ -688,7 +689,7 @@ export default function DaftarTugas() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4">
             {/* Kartu NOP Baru */}
             {(pbbSubFilter === 'all' || pbbSubFilter === 'nop_baru') &&
               pbbApplications
@@ -708,76 +709,62 @@ export default function DaftarTugas() {
                   return (
                     <div
                       key={`nop-${app.id}`}
-                      className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700 overflow-hidden hover:shadow-xl hover:shadow-slate-200/20 dark:hover:shadow-none transition-all flex flex-col"
+                      className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 overflow-hidden hover:shadow-md transition-all flex flex-col"
                     >
-                      <div className="p-6 pb-5 border-b border-slate-50 dark:border-slate-700/50 space-y-3">
+                      <div className="p-4 pb-3 border-b border-slate-50 dark:border-slate-700/50 space-y-2">
                         <div className="flex items-start justify-between">
-                          <span className="px-3 py-1 rounded-lg text-xs font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
+                          <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
                             NOP Baru #{app.id}
                           </span>
-                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-800 border border-amber-300">
+                          <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-amber-100 text-amber-800 border border-amber-300">
                             Survei Lapangan
                           </span>
                         </div>
 
                         <div>
-                          <h4 className="text-base font-bold text-slate-900 dark:text-white">
+                          <h4 className="text-sm font-bold text-slate-900 dark:text-white">
                             {app.name}
                           </h4>
-                          <p className="text-xs font-mono text-slate-400 mt-0.5">
+                          <p className="text-[11px] font-mono text-slate-400 mt-0.5">
                             NIK: {app.nik}
                           </p>
                         </div>
 
-                        <div className="space-y-1.5 pt-1 border-t border-slate-100 dark:border-slate-700/60 text-xs">
-                          <div className="flex items-start gap-2 text-slate-700 dark:text-slate-300">
-                            <MapPin size={14} className="text-slate-400 shrink-0 mt-0.5" />
-                            <span className="line-clamp-2">{app.address}</span>
+                        <div className="space-y-1 pt-1 border-t border-slate-100 dark:border-slate-700/60 text-xs">
+                          <div className="flex items-start gap-1.5 text-slate-700 dark:text-slate-300">
+                            <MapPin size={13} className="text-slate-400 shrink-0 mt-0.5" />
+                            <span className="line-clamp-2 text-[11px]">{app.address}</span>
                           </div>
-                          <div className="flex items-center justify-between text-slate-600 dark:text-slate-400 font-semibold pt-1">
-                            <span>Luas Tanah: <strong className="text-slate-900 dark:text-white">{app.land_area} m²</strong></span>
-                            <span>Luas Bgn: <strong className="text-slate-900 dark:text-white">{bgnArea > 0 ? `${bgnArea} m²` : 'Tanah Kosong'}</strong></span>
+                          <div className="flex items-center justify-between text-slate-600 dark:text-slate-400 font-semibold text-[11px] pt-0.5">
+                            <span>Tanah: <strong className="text-slate-900 dark:text-white">{app.land_area} m²</strong></span>
+                            <span>Bgn: <strong className="text-slate-900 dark:text-white">{bgnArea > 0 ? `${bgnArea} m²` : 'Kosong'}</strong></span>
                           </div>
                         </div>
 
                         {photoUrl && (
-                          <div className="p-2.5 bg-amber-50/70 dark:bg-amber-950/30 rounded-2xl border border-amber-200 dark:border-amber-800/60 flex items-center gap-3">
+                          <div className="p-2 bg-amber-50/70 dark:bg-amber-950/30 rounded-xl border border-amber-200 dark:border-amber-800/60 flex items-center gap-2.5">
                             <img
                               src={photoUrl}
                               alt="Foto Fisik Bangunan"
-                              className="w-16 h-16 object-cover rounded-xl border border-amber-300 shrink-0 bg-amber-100"
+                              className="w-12 h-12 object-cover rounded-lg border border-amber-300 shrink-0 bg-amber-100"
                               onError={(e) => {
                                 const target = e.currentTarget;
-                                if (app.metadata?.building_photo_path?.startsWith('http')) {
-                                  target.src = app.metadata.building_photo_path;
-                                }
+                                target.style.display = 'none';
                               }}
                             />
-                            <div className="min-w-0 flex-1 text-xs">
-                              <span className="font-bold text-amber-950 dark:text-amber-200 block truncate">
-                                Foto Fisik dari WP
-                              </span>
-                              <span className="text-[11px] text-amber-800 dark:text-amber-300 line-clamp-2 mt-0.5">
-                                {app.metadata?.building_usage || 'Bangunan Eksisting'} • {app.metadata?.pbg_number ? `PBG: ${app.metadata.pbg_number}` : 'Tanpa PBG'}
-                              </span>
-                              <a
-                                href={photoUrl}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="text-[10px] text-blue-600 hover:underline font-bold inline-flex items-center gap-0.5 mt-1"
-                              >
-                                Lihat Penuh <ExternalLink size={10} />
-                              </a>
+                            <div className="text-[11px] min-w-0">
+                              <span className="font-bold text-amber-900 dark:text-amber-300 block truncate">Foto Permohonan</span>
+                              <span className="text-amber-800 dark:text-amber-400 text-[10px]">Tersedia untuk diverifikasi</span>
                             </div>
                           </div>
                         )}
 
                         {app.survey_notes && (
-                          <div className="p-2.5 bg-blue-50/60 dark:bg-blue-950/30 rounded-xl border border-blue-200 dark:border-blue-900/50 text-xs">
-                            <span className="font-bold text-blue-900 dark:text-blue-300 block text-[11px] mb-0.5">
-                              Instruksi dari Admin/Kasubid:
+                          <div className="p-2 bg-blue-50/60 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-900/50 text-[11px]">
+                            <span className="font-bold text-blue-900 dark:text-blue-300 block text-[10px] mb-0.5">
+                              Catatan Admin / Kasubid:
                             </span>
-                            <p className="text-blue-950 dark:text-blue-200 italic font-medium">"{app.survey_notes}"</p>
+                            <p className="text-blue-950 dark:text-blue-200 italic font-medium">{app.survey_notes}</p>
                           </div>
                         )}
 
@@ -786,20 +773,20 @@ export default function DaftarTugas() {
                             href={`https://www.google.com/maps/dir/?api=1&destination=${app.latitude},${app.longitude}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="w-full py-2 bg-slate-100 dark:bg-slate-700/60 hover:bg-slate-200 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors"
+                            className="inline-flex items-center gap-1.5 text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline pt-0.5"
                           >
-                            <Navigation size={13} className="text-indigo-600" />
-                            <span>Navigasi Peta ({app.latitude}, {app.longitude})</span>
+                            <Navigation size={12} className="text-indigo-600" />
+                            <span>Navigasi Peta ({Number(app.latitude).toFixed(4)}, {Number(app.longitude).toFixed(4)})</span>
                           </a>
                         )}
                       </div>
 
-                      <div className="p-4 mt-auto bg-slate-50 dark:bg-slate-900/50">
+                      <div className="p-3 mt-auto bg-slate-50 dark:bg-slate-900/50">
                         <button
                           onClick={() => handleOpenPbbSurveyModal(app)}
-                          className="w-full flex items-center justify-center gap-2 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold uppercase tracking-wider text-xs transition-colors shadow-lg shadow-blue-600/20 active:scale-98"
+                          className="w-full flex items-center justify-center gap-1.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold uppercase tracking-wider text-[11px] transition-colors shadow-sm active:scale-98"
                         >
-                          <Camera className="w-4 h-4" />
+                          <Camera className="w-3.5 h-3.5" />
                           <span>Input Hasil Survei / BASL</span>
                         </button>
                       </div>
@@ -824,27 +811,27 @@ export default function DaftarTugas() {
                 .map((m) => (
                   <div
                     key={`mut-${m.id}`}
-                    className="bg-white dark:bg-slate-800 rounded-3xl border border-indigo-100 dark:border-indigo-900/40 overflow-hidden hover:shadow-xl hover:shadow-indigo-200/20 dark:hover:shadow-none transition-all flex flex-col"
+                    className="bg-white dark:bg-slate-800 rounded-2xl border border-indigo-100 dark:border-indigo-900/40 overflow-hidden hover:shadow-md transition-all flex flex-col"
                   >
-                    <div className="p-6 pb-5 border-b border-slate-50 dark:border-slate-700/50 space-y-3">
-                      <div className="flex items-start justify-between gap-2">
-                        <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300 flex items-center gap-1">
-                          <Layers size={12} />
+                    <div className="p-4 pb-3 border-b border-slate-50 dark:border-slate-700/50 space-y-2">
+                      <div className="flex items-start justify-between gap-1.5">
+                        <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300 flex items-center gap-1">
+                          <Layers size={11} />
                           {getMutationTypeLabel(m.mutation_type)}
                         </span>
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-800 border border-amber-300">
+                        <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-amber-100 text-amber-800 border border-amber-300">
                           Survei Mutasi
                         </span>
                       </div>
 
                       <div>
-                        <div className="text-xs font-mono font-bold text-indigo-600 dark:text-indigo-400">
+                        <div className="text-[11px] font-mono font-bold text-indigo-600 dark:text-indigo-400">
                           {m.ticket_no}
                         </div>
-                        <h4 className="text-base font-bold text-slate-900 dark:text-white mt-0.5">
+                        <h4 className="text-sm font-bold text-slate-900 dark:text-white mt-0.5">
                           {m.applicant_name}
                         </h4>
-                        <div className="flex flex-wrap items-center gap-2 text-xs font-mono text-slate-400 mt-0.5">
+                        <div className="flex flex-wrap items-center gap-2 text-[11px] font-mono text-slate-400 mt-0.5">
                           <span>NIK: {m.applicant_nik}</span>
                           {m.applicant_phone && <span>• Telp: {m.applicant_phone}</span>}
                         </div>
@@ -913,12 +900,12 @@ export default function DaftarTugas() {
                       )}
                     </div>
 
-                    <div className="p-4 mt-auto bg-slate-50 dark:bg-slate-900/50">
+                    <div className="p-3 mt-auto bg-slate-50 dark:bg-slate-900/50">
                       <button
                         onClick={() => handleOpenMutationSurveyModal(m)}
-                        className="w-full flex items-center justify-center gap-2 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold uppercase tracking-wider text-xs transition-colors shadow-lg shadow-indigo-600/20 active:scale-98"
+                        className="w-full flex items-center justify-center gap-1.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold uppercase tracking-wider text-[11px] transition-colors shadow-sm active:scale-98"
                       >
-                        <Camera className="w-4 h-4" />
+                        <Camera className="w-3.5 h-3.5" />
                         <span>Input Hasil Survei Mutasi / BASL</span>
                       </button>
                     </div>
@@ -928,19 +915,19 @@ export default function DaftarTugas() {
         )
       ) : activeTab === 'asset_survey' ? (
         assetRentals.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 bg-white/50 dark:bg-slate-800/50 rounded-3xl border border-dashed border-slate-200 dark:border-slate-700">
-            <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center mb-4">
-              <Wrench className="w-8 h-8 text-slate-400" />
+          <div className="flex flex-col items-center justify-center py-16 bg-white/50 dark:bg-slate-800/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
+            <div className="w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-xl flex items-center justify-center mb-3">
+              <Wrench className="w-6 h-6 text-slate-400" />
             </div>
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">
               Tidak Ada Pengajuan Sewa
             </h3>
-            <p className="text-slate-500 dark:text-slate-400 text-center max-w-sm">
+            <p className="text-xs text-slate-500 dark:text-slate-400 text-center max-w-sm">
               Belum ada permohonan sewa alat berat yang perlu diverifikasi lapangan.
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4">
             {assetRentals
               .filter((r) => {
                 const s = searchTerm.toLowerCase();
