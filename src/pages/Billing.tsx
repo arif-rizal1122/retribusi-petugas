@@ -8,7 +8,8 @@ import {
   Loader2, 
   QrCode, 
   Plus, 
-  ImagePlus
+  ImagePlus,
+  Camera
 } from 'lucide-react';
 import SearchableSelect from '../components/SearchableSelect';
 import { Billing as BillingType } from '../types';
@@ -565,9 +566,9 @@ export default function Billing() {
                       </>
                     ) : (
                       <>
-                        <ImagePlus className="w-6 h-6 sm:w-8 sm:h-8 text-slate-400 mb-2" />
-                        <span className="text-xs font-bold text-slate-500">Ketuk untuk Ambil Foto</span>
-                        <span className="text-[9px] font-medium text-slate-400 mt-1">PNG, JPG up to 5MB</span>
+                        <Camera className="w-6 h-6 sm:w-8 sm:h-8 text-blue-500 mb-2" />
+                        <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Buka Kamera Bukti Pembayaran</span>
+                        <span className="text-[10px] font-medium text-slate-400 mt-1">Wajib kamera langsung di lokasi objek</span>
                       </>
                     )}
                     <input 
@@ -745,9 +746,9 @@ export default function Billing() {
                     </>
                   ) : (
                     <>
-                      <ImagePlus className="w-6 h-6 sm:w-8 sm:h-8 text-slate-400 mb-2" />
-                      <span className="text-xs font-bold text-slate-500">Ketuk untuk Ambil Foto</span>
-                      <span className="text-[9px] font-medium text-slate-400 mt-1">PNG, JPG up to 5MB</span>
+                      <Camera className="w-6 h-6 sm:w-8 sm:h-8 text-blue-500 mb-2" />
+                      <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Buka Kamera Bukti Pembayaran</span>
+                      <span className="text-[10px] font-medium text-slate-400 mt-1">Wajib kamera langsung di lokasi objek</span>
                     </>
                   )}
                   <input 

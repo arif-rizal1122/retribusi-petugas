@@ -29,6 +29,8 @@ import {
 import toast from 'react-hot-toast';
 import { AssetSurveyForm, type AssetRentalSurveyItem } from '../components/AssetSurveyForm';
 import { AssetInspectionModal } from '../components/AssetInspectionModal';
+import { FieldCameraCapture } from '../components/FieldCameraCapture';
+import { getOfficerCurrentPosition, calculateDistanceMeters, DEFAULT_MAX_RADIUS_METERS } from '../utils/geoValidation';
 
 interface PbbMutationItem {
   id: number;
@@ -370,6 +372,25 @@ export default function DaftarTugas() {
     if (!photo) {
       toast.error('Gunakan Kamera untuk bukti penyelesaian!');
       return;
+    }
+
+    const targetTask = tasks.find(t => t.id === id);
+    if (targetTask?.latitude && targetTask?.longitude) {
+      try {
+        const officerLoc = await getOfficerCurrentPosition();
+        const dist = calculateDistanceMeters(
+          officerLoc.lat,
+          officerLoc.lng,
+          parseFloat(targetTask.latitude),
+          parseFloat(targetTask.longitude)
+        );
+        if (dist > DEFAULT_MAX_RADIUS_METERS) {
+          toast.error(`Validasi radius gagal: Anda berjarak ${dist} m dari lokasi objek. Maksimal radius adalah ${DEFAULT_MAX_RADIUS_METERS} m.`);
+          return;
+        }
+      } catch (locErr: any) {
+        console.warn('GPS check warning:', locErr);
+      }
     }
 
     try {
@@ -1643,55 +1664,24 @@ export default function DaftarTugas() {
                 </div>
               </div>
 
-              {/* Step 3: Kamera Lapangan */}
+              {/* Step 3: Kamera Lapangan & Validasi Radius */}
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-gray-800 dark:text-gray-200 block">
-                  3. Foto Bukti Lapangan (Kamera Petugas)
-                </label>
-                <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-3 text-center bg-gray-50/50 dark:bg-gray-700/30">
-                  {surveyPhotoPreview ? (
-                    <div className="space-y-2">
-                      <img
-                        src={surveyPhotoPreview}
-                        alt="Preview Survei"
-                        className="w-full max-h-48 object-cover rounded-lg mx-auto border border-gray-200"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSurveyPhotoFile(null);
-                          setSurveyPhotoPreview(null);
-                        }}
-                        className="text-[11px] text-rose-600 hover:underline font-semibold inline-flex items-center gap-1"
-                      >
-                        <X size={12} /> Hapus &amp; Ambil Ulang
-                      </button>
-                    </div>
-                  ) : (
-                    <label className="cursor-pointer block py-2">
-                      <Camera className="w-8 h-8 text-blue-500 mx-auto mb-1" />
-                      <span className="text-xs font-bold text-blue-600 block">
-                        Ambil Foto Langsung dari Kamera HP
-                      </span>
-                      <span className="text-[10px] text-gray-400 block mt-0.5">
-                        Format JPG, PNG (Maks 5MB)
-                      </span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        capture="environment"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            setSurveyPhotoFile(file);
-                            setSurveyPhotoPreview(URL.createObjectURL(file));
-                          }
-                        }}
-                        className="hidden"
-                      />
-                    </label>
-                  )}
-                </div>
+                <FieldCameraCapture
+                  targetLat={selectedPbbForSurvey.latitude}
+                  targetLng={selectedPbbForSurvey.longitude}
+                  targetLabel={`NOP Baru #${selectedPbbForSurvey.id} (${selectedPbbForSurvey.name})`}
+                  label="3. Foto Bukti Fisik Lapangan (Wajib Kamera & Radius Terverifikasi)"
+                  currentPhotoPreview={surveyPhotoPreview}
+                  onPhotoCaptured={(file) => {
+                    setSurveyPhotoFile(file);
+                    setSurveyPhotoPreview(URL.createObjectURL(file));
+                  }}
+                  onClearPhoto={() => {
+                    setSurveyPhotoFile(null);
+                    setSurveyPhotoPreview(null);
+                  }}
+                  required={true}
+                />
               </div>
 
               {/* Step 4: Rekomendasi */}
@@ -1832,55 +1822,24 @@ export default function DaftarTugas() {
                 )}
               </div>
 
-              {/* Upload Foto Survei Lapangan */}
+              {/* Kamera Lapangan & Validasi Radius Survei Mutasi */}
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-gray-800 dark:text-gray-200 block">
-                  1. Foto Hasil Survei / Patok / Fisik Lapangan
-                </label>
-                <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-3 text-center bg-gray-50 dark:bg-gray-700/30">
-                  {mutationSurveyPhotoPreview ? (
-                    <div className="space-y-2">
-                      <img
-                        src={mutationSurveyPhotoPreview}
-                        alt="Preview Survei Mutasi"
-                        className="w-full max-h-48 object-cover rounded-lg mx-auto border border-gray-200"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setMutationSurveyPhotoFile(null);
-                          setMutationSurveyPhotoPreview(null);
-                        }}
-                        className="text-[11px] text-rose-600 hover:underline font-semibold inline-flex items-center gap-1"
-                      >
-                        <X size={12} /> Hapus &amp; Ambil Ulang
-                      </button>
-                    </div>
-                  ) : (
-                    <label className="cursor-pointer block py-2">
-                      <Camera className="w-8 h-8 text-indigo-500 mx-auto mb-1" />
-                      <span className="text-xs font-bold text-indigo-600 block">
-                        Ambil Foto Lapangan (Kamera HP)
-                      </span>
-                      <span className="text-[10px] text-gray-400 block mt-0.5">
-                        Foto batas kavling / fisik objek (JPG/PNG maks 10MB)
-                      </span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        capture="environment"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            setMutationSurveyPhotoFile(file);
-                            setMutationSurveyPhotoPreview(URL.createObjectURL(file));
-                          }
-                        }}
-                        className="hidden"
-                      />
-                    </label>
-                  )}
-                </div>
+                <FieldCameraCapture
+                  targetLat={selectedMutationForSurvey.latitude || (selectedMutationForSurvey as any).survey_metadata?.latitude}
+                  targetLng={selectedMutationForSurvey.longitude || (selectedMutationForSurvey as any).survey_metadata?.longitude}
+                  targetLabel={`Mutasi ${selectedMutationForSurvey.ticket_no}`}
+                  label="1. Foto Hasil Survei / Patok Lapangan (Wajib Kamera & Radius Terverifikasi)"
+                  currentPhotoPreview={mutationSurveyPhotoPreview}
+                  onPhotoCaptured={(file) => {
+                    setMutationSurveyPhotoFile(file);
+                    setMutationSurveyPhotoPreview(URL.createObjectURL(file));
+                  }}
+                  onClearPhoto={() => {
+                    setMutationSurveyPhotoFile(null);
+                    setMutationSurveyPhotoPreview(null);
+                  }}
+                  required={true}
+                />
               </div>
 
               {/* Rekomendasi Hasil Survei */}

@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { thermalPrintService } from '../services/ThermalPrintService';
 import { api, API_URL } from '../lib/api';
+import { FieldCameraCapture } from '../components/FieldCameraCapture';
 
 interface InquiryResult {
   nop: string;
@@ -977,48 +978,24 @@ export default function PbbBapenda() {
                 </div>
               </div>
 
-              {/* Step 3: Ambil Foto Lapangan */}
+              {/* Step 3: Kamera Lapangan & Validasi Radius */}
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-gray-800 dark:text-gray-200 block">
-                  3. Foto Bukti Lapangan (Kamera Petugas)
-                </label>
-                {surveyPhotoPreview ? (
-                  <div className="relative rounded-xl overflow-hidden border border-emerald-300 bg-emerald-50/50 p-2.5 flex items-center gap-3">
-                    <img
-                      src={surveyPhotoPreview}
-                      alt="Preview Survei"
-                      className="w-16 h-16 object-cover rounded-lg border border-emerald-200 shadow-sm"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-bold text-emerald-900 truncate">
-                        {surveyPhotoFile ? surveyPhotoFile.name : 'Foto Lapangan Tersimpan'}
-                      </p>
-                      <p className="text-[10px] text-emerald-700 font-medium">✓ Foto bukti siap dilampirkan</p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => { setSurveyPhotoFile(null); setSurveyPhotoPreview(null); }}
-                      className="p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg"
-                      title="Hapus foto"
-                    >
-                      <X size={16} />
-                    </button>
-                  </div>
-                ) : (
-                  <label className="cursor-pointer block">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      capture="environment"
-                      onChange={handlePhotoSelected}
-                      className="hidden"
-                    />
-                    <div className="py-3.5 px-4 rounded-xl border-2 border-dashed border-blue-300 bg-blue-50/60 hover:bg-blue-100/60 text-blue-950 text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-sm">
-                      <Camera size={18} className="text-baubau-blue shrink-0" />
-                      <span>Ambil Foto Langsung dari Kamera HP</span>
-                    </div>
-                  </label>
-                )}
+                <FieldCameraCapture
+                  targetLat={selectedAppForSurvey?.latitude}
+                  targetLng={selectedAppForSurvey?.longitude}
+                  targetLabel={`NOP Baru #${selectedAppForSurvey?.id} (${selectedAppForSurvey?.name})`}
+                  label="3. Foto Bukti Lapangan (Wajib Kamera & Radius Terverifikasi)"
+                  currentPhotoPreview={surveyPhotoPreview}
+                  onPhotoCaptured={(file) => {
+                    setSurveyPhotoFile(file);
+                    setSurveyPhotoPreview(URL.createObjectURL(file));
+                  }}
+                  onClearPhoto={() => {
+                    setSurveyPhotoFile(null);
+                    setSurveyPhotoPreview(null);
+                  }}
+                  required={true}
+                />
               </div>
 
               {/* Step 4: Rekomendasi Akhir Petugas (1-Tap) */}
