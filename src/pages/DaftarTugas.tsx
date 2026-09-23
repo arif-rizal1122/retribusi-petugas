@@ -20,10 +20,54 @@ import {
   X,
   Loader2,
   Filter,
+  Layers,
+  FileText,
+  Phone,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { AssetSurveyForm, type AssetRentalSurveyItem } from '../components/AssetSurveyForm';
 import { AssetInspectionModal } from '../components/AssetInspectionModal';
+
+interface PbbMutationItem {
+  id: number;
+  ticket_no: string;
+  mutation_type: string;
+  applicant_nik: string;
+  applicant_name: string;
+  applicant_phone?: string | null;
+  applicant_address?: string | null;
+  parent_nop?: string | null;
+  status: string;
+  notes?: string | null;
+  survey_notes?: string | null;
+  survey_photo_path?: string | null;
+  parent_land_area?: number | string | null;
+  total_parent_debt?: number | string | null;
+  previous_taxpayer_name?: string | null;
+  new_taxpayer_name?: string | null;
+  correction_data?: any;
+  split_items?: Array<{
+    id: number;
+    kavling_name?: string;
+    land_area: number | string;
+    building_area?: number | string | null;
+    owner_name?: string | null;
+    owner_nik?: string | null;
+  }>;
+  attachment_files?: any;
+  created_at: string;
+}
+
+const getMutationTypeLabel = (type: string) => {
+  switch (type) {
+    case 'SPLIT_KAVLING': return 'Pecah Bidang / Kavling';
+    case 'TRANSFER_OWNERSHIP': return 'Balik Nama / Peralihan Hak';
+    case 'RECTIFICATION': return 'Pembetulan Data SPPT';
+    case 'AMALGAMATION': return 'Penggabungan Bidang';
+    case 'CANCELLATION': return 'Pembatalan / NOP Ganda';
+    default: return type;
+  }
+};
 
 interface Task {
   id: number;
@@ -121,7 +165,7 @@ export default function DaftarTugas() {
   const [selectedRentalForSurvey, setSelectedRentalForSurvey] = useState<AssetRentalSurveyItem | null>(null);
   const [selectedRentalForInspection, setSelectedRentalForInspection] = useState<AssetRentalSurveyItem | null>(null);
   
-  // PBB Survey Modal State
+  // PBB Survey Modal State (NOP Baru)
   const [selectedPbbForSurvey, setSelectedPbbForSurvey] = useState<PbbNopApplication | null>(null);
   const [surveyNotesInput, setSurveyNotesInput] = useState('');
   const [surveyPhotoFile, setSurveyPhotoFile] = useState<File | null>(null);
@@ -130,6 +174,16 @@ export default function DaftarTugas() {
   const [surveyPhysicalCondition, setSurveyPhysicalCondition] = useState<string>('HUNIAN_SEDERHANA');
   const [surveyLocationMatch, setSurveyLocationMatch] = useState<boolean>(true);
   const [submittingSurvey, setSubmittingSurvey] = useState(false);
+
+  // PBB Mutasi State & Modal (Pecah/Gabung/Balik Nama/dll)
+  const [pbbMutations, setPbbMutations] = useState<PbbMutationItem[]>([]);
+  const [pbbSubFilter, setPbbSubFilter] = useState<'all' | 'nop_baru' | 'mutasi'>('all');
+  const [selectedMutationForSurvey, setSelectedMutationForSurvey] = useState<PbbMutationItem | null>(null);
+  const [mutationSurveyNotes, setMutationSurveyNotes] = useState('');
+  const [mutationSurveyPhotoFile, setMutationSurveyPhotoFile] = useState<File | null>(null);
+  const [mutationSurveyPhotoPreview, setMutationSurveyPhotoPreview] = useState<string | null>(null);
+  const [mutationRecommendation, setMutationRecommendation] = useState<'RECOMMENDED' | 'NEEDS_REVISION'>('RECOMMENDED');
+  const [submittingMutationSurvey, setSubmittingMutationSurvey] = useState(false);
 
   const getFileUrl = (path?: string | null) => {
     if (!path) return '';
@@ -142,11 +196,19 @@ export default function DaftarTugas() {
   const fetchPbbApplications = async () => {
     try {
       setPbbLoading(true);
-      const res = await api.get('/api/pbb/bapenda/nop-applications', {
-        params: { status: 'SURVEY' }
-      });
-      const list = res.data?.data || (Array.isArray(res.data) ? res.data : []);
-      setPbbApplications(list);
+      const [nopRes, mutRes] = await Promise.allSettled([
+        api.get('/api/pbb/bapenda/nop-applications', { params: { status: 'SURVEY' } }),
+        api.get('/api/pbb/mutations/my-assignments'),
+      ]);
+
+      if (nopRes.status === 'fulfilled') {
+        const list = nopRes.value.data?.data || (Array.isArray(nopRes.value.data) ? nopRes.value.data : []);
+        setPbbApplications(list);
+      }
+      if (mutRes.status === 'fulfilled') {
+        const list = mutRes.value.data?.data || (Array.isArray(mutRes.value.data) ? mutRes.value.data : []);
+        setPbbMutations(list);
+      }
     } catch (err) {
       console.error('Error fetching PBB applications for survey:', err);
     } finally {
@@ -218,6 +280,56 @@ export default function DaftarTugas() {
       toast.error(err.message || 'Gagal menyimpan hasil survei');
     } finally {
       setSubmittingSurvey(false);
+    }
+  };
+
+  const handleOpenMutationSurveyModal = (mutation: PbbMutationItem) => {
+    setSelectedMutationForSurvey(mutation);
+    setMutationSurveyNotes(mutation.survey_notes || '');
+    setMutationSurveyPhotoFile(null);
+    setMutationSurveyPhotoPreview(mutation.survey_photo_path ? getFileUrl(mutation.survey_photo_path) : null);
+    setMutationRecommendation('RECOMMENDED');
+  };
+
+  const handleSubmitMutationSurvey = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedMutationForSurvey) return;
+
+    let finalNotes = mutationSurveyNotes.trim();
+    if (!finalNotes) {
+      if (mutationRecommendation === 'RECOMMENDED') {
+        finalNotes = 'Hasil survei lapangan mutasi telah diverifikasi faktual. Kondisi batas tanah dan data fisik sesuai permohonan.';
+      } else {
+        toast.error('Mohon cantumkan catatan koreksi atau temuan lapangan.');
+        return;
+      }
+    }
+
+    setSubmittingMutationSurvey(true);
+    try {
+      const formData = new FormData();
+      formData.append('status', 'SURVEY');
+      formData.append('survey_notes', finalNotes);
+      formData.append('survey_metadata', JSON.stringify({
+        recommendation: mutationRecommendation,
+        surveyed_at: new Date().toISOString(),
+      }));
+      if (mutationSurveyPhotoFile) {
+        formData.append('survey_photo', mutationSurveyPhotoFile);
+      }
+
+      await api.post(`/api/pbb/mutations/${selectedMutationForSurvey.id}/status`, formData);
+      toast.success(`Hasil survei mutasi ${selectedMutationForSurvey.ticket_no} berhasil dikirim ke Admin Bapenda!`);
+      setSelectedMutationForSurvey(null);
+      setMutationSurveyNotes('');
+      setMutationSurveyPhotoFile(null);
+      setMutationSurveyPhotoPreview(null);
+      fetchPbbApplications();
+    } catch (err: any) {
+      console.error('Error submitting mutation survey:', err);
+      toast.error(err.message || 'Gagal menyimpan hasil survei mutasi');
+    } finally {
+      setSubmittingMutationSurvey(false);
     }
   };
 
@@ -358,8 +470,8 @@ export default function DaftarTugas() {
         </div>
       </div>
 
-      {/* Banner PBB Survei Objek Baru */}
-      {pbbApplications.length > 0 && activeTab !== 'pbb_survey' && (
+      {/* Banner Penugasan PBB */}
+      {(pbbApplications.length + pbbMutations.length) > 0 && activeTab !== 'pbb_survey' && (
         <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 text-white rounded-3xl p-4 sm:p-5 shadow-xl shadow-blue-600/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-blue-400/30">
           <div className="flex items-center gap-3.5">
             <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center shrink-0 border border-white/30">
@@ -373,10 +485,11 @@ export default function DaftarTugas() {
                 <span className="text-xs font-semibold text-blue-100">PBB Bapenda</span>
               </div>
               <h3 className="text-base font-black tracking-tight mt-0.5">
-                Ada {pbbApplications.length} Penugasan Survei Lapangan NOP Baru
+                Ada {pbbApplications.length + pbbMutations.length} Penugasan Survei Lapangan PBB
+                {pbbMutations.length > 0 && ` (${pbbMutations.length} Mutasi)`}
               </h3>
               <p className="text-xs text-blue-100 mt-0.5">
-                Admin/Kasubid telah mendisposisikan verifikasi fisik bangunan & koordinat lapangan.
+                Admin/Kasubid telah mendisposisikan verifikasi fisik objek baru &amp; mutasi PBB.
               </p>
             </div>
           </div>
@@ -384,7 +497,7 @@ export default function DaftarTugas() {
             onClick={() => setActiveTab('pbb_survey')}
             className="px-5 py-2.5 bg-white hover:bg-blue-50 text-blue-700 rounded-2xl text-xs font-black shrink-0 transition-all shadow-md active:scale-95 flex items-center justify-center gap-2"
           >
-            <span>Buka Survei PBB ({pbbApplications.length})</span>
+            <span>Buka Penugasan PBB ({pbbApplications.length + pbbMutations.length})</span>
             <ExternalLink className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -412,10 +525,10 @@ export default function DaftarTugas() {
           }`}
         >
           <Building2 className="w-4 h-4" />
-          <span>Survei Objek Baru PBB</span>
-          {pbbApplications.length > 0 && (
+          <span>Penugasan PBB</span>
+          {(pbbApplications.length + pbbMutations.length) > 0 && (
             <span className="ml-1 px-2 py-0.5 text-[11px] font-black rounded-full bg-rose-500 text-white animate-pulse">
-              {pbbApplications.length}
+              {pbbApplications.length + pbbMutations.length}
             </span>
           )}
         </button>
@@ -442,6 +555,57 @@ export default function DaftarTugas() {
           Survey Alat Berat PUPR
         </button>
       </div>
+
+      {/* Sub-filter Penugasan PBB (NOP Baru vs Mutasi) */}
+      {activeTab === 'pbb_survey' && (
+        <div className="flex flex-wrap items-center gap-2 pt-1 animate-in fade-in duration-200">
+          <span className="text-xs font-bold text-slate-500 dark:text-slate-400 mr-1 flex items-center gap-1.5">
+            <Filter className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+            <span>Kategori PBB:</span>
+          </span>
+          <button
+            onClick={() => setPbbSubFilter('all')}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+              pbbSubFilter === 'all'
+                ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-sm'
+                : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:bg-slate-50'
+            }`}
+          >
+            <span>Semua PBB</span>
+            <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-slate-200/60 dark:bg-slate-700 text-slate-700 dark:text-slate-200">
+              {pbbApplications.length + pbbMutations.length}
+            </span>
+          </button>
+          <button
+            onClick={() => setPbbSubFilter('nop_baru')}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+              pbbSubFilter === 'nop_baru'
+                ? 'bg-blue-600 text-white shadow-sm'
+                : 'bg-white dark:bg-slate-800 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800/60 hover:bg-blue-50'
+            }`}
+          >
+            <Building2 className="w-3.5 h-3.5" />
+            <span>NOP Baru</span>
+            <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200">
+              {pbbApplications.length}
+            </span>
+          </button>
+          <button
+            onClick={() => setPbbSubFilter('mutasi')}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+              pbbSubFilter === 'mutasi'
+                ? 'bg-indigo-600 text-white shadow-sm'
+                : 'bg-white dark:bg-slate-800 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/60 hover:bg-indigo-50'
+            }`}
+          >
+            <Layers className="w-3.5 h-3.5" />
+            <span>Mutasi PBB</span>
+            <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-indigo-100 dark:bg-indigo-900/60 text-indigo-800 dark:text-indigo-200">
+              {pbbMutations.length}
+            </span>
+          </button>
+        </div>
+      )}
 
       {/* Sub-filter Riwayat Kunjungan Petugas */}
       {activeTab === 'completed' && (
@@ -498,7 +662,7 @@ export default function DaftarTugas() {
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5 group-focus-within:text-blue-500" />
         <input
           type="text"
-          placeholder={activeTab === 'asset_survey' ? "Cari kode, nama alat, lokasi, atau pemohon..." : "Cari tugas berdasarkan catatan, zona, atau wp..."}
+          placeholder={activeTab === 'asset_survey' ? "Cari kode, nama alat, lokasi, atau pemohon..." : activeTab === 'pbb_survey' ? "Cari tiket mutasi, NOP, NIK, catatan, atau pemohon..." : "Cari tugas berdasarkan catatan, zona, atau wp..."}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="w-full bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-2xl py-3 pl-12 pr-4 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium placeholder:font-normal"
@@ -509,140 +673,257 @@ export default function DaftarTugas() {
         pbbLoading ? (
           <div className="flex flex-col items-center justify-center py-20 bg-white/50 dark:bg-slate-800/50 rounded-3xl border border-dashed border-slate-200 dark:border-slate-700">
             <Loader2 className="w-8 h-8 text-blue-600 animate-spin mb-3" />
-            <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">Memuat berkas survei PBB...</p>
+            <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">Memuat berkas penugasan PBB...</p>
           </div>
-        ) : pbbApplications.length === 0 ? (
+        ) : (pbbApplications.length === 0 && pbbMutations.length === 0) ? (
           <div className="flex flex-col items-center justify-center py-20 bg-white/50 dark:bg-slate-800/50 rounded-3xl border border-dashed border-slate-200 dark:border-slate-700">
             <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center mb-4">
               <Building2 className="w-8 h-8 text-slate-400" />
             </div>
             <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">
-              Tidak Ada Permohonan Survei PBB
+              Tidak Ada Penugasan PBB
             </h3>
             <p className="text-slate-500 dark:text-slate-400 text-center max-w-sm">
-              Semua permohonan pendaftaran NOP baru telah disurvei.
+              Semua permohonan pendaftaran NOP baru &amp; mutasi PBB telah selesai disurvei.
             </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {pbbApplications
-              .filter((app) => {
-                const s = searchTerm.toLowerCase();
-                return (
-                  app.name?.toLowerCase().includes(s) ||
-                  app.nik?.toLowerCase().includes(s) ||
-                  app.address?.toLowerCase().includes(s) ||
-                  app.survey_notes?.toLowerCase().includes(s)
-                );
-              })
-              .map((app) => {
-                const bgnArea = Number(app.building_area || 0);
-                const photoUrl = app.metadata?.building_photo_path ? getFileUrl(app.metadata.building_photo_path) : null;
+            {/* Kartu NOP Baru */}
+            {(pbbSubFilter === 'all' || pbbSubFilter === 'nop_baru') &&
+              pbbApplications
+                .filter((app) => {
+                  const s = searchTerm.toLowerCase();
+                  return (
+                    app.name?.toLowerCase().includes(s) ||
+                    app.nik?.toLowerCase().includes(s) ||
+                    app.address?.toLowerCase().includes(s) ||
+                    app.survey_notes?.toLowerCase().includes(s)
+                  );
+                })
+                .map((app) => {
+                  const bgnArea = Number(app.building_area || 0);
+                  const photoUrl = app.metadata?.building_photo_path ? getFileUrl(app.metadata.building_photo_path) : null;
 
-                return (
+                  return (
+                    <div
+                      key={`nop-${app.id}`}
+                      className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700 overflow-hidden hover:shadow-xl hover:shadow-slate-200/20 dark:hover:shadow-none transition-all flex flex-col"
+                    >
+                      <div className="p-6 pb-5 border-b border-slate-50 dark:border-slate-700/50 space-y-3">
+                        <div className="flex items-start justify-between">
+                          <span className="px-3 py-1 rounded-lg text-xs font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
+                            NOP Baru #{app.id}
+                          </span>
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-800 border border-amber-300">
+                            Survei Lapangan
+                          </span>
+                        </div>
+
+                        <div>
+                          <h4 className="text-base font-bold text-slate-900 dark:text-white">
+                            {app.name}
+                          </h4>
+                          <p className="text-xs font-mono text-slate-400 mt-0.5">
+                            NIK: {app.nik}
+                          </p>
+                        </div>
+
+                        <div className="space-y-1.5 pt-1 border-t border-slate-100 dark:border-slate-700/60 text-xs">
+                          <div className="flex items-start gap-2 text-slate-700 dark:text-slate-300">
+                            <MapPin size={14} className="text-slate-400 shrink-0 mt-0.5" />
+                            <span className="line-clamp-2">{app.address}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-slate-600 dark:text-slate-400 font-semibold pt-1">
+                            <span>Luas Tanah: <strong className="text-slate-900 dark:text-white">{app.land_area} m²</strong></span>
+                            <span>Luas Bgn: <strong className="text-slate-900 dark:text-white">{bgnArea > 0 ? `${bgnArea} m²` : 'Tanah Kosong'}</strong></span>
+                          </div>
+                        </div>
+
+                        {photoUrl && (
+                          <div className="p-2.5 bg-amber-50/70 dark:bg-amber-950/30 rounded-2xl border border-amber-200 dark:border-amber-800/60 flex items-center gap-3">
+                            <img
+                              src={photoUrl}
+                              alt="Foto Fisik Bangunan"
+                              className="w-16 h-16 object-cover rounded-xl border border-amber-300 shrink-0 bg-amber-100"
+                              onError={(e) => {
+                                const target = e.currentTarget;
+                                if (app.metadata?.building_photo_path?.startsWith('http')) {
+                                  target.src = app.metadata.building_photo_path;
+                                }
+                              }}
+                            />
+                            <div className="min-w-0 flex-1 text-xs">
+                              <span className="font-bold text-amber-950 dark:text-amber-200 block truncate">
+                                Foto Fisik dari WP
+                              </span>
+                              <span className="text-[11px] text-amber-800 dark:text-amber-300 line-clamp-2 mt-0.5">
+                                {app.metadata?.building_usage || 'Bangunan Eksisting'} • {app.metadata?.pbg_number ? `PBG: ${app.metadata.pbg_number}` : 'Tanpa PBG'}
+                              </span>
+                              <a
+                                href={photoUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-[10px] text-blue-600 hover:underline font-bold inline-flex items-center gap-0.5 mt-1"
+                              >
+                                Lihat Penuh <ExternalLink size={10} />
+                              </a>
+                            </div>
+                          </div>
+                        )}
+
+                        {app.survey_notes && (
+                          <div className="p-2.5 bg-blue-50/60 dark:bg-blue-950/30 rounded-xl border border-blue-200 dark:border-blue-900/50 text-xs">
+                            <span className="font-bold text-blue-900 dark:text-blue-300 block text-[11px] mb-0.5">
+                              Instruksi dari Admin/Kasubid:
+                            </span>
+                            <p className="text-blue-950 dark:text-blue-200 italic font-medium">"{app.survey_notes}"</p>
+                          </div>
+                        )}
+
+                        {app.latitude && app.longitude && (
+                          <a
+                            href={`https://www.google.com/maps/dir/?api=1&destination=${app.latitude},${app.longitude}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-full py-2 bg-slate-100 dark:bg-slate-700/60 hover:bg-slate-200 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors"
+                          >
+                            <Navigation size={13} className="text-indigo-600" />
+                            <span>Navigasi Peta ({app.latitude}, {app.longitude})</span>
+                          </a>
+                        )}
+                      </div>
+
+                      <div className="p-4 mt-auto bg-slate-50 dark:bg-slate-900/50">
+                        <button
+                          onClick={() => handleOpenPbbSurveyModal(app)}
+                          className="w-full flex items-center justify-center gap-2 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold uppercase tracking-wider text-xs transition-colors shadow-lg shadow-blue-600/20 active:scale-98"
+                        >
+                          <Camera className="w-4 h-4" />
+                          <span>Input Hasil Survei / BASL</span>
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+
+            {/* Kartu Mutasi PBB */}
+            {(pbbSubFilter === 'all' || pbbSubFilter === 'mutasi') &&
+              pbbMutations
+                .filter((m) => {
+                  const s = searchTerm.toLowerCase();
+                  return (
+                    m.ticket_no?.toLowerCase().includes(s) ||
+                    m.parent_nop?.toLowerCase().includes(s) ||
+                    m.applicant_name?.toLowerCase().includes(s) ||
+                    m.applicant_nik?.toLowerCase().includes(s) ||
+                    m.notes?.toLowerCase().includes(s) ||
+                    m.survey_notes?.toLowerCase().includes(s)
+                  );
+                })
+                .map((m) => (
                   <div
-                    key={app.id}
-                    className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700 overflow-hidden hover:shadow-xl hover:shadow-slate-200/20 dark:hover:shadow-none transition-all flex flex-col"
+                    key={`mut-${m.id}`}
+                    className="bg-white dark:bg-slate-800 rounded-3xl border border-indigo-100 dark:border-indigo-900/40 overflow-hidden hover:shadow-xl hover:shadow-indigo-200/20 dark:hover:shadow-none transition-all flex flex-col"
                   >
                     <div className="p-6 pb-5 border-b border-slate-50 dark:border-slate-700/50 space-y-3">
-                      <div className="flex items-start justify-between">
-                        <span className="px-3 py-1 rounded-lg text-xs font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
-                          NOP App #{app.id}
+                      <div className="flex items-start justify-between gap-2">
+                        <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300 flex items-center gap-1">
+                          <Layers size={12} />
+                          {getMutationTypeLabel(m.mutation_type)}
                         </span>
                         <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-800 border border-amber-300">
-                          Survei Lapangan
+                          Survei Mutasi
                         </span>
                       </div>
 
                       <div>
-                        <h4 className="text-base font-bold text-slate-900 dark:text-white">
-                          {app.name}
+                        <div className="text-xs font-mono font-bold text-indigo-600 dark:text-indigo-400">
+                          {m.ticket_no}
+                        </div>
+                        <h4 className="text-base font-bold text-slate-900 dark:text-white mt-0.5">
+                          {m.applicant_name}
                         </h4>
-                        <p className="text-xs font-mono text-slate-400 mt-0.5">
-                          NIK: {app.nik}
-                        </p>
+                        <div className="flex flex-wrap items-center gap-2 text-xs font-mono text-slate-400 mt-0.5">
+                          <span>NIK: {m.applicant_nik}</span>
+                          {m.applicant_phone && <span>• Telp: {m.applicant_phone}</span>}
+                        </div>
                       </div>
 
                       <div className="space-y-1.5 pt-1 border-t border-slate-100 dark:border-slate-700/60 text-xs">
-                        <div className="flex items-start gap-2 text-slate-700 dark:text-slate-300">
-                          <MapPin size={14} className="text-slate-400 shrink-0 mt-0.5" />
-                          <span className="line-clamp-2">{app.address}</span>
+                        <div className="flex items-center justify-between text-slate-600 dark:text-slate-400 font-semibold">
+                          <span>NOP Induk / Objek:</span>
+                          <span className="font-mono text-slate-900 dark:text-white">{m.parent_nop || '-'}</span>
                         </div>
-                        <div className="flex items-center justify-between text-slate-600 dark:text-slate-400 font-semibold pt-1">
-                          <span>Luas Tanah: <strong className="text-slate-900 dark:text-white">{app.land_area} m²</strong></span>
-                          <span>Luas Bgn: <strong className="text-slate-900 dark:text-white">{bgnArea > 0 ? `${bgnArea} m²` : 'Tanah Kosong'}</strong></span>
-                        </div>
+                        {m.mutation_type === 'SPLIT_KAVLING' && (
+                          <div className="p-2.5 bg-indigo-50/50 dark:bg-indigo-950/30 rounded-xl border border-indigo-100 dark:border-indigo-900/40 text-[11px] space-y-1">
+                            <div className="font-semibold text-indigo-900 dark:text-indigo-300 flex items-center justify-between">
+                              <span>Luas Induk: {m.parent_land_area || '-'} m²</span>
+                              <span>{m.split_items?.length || 0} Kavling Pecahan</span>
+                            </div>
+                            {m.split_items && m.split_items.length > 0 && (
+                              <div className="text-slate-600 dark:text-slate-400 space-y-0.5 pt-1 border-t border-indigo-100/60 dark:border-indigo-800/40">
+                                {m.split_items.slice(0, 3).map((item, idx) => (
+                                  <div key={item.id || idx} className="flex justify-between">
+                                    <span>• {item.kavling_name || `Kavling ${idx + 1}`} ({item.owner_name || 'Pemohon'}):</span>
+                                    <span className="font-semibold">{item.land_area} m²</span>
+                                  </div>
+                                ))}
+                                {m.split_items.length > 3 && (
+                                  <div className="text-indigo-600 dark:text-indigo-400 font-semibold italic text-[10px]">
+                                    +{m.split_items.length - 3} kavling lainnya
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        {m.mutation_type === 'TRANSFER_OWNERSHIP' && (
+                          <div className="p-2 bg-slate-50 dark:bg-slate-700/50 rounded-xl text-[11px] space-y-0.5">
+                            <div className="text-slate-500">Peralihan Hak:</div>
+                            <div className="font-semibold text-slate-800 dark:text-slate-200">
+                              {m.previous_taxpayer_name || 'WP Lama'} ➔ {m.new_taxpayer_name || 'WP Baru'}
+                            </div>
+                          </div>
+                        )}
+                        {m.applicant_address && (
+                          <div className="flex items-start gap-2 text-slate-700 dark:text-slate-300">
+                            <MapPin size={14} className="text-slate-400 shrink-0 mt-0.5" />
+                            <span className="line-clamp-2">{m.applicant_address}</span>
+                          </div>
+                        )}
                       </div>
 
-                      {/* Foto Bangunan dari WP */}
-                      {photoUrl && (
-                        <div className="p-2.5 bg-amber-50/70 dark:bg-amber-950/30 rounded-2xl border border-amber-200 dark:border-amber-800/60 flex items-center gap-3">
-                          <img
-                            src={photoUrl}
-                            alt="Foto Fisik Bangunan"
-                            className="w-16 h-16 object-cover rounded-xl border border-amber-300 shrink-0 bg-amber-100"
-                            onError={(e) => {
-                              const target = e.currentTarget;
-                              if (app.metadata?.building_photo_path?.startsWith('http')) {
-                                target.src = app.metadata.building_photo_path;
-                              }
-                            }}
-                          />
-                          <div className="min-w-0 flex-1 text-xs">
-                            <span className="font-bold text-amber-950 dark:text-amber-200 block truncate">
-                              Foto Fisik dari WP
-                            </span>
-                            <span className="text-[11px] text-amber-800 dark:text-amber-300 line-clamp-2 mt-0.5">
-                              {app.metadata?.building_usage || 'Bangunan Eksisting'} • {app.metadata?.pbg_number ? `PBG: ${app.metadata.pbg_number}` : 'Tanpa PBG'}
-                            </span>
-                            <a
-                              href={photoUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="text-[10px] text-blue-600 hover:underline font-bold inline-flex items-center gap-0.5 mt-1"
-                            >
-                              Lihat Penuh <ExternalLink size={10} />
-                            </a>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Catatan Disposisi Admin */}
-                      {app.survey_notes && (
+                      {/* Instruksi dari Admin/Kasubid */}
+                      {(m.survey_notes || m.notes) && (
                         <div className="p-2.5 bg-blue-50/60 dark:bg-blue-950/30 rounded-xl border border-blue-200 dark:border-blue-900/50 text-xs">
                           <span className="font-bold text-blue-900 dark:text-blue-300 block text-[11px] mb-0.5">
-                            Instruksi dari Admin/Kasubid:
+                            Instruksi dari Admin / Kasubid:
                           </span>
-                          <p className="text-blue-950 dark:text-blue-200 italic font-medium">"{app.survey_notes}"</p>
+                          <p className="text-blue-950 dark:text-blue-200 italic font-medium">"{m.survey_notes || m.notes}"</p>
                         </div>
                       )}
 
-                      {/* Koordinat GPS & Arah */}
-                      {app.latitude && app.longitude && (
-                        <a
-                          href={`https://www.google.com/maps/dir/?api=1&destination=${app.latitude},${app.longitude}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="w-full py-2 bg-slate-100 dark:bg-slate-700/60 hover:bg-slate-200 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors"
-                        >
-                          <Navigation size={13} className="text-indigo-600" />
-                          <span>Navigasi Peta ({app.latitude}, {app.longitude})</span>
-                        </a>
+                      {/* Foto Survei Sebelumnya jika sudah ada */}
+                      {m.survey_photo_path && (
+                        <div className="p-2 bg-emerald-50 dark:bg-emerald-950/30 rounded-xl border border-emerald-200 text-xs flex items-center gap-2">
+                          <CheckCircle2 size={14} className="text-emerald-600 shrink-0" />
+                          <span className="text-emerald-800 dark:text-emerald-300 text-[11px] font-medium">Sudah pernah disurvei</span>
+                        </div>
                       )}
                     </div>
 
                     <div className="p-4 mt-auto bg-slate-50 dark:bg-slate-900/50">
                       <button
-                        onClick={() => handleOpenPbbSurveyModal(app)}
-                        className="w-full flex items-center justify-center gap-2 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold uppercase tracking-wider text-xs transition-colors shadow-lg shadow-blue-600/20 active:scale-98"
+                        onClick={() => handleOpenMutationSurveyModal(m)}
+                        className="w-full flex items-center justify-center gap-2 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold uppercase tracking-wider text-xs transition-colors shadow-lg shadow-indigo-600/20 active:scale-98"
                       >
                         <Camera className="w-4 h-4" />
-                        <span>Input Hasil Survei / BASL</span>
+                        <span>Input Hasil Survei Mutasi / BASL</span>
                       </button>
                     </div>
                   </div>
-                );
-              })}
+                ))}
           </div>
         )
       ) : activeTab === 'asset_survey' ? (
@@ -1288,6 +1569,195 @@ export default function DaftarTugas() {
                   } disabled:opacity-50`}
                 >
                   {submittingSurvey ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
+                  <span>Kirim Hasil Survei ke Admin</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Survei Lapangan Mutasi PBB */}
+      {selectedMutationForSurvey && (
+        <div className="fixed inset-0 z-[120] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-xl w-full max-h-[90vh] flex flex-col shadow-2xl border border-gray-100 dark:border-gray-700 animate-in fade-in zoom-in-95 duration-200">
+            {/* Header */}
+            <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between shrink-0 bg-white dark:bg-gray-800 rounded-t-2xl">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-0.5 rounded text-xs font-bold bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300">
+                    {getMutationTypeLabel(selectedMutationForSurvey.mutation_type)}
+                  </span>
+                  <span className="font-mono text-xs font-bold text-gray-500">
+                    {selectedMutationForSurvey.ticket_no}
+                  </span>
+                </div>
+                <h3 className="text-sm font-bold text-gray-900 dark:text-white mt-1">
+                  Survei Lapangan Mutasi PBB
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedMutationForSurvey(null)}
+                className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Scrollable Form */}
+            <form onSubmit={handleSubmitMutationSurvey} className="p-4 space-y-4 overflow-y-auto flex-1">
+              {/* Ringkasan Data */}
+              <div className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-xl text-xs space-y-1.5 border border-gray-200 dark:border-gray-600">
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Pemohon:</span>
+                  <span className="font-semibold text-gray-900 dark:text-white">
+                    {selectedMutationForSurvey.applicant_name} ({selectedMutationForSurvey.applicant_nik})
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">NOP Induk:</span>
+                  <span className="font-mono font-semibold text-gray-900 dark:text-white">
+                    {selectedMutationForSurvey.parent_nop || '-'}
+                  </span>
+                </div>
+                {selectedMutationForSurvey.mutation_type === 'SPLIT_KAVLING' && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Luas Induk / Rincian:</span>
+                    <span className="font-semibold text-indigo-600 dark:text-indigo-400">
+                      {selectedMutationForSurvey.parent_land_area || '-'} m² • {selectedMutationForSurvey.split_items?.length || 0} Kavling
+                    </span>
+                  </div>
+                )}
+                {selectedMutationForSurvey.survey_notes && (
+                  <div className="pt-1.5 border-t border-gray-200 dark:border-gray-600 text-amber-700 dark:text-amber-300">
+                    <span className="font-bold">Instruksi Admin: </span>
+                    <span>{selectedMutationForSurvey.survey_notes}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Upload Foto Survei Lapangan */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-gray-800 dark:text-gray-200 block">
+                  1. Foto Hasil Survei / Patok / Fisik Lapangan
+                </label>
+                <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-3 text-center bg-gray-50 dark:bg-gray-700/30">
+                  {mutationSurveyPhotoPreview ? (
+                    <div className="space-y-2">
+                      <img
+                        src={mutationSurveyPhotoPreview}
+                        alt="Preview Survei Mutasi"
+                        className="w-full max-h-48 object-cover rounded-lg mx-auto border border-gray-200"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMutationSurveyPhotoFile(null);
+                          setMutationSurveyPhotoPreview(null);
+                        }}
+                        className="text-[11px] text-rose-600 hover:underline font-semibold inline-flex items-center gap-1"
+                      >
+                        <X size={12} /> Hapus &amp; Ambil Ulang
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="cursor-pointer block py-2">
+                      <Camera className="w-8 h-8 text-indigo-500 mx-auto mb-1" />
+                      <span className="text-xs font-bold text-indigo-600 block">
+                        Ambil Foto Lapangan (Kamera HP)
+                      </span>
+                      <span className="text-[10px] text-gray-400 block mt-0.5">
+                        Foto batas kavling / fisik objek (JPG/PNG maks 10MB)
+                      </span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        capture="environment"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            setMutationSurveyPhotoFile(file);
+                            setMutationSurveyPhotoPreview(URL.createObjectURL(file));
+                          }
+                        }}
+                        className="hidden"
+                      />
+                    </label>
+                  )}
+                </div>
+              </div>
+
+              {/* Rekomendasi Hasil Survei */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-gray-800 dark:text-gray-200 block">
+                  2. Rekomendasi Petugas Lapangan
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setMutationRecommendation('RECOMMENDED')}
+                    className={`p-3 rounded-xl border text-center transition-all ${
+                      mutationRecommendation === 'RECOMMENDED'
+                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-md ring-2 ring-emerald-600/30 font-bold'
+                        : 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100 font-bold'
+                    }`}
+                  >
+                    <div className="text-xs">✓ SESUAI &amp; LAYAK</div>
+                    <div className="text-[10px] opacity-90 font-normal">Kondisi Lapangan Sesuai Berkas</div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMutationRecommendation('NEEDS_REVISION')}
+                    className={`p-3 rounded-xl border text-center transition-all ${
+                      mutationRecommendation === 'NEEDS_REVISION'
+                        ? 'bg-rose-600 text-white border-rose-600 shadow-md ring-2 ring-rose-600/30 font-bold'
+                        : 'bg-rose-50 text-rose-800 border-rose-200 hover:bg-rose-100 font-bold'
+                    }`}
+                  >
+                    <div className="text-xs">✕ PERLU KOREKSI</div>
+                    <div className="text-[10px] opacity-90 font-normal">Batas/Luas Berbeda di Lapangan</div>
+                  </button>
+                </div>
+              </div>
+
+              {/* Catatan Survei */}
+              <div className="space-y-1">
+                <label className="text-[11px] font-semibold text-gray-600 dark:text-gray-300 block">
+                  Catatan / Berita Acara Survei Lapangan (BASL):
+                </label>
+                <textarea
+                  rows={3}
+                  value={mutationSurveyNotes}
+                  onChange={(e) => setMutationSurveyNotes(e.target.value)}
+                  placeholder={
+                    mutationRecommendation === 'RECOMMENDED'
+                      ? 'Catatan hasil survei mutasi...'
+                      : 'Contoh: Patok batas kavling A overlap 2 meter dengan tetangga timur, luas riil induk 850 m².'
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl text-xs bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                />
+              </div>
+
+              {/* Footer */}
+              <div className="pt-3 border-t border-gray-100 dark:border-gray-700 flex justify-end gap-2 shrink-0 bg-white dark:bg-gray-800">
+                <button
+                  type="button"
+                  onClick={() => setSelectedMutationForSurvey(null)}
+                  className="px-4 py-2.5 rounded-xl text-xs font-semibold text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={submittingMutationSurvey}
+                  className={`px-5 py-2.5 rounded-xl text-xs font-bold text-white flex items-center gap-2 transition-all shadow-md ${
+                    mutationRecommendation === 'RECOMMENDED'
+                      ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20'
+                      : 'bg-rose-600 hover:bg-rose-700 shadow-rose-600/20'
+                  } disabled:opacity-50`}
+                >
+                  {submittingMutationSurvey ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
                   <span>Kirim Hasil Survei ke Admin</span>
                 </button>
               </div>
