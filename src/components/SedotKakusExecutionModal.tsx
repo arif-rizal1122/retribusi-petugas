@@ -1,14 +1,11 @@
 import React, { useState } from 'react';
 import {
   Droplets,
-  Truck,
   CheckCircle2,
   X,
   Loader2,
   MapPin,
   User,
-  ShieldCheck,
-  AlertCircle
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../lib/api';
@@ -218,14 +215,13 @@ export const SedotKakusExecutionModal: React.FC<SedotKakusExecutionModalProps> =
             </div>
             <FieldCameraCapture
               label="Ambil Foto Sebelum Disedot"
-              folder="retribusi/sedot-kakus-execution"
-              previewUrl={fotoSebelumPreview}
-              onCapture={(file, coords) => {
+              currentPhotoPreview={fotoSebelumPreview}
+              onPhotoCaptured={(file: File, coords: OfficerLocation) => {
                 setFotoSebelumFile(file);
                 setFotoSebelumPreview(URL.createObjectURL(file));
                 setGpsSebelum(coords);
               }}
-              onClear={() => {
+              onClearPhoto={() => {
                 setFotoSebelumFile(null);
                 setFotoSebelumPreview(null);
                 setGpsSebelum(null);
@@ -245,14 +241,13 @@ export const SedotKakusExecutionModal: React.FC<SedotKakusExecutionModalProps> =
             </div>
             <FieldCameraCapture
               label="Ambil Foto Sesudah Disedot"
-              folder="retribusi/sedot-kakus-execution"
-              previewUrl={fotoSesudahPreview}
-              onCapture={(file, coords) => {
+              currentPhotoPreview={fotoSesudahPreview}
+              onPhotoCaptured={(file: File, coords: OfficerLocation) => {
                 setFotoSesudahFile(file);
                 setFotoSesudahPreview(URL.createObjectURL(file));
                 setGpsSesudah(coords);
               }}
-              onClear={() => {
+              onClearPhoto={() => {
                 setFotoSesudahFile(null);
                 setFotoSesudahPreview(null);
                 setGpsSesudah(null);
