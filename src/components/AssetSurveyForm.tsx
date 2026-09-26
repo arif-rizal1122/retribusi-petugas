@@ -6,7 +6,6 @@ import {
   Loader2,
   FileCheck,
   ShieldCheck,
-  Navigation,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../lib/api';
@@ -17,6 +16,8 @@ export interface AssetRentalSurveyItem {
   id: number;
   rental_code: string;
   nomor_kontrak?: string | null;
+  status?: string | null;
+  metadata?: any;
   latitude?: number | string | null;
   longitude?: number | string | null;
   taxpayer?: {

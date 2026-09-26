@@ -10,7 +10,10 @@ import {
   Loader2,
   SwitchCamera,
   Zap,
+  ExternalLink,
+  ImageOff,
 } from 'lucide-react';
+import { API_URL } from '../lib/api';
 import {
   calculateDistanceMeters,
   formatDistance,
@@ -60,6 +63,28 @@ export const FieldCameraCapture: React.FC<FieldCameraCaptureProps> = ({
   const [facingMode, setFacingMode] = useState<'environment' | 'user'>('environment');
   const [hasTorch, setHasTorch] = useState<boolean>(false);
   const [isTorchOn, setIsTorchOn] = useState<boolean>(false);
+
+  // Photo preview URL & fallback handling
+  const [imgDisplaySrc, setImgDisplaySrc] = useState<string | null>(currentPhotoPreview || null);
+  const [imgLoadFailed, setImgLoadFailed] = useState<boolean>(false);
+  const [triedProxy, setTriedProxy] = useState<boolean>(false);
+
+  useEffect(() => {
+    setImgDisplaySrc(currentPhotoPreview || null);
+    setImgLoadFailed(false);
+    setTriedProxy(false);
+  }, [currentPhotoPreview]);
+
+  const handleImageError = () => {
+    if (!triedProxy && currentPhotoPreview && (currentPhotoPreview.startsWith('http://') || currentPhotoPreview.startsWith('https://'))) {
+      const baseUrl = (API_URL || '').replace(/\/+$/, '');
+      const proxyUrl = `${baseUrl}/api/public/media/proxy?url=${encodeURIComponent(currentPhotoPreview)}`;
+      setTriedProxy(true);
+      setImgDisplaySrc(proxyUrl);
+    } else {
+      setImgLoadFailed(true);
+    }
+  };
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -493,14 +518,49 @@ export const FieldCameraCapture: React.FC<FieldCameraCaptureProps> = ({
       {/* Photo Preview or Open Camera Trigger */}
       {currentPhotoPreview ? (
         <div className="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-black/5 dark:bg-slate-900 group">
-          <img
-            src={currentPhotoPreview}
-            alt="Bukti Foto Lapangan"
-            className="w-full h-48 object-cover"
-          />
+          {imgLoadFailed ? (
+            <div className="w-full h-48 flex flex-col items-center justify-center p-4 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-center space-y-2">
+              <ImageOff className="w-8 h-8 text-amber-500 animate-pulse" />
+              <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                Pratinjau foto terhalang koneksi / browser
+              </p>
+              <div className="flex items-center gap-2 pt-1">
+                <a
+                  href={currentPhotoPreview}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[11px] font-bold shadow-xs transition-colors flex items-center gap-1.5"
+                >
+                  <ExternalLink className="w-3 h-3" />
+                  <span>Buka Foto Asli</span>
+                </a>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setImgLoadFailed(false);
+                    setTriedProxy(false);
+                    setImgDisplaySrc(`${currentPhotoPreview}?t=${Date.now()}`);
+                  }}
+                  className="px-3 py-1.5 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 rounded-lg text-[11px] font-bold transition-colors flex items-center gap-1"
+                >
+                  <RefreshCw className="w-3 h-3" />
+                  <span>Coba Lagi</span>
+                </button>
+              </div>
+            </div>
+          ) : (
+            <img
+              src={imgDisplaySrc || currentPhotoPreview}
+              alt="Bukti Foto Lapangan"
+              className="w-full h-48 object-cover"
+              referrerPolicy="no-referrer"
+              crossOrigin="anonymous"
+              onError={handleImageError}
+            />
+          )}
 
           {/* Watermark Tag Info */}
-          <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent p-2.5 text-white text-[10px]">
+          <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent p-2.5 text-white text-[10px] pointer-events-none">
             <div className="flex items-center justify-between font-mono font-bold">
               <span>KAMERA LAPANGAN AKTIF</span>
               <span>{new Date().toLocaleTimeString('id-ID')}</span>
@@ -519,8 +579,17 @@ export const FieldCameraCapture: React.FC<FieldCameraCaptureProps> = ({
             )}
           </div>
 
-          {/* Tombol Hapus & Ambil Ulang */}
-          <div className="absolute top-2 right-2 flex items-center gap-1.5">
+          {/* Tombol Aksi: Buka Foto Penuh, Ambil Ulang & Hapus */}
+          <div className="absolute top-2 right-2 flex items-center gap-1.5 z-10">
+            <a
+              href={currentPhotoPreview}
+              target="_blank"
+              rel="noreferrer"
+              className="p-1.5 bg-white/90 dark:bg-slate-900/90 hover:bg-white text-slate-800 dark:text-white rounded-lg text-[11px] font-bold shadow-md transition-all flex items-center gap-1 backdrop-blur-xs"
+              title="Buka foto asli di tab baru"
+            >
+              <ExternalLink className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+            </a>
             <button
               type="button"
               onClick={handleOpenKamera}

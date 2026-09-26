@@ -1587,7 +1587,17 @@ export default function DaftarTugas() {
                           src={getFileUrl(task.completion_photo_url || task.completion_photo_path)}
                           alt="Foto Bukti Kunjungan"
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          referrerPolicy="no-referrer"
+                          crossOrigin="anonymous"
+                          onError={(e) => {
+                            const original = task.completion_photo_url || task.completion_photo_path;
+                            if (original && (original.startsWith('http://') || original.startsWith('https://'))) {
+                              const baseUrl = (API_URL || '').replace(/\/+$/, '');
+                              e.currentTarget.src = `${baseUrl}/api/public/media/proxy?url=${encodeURIComponent(original)}`;
+                            }
+                          }}
                         />
+
                         <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold gap-1">
                           <ExternalLink size={14} />
                           <span>Klik untuk Detail</span>
@@ -2112,7 +2122,17 @@ export default function DaftarTugas() {
                 src={previewPhotoModal.url}
                 alt={previewPhotoModal.title}
                 className="max-w-full max-h-[65vh] object-contain rounded-xl"
+                referrerPolicy="no-referrer"
+                crossOrigin="anonymous"
+                onError={(e) => {
+                  const original = previewPhotoModal.url;
+                  if (original && (original.startsWith('http://') || original.startsWith('https://')) && !original.includes('/media/proxy')) {
+                    const baseUrl = (API_URL || '').replace(/\/+$/, '');
+                    e.currentTarget.src = `${baseUrl}/api/public/media/proxy?url=${encodeURIComponent(original)}`;
+                  }
+                }}
               />
+
             </div>
             <div className="mt-3 flex justify-between items-center pt-2 border-t border-slate-100 dark:border-slate-700">
               <span className="text-[11px] text-slate-500 font-medium">Foto bukti fisik hasil kunjungan survei lapangan</span>
