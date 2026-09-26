@@ -29,6 +29,8 @@ import { AssetSurveyForm, type AssetRentalSurveyItem } from '../components/Asset
 import { AssetInspectionModal } from '../components/AssetInspectionModal';
 import { FieldCameraCapture } from '../components/FieldCameraCapture';
 import { getOfficerCurrentPosition, calculateDistanceMeters, DEFAULT_MAX_RADIUS_METERS, type OfficerLocation } from '../utils/geoValidation';
+import { useAuth } from '../contexts/AuthContext';
+import { isPuprOfficer } from '../lib/officerRoleUtils';
 
 interface PbbMutationItem {
   id: number;
@@ -159,13 +161,18 @@ interface PbbNopApplication {
 }
 
 export default function DaftarTugas() {
+  const { user } = useAuth();
+  const isPupr = isPuprOfficer(user);
+
   const [tasks, setTasks] = useState<Task[]>([]);
   const [assetRentals, setAssetRentals] = useState<AssetRentalSurveyItem[]>([]);
   const [pbbApplications, setPbbApplications] = useState<PbbNopApplication[]>([]);
   const [loading, setLoading] = useState(true);
   const [pbbLoading, setPbbLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState<'pending' | 'completed' | 'asset_survey' | 'pbb_survey'>('pending');
+  const [activeTab, setActiveTab] = useState<'pending' | 'completed' | 'asset_survey' | 'pbb_survey'>(() => {
+    return isPuprOfficer(user) ? 'asset_survey' : 'pending';
+  });
   const [verificationFilter, setVerificationFilter] = useState<'all' | 'verified' | 'unverified'>('all');
   const [previewPhotoModal, setPreviewPhotoModal] = useState<{ url: string; title: string } | null>(null);
   const [selectedRentalForSurvey, setSelectedRentalForSurvey] = useState<AssetRentalSurveyItem | null>(null);
@@ -203,6 +210,7 @@ export default function DaftarTugas() {
   };
 
   const fetchPbbApplications = async () => {
+    if (isPupr) return; // Petugas PUPR tidak memiliki akses PBB Bapenda
     try {
       setPbbLoading(true);
       const [nopRes, mutRes] = await Promise.allSettled([
@@ -229,18 +237,20 @@ export default function DaftarTugas() {
   };
 
   useEffect(() => {
-    fetchPbbApplications();
-  }, []);
+    if (!isPupr) {
+      fetchPbbApplications();
+    }
+  }, [isPupr]);
 
   useEffect(() => {
     if (activeTab === 'asset_survey') {
       fetchAssetRentals();
     } else if (activeTab === 'pbb_survey') {
-      fetchPbbApplications();
+      if (!isPupr) fetchPbbApplications();
     } else {
       fetchTasks();
     }
-  }, [activeTab]);
+  }, [activeTab, isPupr]);
 
   const handleOpenPbbSurveyModal = (app: PbbNopApplication) => {
     setSelectedPbbForSurvey(app);
@@ -525,8 +535,8 @@ export default function DaftarTugas() {
         </div>
       </div>
 
-      {/* Banner Penugasan PBB */}
-      {(pbbApplications.length + pbbMutations.length) > 0 && activeTab !== 'pbb_survey' && (
+      {/* Banner Penugasan PBB — Hanya untuk Tim Bapenda */}
+      {!isPupr && (pbbApplications.length + pbbMutations.length) > 0 && activeTab !== 'pbb_survey' && (
         <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 text-white rounded-2xl p-3.5 sm:p-4 shadow-lg shadow-blue-600/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border border-blue-400/30">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center shrink-0 border border-white/30">
@@ -560,55 +570,100 @@ export default function DaftarTugas() {
 
       {/* Tabs — Compact & Horizontally Scrollable on Mobile */}
       <div className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800/60 rounded-xl border border-slate-200/80 dark:border-slate-700/80 overflow-x-auto no-scrollbar w-full sm:w-fit">
-        <button
-          onClick={() => setActiveTab('pending')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all ${
-            activeTab === 'pending'
-              ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-white shadow-sm'
-              : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
-          }`}
-        >
-          <Clock className="w-3.5 h-3.5" />
-          <span>Tugas Aktif</span>
-        </button>
-        <button
-          onClick={() => setActiveTab('pbb_survey')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all relative ${
-            activeTab === 'pbb_survey'
-              ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm'
-              : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
-          }`}
-        >
-          <Building2 className="w-3.5 h-3.5" />
-          <span>Penugasan PBB</span>
-          {(pbbApplications.length + pbbMutations.length) > 0 && (
-            <span className="px-1.5 py-0.2 text-[10px] font-black rounded-full bg-rose-500 text-white animate-pulse">
-              {pbbApplications.length + pbbMutations.length}
-            </span>
-          )}
-        </button>
-        <button
-          onClick={() => setActiveTab('completed')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all ${
-            activeTab === 'completed'
-              ? 'bg-white dark:bg-slate-700 text-emerald-600 dark:text-white shadow-sm'
-              : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
-          }`}
-        >
-          <CheckCircle className="w-3.5 h-3.5" />
-          <span>Riwayat Kunjungan</span>
-        </button>
-        <button
-          onClick={() => setActiveTab('asset_survey')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all ${
-            activeTab === 'asset_survey'
-              ? 'bg-white dark:bg-slate-700 text-purple-600 dark:text-white shadow-sm'
-              : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
-          }`}
-        >
-          <Wrench className="w-3.5 h-3.5" />
-          <span>Survey Alat PUPR</span>
-        </button>
+        {isPupr ? (
+          <>
+            <button
+              onClick={() => setActiveTab('asset_survey')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all ${
+                activeTab === 'asset_survey'
+                  ? 'bg-white dark:bg-slate-700 text-amber-600 dark:text-amber-400 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+              }`}
+            >
+              <Wrench className="w-3.5 h-3.5" />
+              <span>Survey Kelayakan Alat PUPR</span>
+              {assetRentals.filter((r) => !r.survey_submitted_at).length > 0 && (
+                <span className="px-1.5 py-0.2 text-[10px] font-black rounded-full bg-amber-500 text-white">
+                  {assetRentals.filter((r) => !r.survey_submitted_at).length}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab('pending')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all ${
+                activeTab === 'pending'
+                  ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-white shadow-sm'
+                  : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+              }`}
+            >
+              <Clock className="w-3.5 h-3.5" />
+              <span>Tugas Operasional ({tasks.filter((t) => t.status === 'pending').length})</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('completed')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all ${
+                activeTab === 'completed'
+                  ? 'bg-white dark:bg-slate-700 text-emerald-600 dark:text-white shadow-sm'
+                  : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+              }`}
+            >
+              <CheckCircle className="w-3.5 h-3.5" />
+              <span>Riwayat Selesai</span>
+            </button>
+          </>
+        ) : (
+          <>
+            <button
+              onClick={() => setActiveTab('pending')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all ${
+                activeTab === 'pending'
+                  ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-white shadow-sm'
+                  : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+              }`}
+            >
+              <Clock className="w-3.5 h-3.5" />
+              <span>Tugas Aktif</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('pbb_survey')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all relative ${
+                activeTab === 'pbb_survey'
+                  ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+              }`}
+            >
+              <Building2 className="w-3.5 h-3.5" />
+              <span>Penugasan PBB</span>
+              {(pbbApplications.length + pbbMutations.length) > 0 && (
+                <span className="px-1.5 py-0.2 text-[10px] font-black rounded-full bg-rose-500 text-white animate-pulse">
+                  {pbbApplications.length + pbbMutations.length}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab('completed')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all ${
+                activeTab === 'completed'
+                  ? 'bg-white dark:bg-slate-700 text-emerald-600 dark:text-white shadow-sm'
+                  : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+              }`}
+            >
+              <CheckCircle className="w-3.5 h-3.5" />
+              <span>Riwayat Kunjungan</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('asset_survey')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all ${
+                activeTab === 'asset_survey'
+                  ? 'bg-white dark:bg-slate-700 text-purple-600 dark:text-white shadow-sm'
+                  : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+              }`}
+            >
+              <Wrench className="w-3.5 h-3.5" />
+              <span>Survey Alat PUPR</span>
+            </button>
+          </>
+        )}
       </div>
 
       {/* Sub-filter Penugasan PBB (NOP Baru vs Mutasi) — Responsive Segmented Control & View Mode */}

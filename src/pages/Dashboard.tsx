@@ -27,14 +27,17 @@ import {
   Home as HomeIcon,
   User as UserIcon,
   MapPin,
-  Store
+  Store,
+  Wrench,
+  Gauge,
+  ClipboardList,
 } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { api } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
-import { isDisperindagOfficer } from '../lib/officerRoleUtils';
+import { isDisperindagOfficer, isPuprOfficer } from '../lib/officerRoleUtils';
 import ZoomControl from '../components/ZoomControl';
 
 // Fix for default marker icon
@@ -84,6 +87,7 @@ interface Potential {
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const isPupr = isPuprOfficer(user);
   const navigate = useNavigate();
   const [stats, setStats] = useState<Stats | null>(null);
   const [revenueData, setRevenueData] = useState<RevenueItem[]>([]);

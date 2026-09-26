@@ -85,6 +85,27 @@ export const isPariwisataOfficer = (user: User | null | undefined): boolean => {
   );
 };
 
+export const isPuprOfficer = (user: User | null | undefined): boolean => {
+  if (!user) return false;
+  const opdCode = (user.opd?.code || '').toUpperCase();
+  const opdName = (user.opd?.name || '').toLowerCase();
+  const dept = (user.department || (user as any).metadata?.department || '').toLowerCase();
+  const roleCode = ((user as any).role_code || (user as any).metadata?.role_code || '').toLowerCase();
+  const email = (user.email || '').toLowerCase();
+  return (
+    user.opd_id === 9 ||
+    opdCode === 'PUPR' ||
+    opdCode === 'DINAS_PUPR' ||
+    opdName.includes('pekerjaan umum') ||
+    dept.includes('peralatan') ||
+    dept.includes('workshop') ||
+    roleCode.includes('pupr') ||
+    email.includes('pupr') ||
+    !!(user as any).access?.flags?.pupr ||
+    !!(user as any).access?.flags?.pupr_aset
+  );
+};
+
 /**
  * Filter wewenang akses rute & menu petugas lapangan M-PAD
  * Berdasarkan Hybrid RBAC + OPD Scoping
@@ -92,8 +113,23 @@ export const isPariwisataOfficer = (user: User | null | undefined): boolean => {
 export const officerCanAccessPath = (user: User | null | undefined, path: string): boolean => {
   if (!user) return false;
 
-  // Super Admin dan Admin Bapenda memiliki akses global
+  // Super Admin memiliki akses global
   if (user.role === 'super_admin') return true;
+
+  // 1. ISOLASI KETAT PETUGAS PUPR: HANYA BOLEH MENGAKSES URUSAN PUPR & ALAT BERAT
+  if (isPuprOfficer(user)) {
+    const puprAllowedPaths = [
+      '/dashboard',
+      '/pupr-inspection',
+      '/tasks',
+      '/peta',
+      '/profile',
+      '/download',
+      '/about',
+      '/user-guide',
+    ];
+    return puprAllowedPaths.some((p) => path === p || path.startsWith(p + '/'));
+  }
 
   // Halaman publik/umum operasional yang selalu boleh diakses semua petugas
   const commonOfficerPaths = [

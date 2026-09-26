@@ -31,10 +31,11 @@ import {
   Printer,
   Car,
   Trash2,
-  Store
+  Store,
+  Wrench,
 } from 'lucide-react';
 import { UserRole } from '../types';
-import { officerCanAccessPath } from '../lib/officerRoleUtils';
+import { officerCanAccessPath, isPuprOfficer } from '../lib/officerRoleUtils';
 
 interface LayoutProps {
   children: ReactNode;
@@ -64,6 +65,12 @@ const menuItems: MenuItem[] = [
     label: 'Tugas',
     path: '/tasks',
     icon: <ClipboardList className="w-5 h-5" />,
+    roles: ['super_admin', 'opd', 'petugas'],
+  },
+  {
+    label: 'Inspeksi Alat Berat',
+    path: '/pupr-inspection',
+    icon: <Wrench className="w-5 h-5" />,
     roles: ['super_admin', 'opd', 'petugas'],
   },
   {
@@ -368,16 +375,27 @@ export default function Layout({ children }: LayoutProps) {
 
       {/* Bottom Navigation (Mobile Only - Clean Modern Style) */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-[90] bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 w-full flex items-center justify-between px-6 pb-2 pt-2 h-20 shadow-[0_-4px_24px_rgba(0,0,0,0.04)]">
-        {[
-          { icon: Home, path: '/dashboard', label: 'Home' },
-          { icon: Users, path: '/taxpayers', label: 'WP' },
-          { icon: FileText, path: '/billing', label: 'Tagihan' },
-          { icon: ClipboardList, path: '/tasks', label: 'Tugas' },
-          { icon: User, path: '/profile', label: 'Account' }
-        ].map((item, i) => {
+        {(isPuprOfficer(user)
+          ? [
+              { icon: Home, path: '/dashboard', label: 'Home' },
+              { icon: ClipboardList, path: '/tasks', label: 'Survei' },
+              { icon: Wrench, path: '/pupr-inspection', label: 'Inspeksi HM' },
+              { icon: Map, path: '/peta', label: 'Peta Proyek' },
+              { icon: User, path: '/profile', label: 'Akun' },
+            ]
+          : [
+              { icon: Home, path: '/dashboard', label: 'Home' },
+              { icon: Users, path: '/taxpayers', label: 'WP' },
+              { icon: FileText, path: '/billing', label: 'Tagihan' },
+              { icon: ClipboardList, path: '/tasks', label: 'Tugas' },
+              { icon: User, path: '/profile', label: 'Account' }
+            ]
+        ).map((item, i) => {
           const isActive = location.pathname === item.path || 
             (item.path === '/billing' && location.pathname.includes('/billing')) ||
-            (item.path === '/taxpayers' && location.pathname.includes('/taxpayers'));
+            (item.path === '/taxpayers' && location.pathname.includes('/taxpayers')) ||
+            (item.path === '/tasks' && location.pathname.includes('/tasks')) ||
+            (item.path === '/pupr-inspection' && location.pathname.includes('/pupr-inspection'));
 
           return (
             <button 
