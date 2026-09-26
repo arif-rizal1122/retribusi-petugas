@@ -49,6 +49,8 @@ export interface OfficerLocation {
   lng: number;
   accuracy?: number;
   timestamp?: number;
+  gps_status?: 'active' | 'disabled' | 'signal_lost' | 'manual';
+  gps_notes?: string;
 }
 
 /**

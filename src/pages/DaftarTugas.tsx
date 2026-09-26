@@ -23,10 +23,12 @@ import {
   Layers,
   LayoutGrid,
   List,
+  Droplets,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { AssetSurveyForm, type AssetRentalSurveyItem } from '../components/AssetSurveyForm';
 import { AssetInspectionModal } from '../components/AssetInspectionModal';
+import { SedotKakusExecutionModal } from '../components/SedotKakusExecutionModal';
 import { FieldCameraCapture } from '../components/FieldCameraCapture';
 import { getOfficerCurrentPosition, calculateDistanceMeters, DEFAULT_MAX_RADIUS_METERS, type OfficerLocation } from '../utils/geoValidation';
 import { useAuth } from '../contexts/AuthContext';
@@ -177,6 +179,7 @@ export default function DaftarTugas() {
   const [previewPhotoModal, setPreviewPhotoModal] = useState<{ url: string; title: string } | null>(null);
   const [selectedRentalForSurvey, setSelectedRentalForSurvey] = useState<AssetRentalSurveyItem | null>(null);
   const [selectedRentalForInspection, setSelectedRentalForInspection] = useState<AssetRentalSurveyItem | null>(null);
+  const [selectedRentalForSedotKakus, setSelectedRentalForSedotKakus] = useState<any | null>(null);
   
   // PBB Survey Modal State (NOP Baru)
   const [selectedPbbForSurvey, setSelectedPbbForSurvey] = useState<PbbNopApplication | null>(null);
@@ -1288,37 +1291,89 @@ export default function DaftarTugas() {
                       </div>
                     </div>
 
-                    {/* Status Survey 4 Poin */}
-                    <div className="pt-2">
-                      {rental.survey_submitted_at ? (
-                        <div className="p-2.5 rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400 text-xs font-semibold flex items-center gap-2">
-                          <CheckCircle2 size={16} />
-                          <span>Survey 4 Butir Telah Disimpan</span>
+                    {/* Status Survey 4 Poin ATAU Layanan Sedot Kakus */}
+                    {(() => {
+                      const name = (rental.asset_item?.name || '').toLowerCase();
+                      const code = (rental.asset_item?.code || '').toLowerCase();
+                      const purpose = (rental.jenis_pekerjaan || '').toLowerCase();
+                      const isTinja = name.includes('kakus') || name.includes('tinja') || code.includes('sedot') || code.includes('kks') || purpose.includes('sedot');
+
+                      if (isTinja) {
+                        return (
+                          <div className="pt-2">
+                            {rental.metadata?.sedot_kakus_execution || rental.status === 'Selesai' ? (
+                              <div className="p-2.5 rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400 text-xs font-semibold flex items-center gap-2">
+                                <CheckCircle2 size={16} />
+                                <span>Penyedotan Tuntas &amp; Masuk IPLT</span>
+                              </div>
+                            ) : (
+                              <div className="p-2.5 rounded-xl bg-teal-50 text-teal-800 dark:bg-teal-950/40 dark:text-teal-300 text-xs font-semibold flex items-center gap-2 border border-teal-200 dark:border-teal-800">
+                                <Droplets size={16} className="text-teal-600" />
+                                <span>Layanan On-Demand (Bebas Survei)</span>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div className="pt-2">
+                          {rental.survey_submitted_at ? (
+                            <div className="p-2.5 rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400 text-xs font-semibold flex items-center gap-2">
+                              <CheckCircle2 size={16} />
+                              <span>Survey 4 Butir Telah Disimpan</span>
+                            </div>
+                          ) : (
+                            <div className="p-2.5 rounded-xl bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400 text-xs font-semibold flex items-center gap-2">
+                              <AlertCircle size={16} />
+                              <span>Menunggu Survey Kelayakan Lapangan</span>
+                            </div>
+                          )}
                         </div>
-                      ) : (
-                        <div className="p-2.5 rounded-xl bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400 text-xs font-semibold flex items-center gap-2">
-                          <AlertCircle size={16} />
-                          <span>Menunggu Survey Kelayakan Lapangan</span>
-                        </div>
-                      )}
-                    </div>
+                      );
+                    })()}
                   </div>
 
                   <div className="p-4 mt-auto bg-slate-50 dark:bg-slate-900/50 space-y-2">
-                    <button
-                      onClick={() => setSelectedRentalForSurvey(rental)}
-                      className="w-full flex items-center justify-center gap-2 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold uppercase tracking-wider text-xs transition-colors shadow-lg shadow-purple-600/20"
-                    >
-                      <ShieldCheck className="w-4 h-4" />
-                      {rental.survey_submitted_at ? 'Tinjau Survey 4 Poin' : 'Isi Survey Kelayakan'}
-                    </button>
-                    <button
-                      onClick={() => setSelectedRentalForInspection(rental)}
-                      className="w-full flex items-center justify-center gap-2 py-2.5 bg-slate-900 hover:bg-slate-800 dark:bg-purple-950 dark:hover:bg-purple-900 text-white rounded-xl font-bold uppercase tracking-wider text-xs transition-colors"
-                    >
-                      <Gauge className="w-4 h-4" />
-                      Inspeksi Hour Meter Pra/Pasca
-                    </button>
+                    {(() => {
+                      const name = (rental.asset_item?.name || '').toLowerCase();
+                      const code = (rental.asset_item?.code || '').toLowerCase();
+                      const purpose = (rental.jenis_pekerjaan || '').toLowerCase();
+                      const isTinja = name.includes('kakus') || name.includes('tinja') || code.includes('sedot') || code.includes('kks') || purpose.includes('sedot');
+
+                      if (isTinja) {
+                        return (
+                          <button
+                            onClick={() => setSelectedRentalForSedotKakus(rental)}
+                            className="w-full flex items-center justify-center gap-2 py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-bold uppercase tracking-wider text-xs transition-colors shadow-lg shadow-teal-600/20"
+                          >
+                            <Droplets className="w-4 h-4" />
+                            {rental.metadata?.sedot_kakus_execution || rental.status === 'Selesai'
+                              ? 'Tinjau Bukti Pelaksanaan'
+                              : 'Eksekusi Sedot Kakus On-The-Spot'}
+                          </button>
+                        );
+                      }
+
+                      return (
+                        <>
+                          <button
+                            onClick={() => setSelectedRentalForSurvey(rental)}
+                            className="w-full flex items-center justify-center gap-2 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold uppercase tracking-wider text-xs transition-colors shadow-lg shadow-purple-600/20"
+                          >
+                            <ShieldCheck className="w-4 h-4" />
+                            {rental.survey_submitted_at ? 'Tinjau Survey 4 Poin' : 'Isi Survey Kelayakan'}
+                          </button>
+                          <button
+                            onClick={() => setSelectedRentalForInspection(rental)}
+                            className="w-full flex items-center justify-center gap-2 py-2.5 bg-slate-900 hover:bg-slate-800 dark:bg-purple-950 dark:hover:bg-purple-900 text-white rounded-xl font-bold uppercase tracking-wider text-xs transition-colors"
+                          >
+                            <Gauge className="w-4 h-4" />
+                            Inspeksi Hour Meter Pra/Pasca
+                          </button>
+                        </>
+                      );
+                    })()}
                   </div>
                 </div>
               ))}
@@ -1604,6 +1659,18 @@ export default function DaftarTugas() {
             fetchAssetRentals();
           }}
           onClose={() => setSelectedRentalForInspection(null)}
+        />
+      )}
+
+      {/* Modal Eksekusi On-The-Spot Sedot Kakus */}
+      {selectedRentalForSedotKakus && (
+        <SedotKakusExecutionModal
+          rental={selectedRentalForSedotKakus}
+          onSuccess={() => {
+            setSelectedRentalForSedotKakus(null);
+            fetchAssetRentals();
+          }}
+          onClose={() => setSelectedRentalForSedotKakus(null)}
         />
       )}
 

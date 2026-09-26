@@ -49,6 +49,11 @@ export const FieldCameraCapture: React.FC<FieldCameraCaptureProps> = ({
   const [gpsError, setGpsError] = useState<string | null>(null);
   const [distance, setDistance] = useState<number | null>(null);
 
+  // Fallback GPS Manual Reporting State (Kendala Sinyal / Sensor Lapangan)
+  const [gpsStatus, setGpsStatus] = useState<'active' | 'disabled' | 'signal_lost' | 'manual'>('active');
+  const [gpsNotes, setGpsNotes] = useState<string>('');
+  const [isManualGpsOverride, setIsManualGpsOverride] = useState<boolean>(false);
+
   // In-App Camera Viewfinder State
   const [isCameraOpen, setIsCameraOpen] = useState<boolean>(false);
   const [cameraLoading, setCameraLoading] = useState<boolean>(false);
@@ -79,6 +84,7 @@ export const FieldCameraCapture: React.FC<FieldCameraCaptureProps> = ({
     try {
       const loc = await getOfficerCurrentPosition();
       setOfficerLocation(loc);
+      setGpsStatus('active');
 
       if (validTargetLat !== null && validTargetLng !== null) {
         const d = calculateDistanceMeters(loc.lat, loc.lng, validTargetLat, validTargetLng);
@@ -90,6 +96,7 @@ export const FieldCameraCapture: React.FC<FieldCameraCaptureProps> = ({
       setGpsError(err.message || 'Gagal mengambil koordinat GPS perangkat.');
       setOfficerLocation(null);
       setDistance(null);
+      setGpsStatus('signal_lost');
     } finally {
       setGpsLoading(false);
     }
@@ -109,9 +116,11 @@ export const FieldCameraCapture: React.FC<FieldCameraCaptureProps> = ({
     };
   }, []);
 
-  // Evaluasi Radius
+  // Evaluasi Radius & Izin Pengambilan Foto
   const isWithinRadius =
     !hasTargetCoords || (distance !== null && distance <= maxRadiusMeters);
+
+  const isAllowedToCapture = isWithinRadius || isManualGpsOverride;
 
   const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
@@ -246,12 +255,23 @@ export const FieldCameraCapture: React.FC<FieldCameraCaptureProps> = ({
     ctx.fillStyle = '#E2E8F0';
     ctx.font = `500 ${Math.round(canvas.width * 0.018)}px monospace`;
     const timeStr = new Date().toLocaleString('id-ID');
-    const locStr = officerLocation
-      ? `GPS: ${officerLocation.lat.toFixed(6)}, ${officerLocation.lng.toFixed(6)} (±${Math.round(
-          officerLocation.accuracy || 0
-        )}m)`
-      : 'GPS: Terkunci di Objek';
-    const distStr = distance !== null ? ` | Jarak: ${formatDistance(distance)}` : '';
+    
+    const isManual = isManualGpsOverride || gpsStatus !== 'active';
+    let locStr = '';
+    if (isManual) {
+      const statusLabel =
+        gpsStatus === 'signal_lost' ? 'SINYAL HILANG/BLANK SPOT' :
+        gpsStatus === 'disabled' ? 'GPS NONAKTIF/OFFLINE' : 'LAPORAN MANUAL';
+      locStr = `KONDISI: ${statusLabel}${gpsNotes ? ` (${gpsNotes.substring(0, 30)})` : ''}`;
+    } else if (officerLocation) {
+      locStr = `GPS: ${officerLocation.lat.toFixed(6)}, ${officerLocation.lng.toFixed(6)} (±${Math.round(
+        officerLocation.accuracy || 0
+      )}m)`;
+    } else {
+      locStr = 'GPS: Terkunci di Objek';
+    }
+
+    const distStr = !isManual && distance !== null ? ` | Jarak: ${formatDistance(distance)}` : '';
     ctx.fillText(`${timeStr} | ${locStr}${distStr}`, 24, canvas.height - bannerH * 0.2);
 
     canvas.toBlob(
@@ -260,10 +280,13 @@ export const FieldCameraCapture: React.FC<FieldCameraCaptureProps> = ({
         const file = new File([blob], `survei_${Date.now()}.jpg`, { type: 'image/jpeg' });
         stopCamera();
 
-        const coords: OfficerLocation = officerLocation || {
-          lat: validTargetLat || 0,
-          lng: validTargetLng || 0,
+        const coords: OfficerLocation = {
+          lat: officerLocation?.lat ?? validTargetLat ?? 0,
+          lng: officerLocation?.lng ?? validTargetLng ?? 0,
+          accuracy: officerLocation?.accuracy,
           timestamp: Date.now(),
+          gps_status: isManual ? gpsStatus : 'active',
+          gps_notes: isManual ? (gpsNotes.trim() || 'Pelaporan GPS manual oleh petugas') : undefined,
         };
 
         onPhotoCaptured(file, coords);
@@ -274,13 +297,13 @@ export const FieldCameraCapture: React.FC<FieldCameraCaptureProps> = ({
   };
 
   const handleOpenKamera = () => {
-    if (!isWithinRadius) {
+    if (!isAllowedToCapture) {
       alert(
         `Pengambilan foto ditolak! Anda berada di luar radius lokasi objek (${
           distance !== null ? formatDistance(distance) : '-'
         }). Maksimal radius yang diizinkan adalah ${formatDistance(
           maxRadiusMeters
-        )}. Silakan mendekat ke lokasi objek fisik.`
+        )}. Silakan mendekat ke lokasi objek fisik atau aktifkan formulir 'Kendala Sinyal / Laporan GPS Manual' jika berada di area blank spot satelit.`
       );
       return;
     }
@@ -309,7 +332,7 @@ export const FieldCameraCapture: React.FC<FieldCameraCaptureProps> = ({
       </div>
 
       {/* Geofence / Radius Status Box */}
-      <div className="p-3 rounded-xl border text-xs transition-all">
+      <div className="p-3 rounded-xl border text-xs transition-all space-y-2.5">
         {gpsLoading ? (
           <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
             <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
@@ -321,8 +344,11 @@ export const FieldCameraCapture: React.FC<FieldCameraCaptureProps> = ({
           <div className="flex items-start gap-2 text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/30 p-2.5 rounded-lg border border-rose-200 dark:border-rose-900/50">
             <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
             <div className="space-y-0.5 text-[11px]">
-              <span className="font-bold block">Sensor Lokasi Bermasalah:</span>
+              <span className="font-bold block">Sensor Lokasi Bermasalah / Sinyal Hilang:</span>
               <p>{gpsError}</p>
+              <p className="text-[10px] text-slate-500 pt-1">
+                Petugas tetap dapat mengambil foto dengan mengisi formulir fallback kondisi GPS di bawah.
+              </p>
             </div>
           </div>
         ) : hasTargetCoords && distance !== null ? (
@@ -330,6 +356,8 @@ export const FieldCameraCapture: React.FC<FieldCameraCaptureProps> = ({
             className={`p-2.5 rounded-xl border flex flex-col gap-1.5 ${
               isWithinRadius
                 ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200'
+                : isManualGpsOverride
+                ? 'bg-amber-50 dark:bg-amber-950/30 border-amber-300 dark:border-amber-800 text-amber-900 dark:text-amber-200'
                 : 'bg-rose-50 dark:bg-rose-950/30 border-rose-300 dark:border-rose-800 text-rose-900 dark:text-rose-200'
             }`}
           >
@@ -337,18 +365,26 @@ export const FieldCameraCapture: React.FC<FieldCameraCaptureProps> = ({
               <div className="flex items-center gap-1.5 font-bold">
                 {isWithinRadius ? (
                   <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                ) : isManualGpsOverride ? (
+                  <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
                 ) : (
                   <ShieldAlert className="w-4 h-4 text-rose-600 shrink-0" />
                 )}
                 <span>
                   {isWithinRadius
                     ? `Lokasi Terverifikasi (Radius Valid)`
+                    : isManualGpsOverride
+                    ? `Mode Pelaporan Manual Aktif`
                     : `Di Luar Radius Objek`}
                 </span>
               </div>
               <span
                 className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
-                  isWithinRadius ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white'
+                  isWithinRadius
+                    ? 'bg-emerald-600 text-white'
+                    : isManualGpsOverride
+                    ? 'bg-amber-600 text-white'
+                    : 'bg-rose-600 text-white'
                 }`}
               >
                 {formatDistance(distance)} / Maks {formatDistance(maxRadiusMeters)}
@@ -373,10 +409,9 @@ export const FieldCameraCapture: React.FC<FieldCameraCaptureProps> = ({
               )}
             </div>
 
-            {!isWithinRadius && (
+            {!isWithinRadius && !isManualGpsOverride && (
               <p className="text-[10px] font-bold text-rose-700 dark:text-rose-300 pt-1 border-t border-rose-200/60 dark:border-rose-800/60">
-                ⚠️ Kamera dinonaktifkan: Anda harus berada di lokasi fisik objek (maks.{' '}
-                {maxRadiusMeters} m) untuk mengambil foto bukti survei.
+                ⚠️ Di luar batas geofence. Dekati lokasi objek atau aktifkan mode pelaporan sinyal GPS di bawah jika berada di lokasi fisik sebenarnya.
               </p>
             )}
           </div>
@@ -397,6 +432,62 @@ export const FieldCameraCapture: React.FC<FieldCameraCaptureProps> = ({
             )}
           </div>
         )}
+
+        {/* Fallback Option: Kendala Sinyal GPS / Pelaporan Lapangan Manual */}
+        <div className="pt-2 border-t border-slate-200/60 dark:border-slate-700/60">
+          <label className="flex items-center gap-2 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={isManualGpsOverride}
+              onChange={(e) => {
+                setIsManualGpsOverride(e.target.checked);
+                if (e.target.checked && gpsStatus === 'active') {
+                  setGpsStatus(gpsError ? 'signal_lost' : 'manual');
+                }
+              }}
+              className="rounded text-blue-600 focus:ring-blue-500 w-3.5 h-3.5"
+            />
+            <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
+              Laporkan Kendala GPS / Mode Sinyal Lemah di Lapangan
+            </span>
+          </label>
+
+          {isManualGpsOverride && (
+            <div className="mt-2 p-2.5 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 rounded-xl space-y-2 text-[11px]">
+              <div>
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  Kondisi Sinyal / GPS Perangkat:
+                </label>
+                <select
+                  value={gpsStatus}
+                  onChange={(e) => setGpsStatus(e.target.value as any)}
+                  className="w-full p-2 bg-white dark:bg-slate-800 border border-amber-300 dark:border-amber-700 rounded-lg text-xs font-medium text-slate-800 dark:text-slate-200"
+                >
+                  <option value="signal_lost">Sinyal Satelit Hilang / Blank Spot (Gedung Tertutup/Pegunungan)</option>
+                  <option value="disabled">Sensor GPS Mati / Izin Lokasi Sistem Terkendala</option>
+                  <option value="manual">Verifikasi Fisik Langsung (Koordinat Manual)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  Keterangan Kendala Lapangan (Tercatat di Audit Admin):
+                </label>
+                <input
+                  type="text"
+                  value={gpsNotes}
+                  onChange={(e) => setGpsNotes(e.target.value)}
+                  placeholder="Contoh: Survei di area basement / blind spot lereng bukit"
+                  className="w-full p-2 bg-white dark:bg-slate-800 border border-amber-300 dark:border-amber-700 rounded-lg text-xs text-slate-800 dark:text-slate-200"
+                />
+              </div>
+
+              <p className="text-[10px] text-amber-700 dark:text-amber-400 font-medium">
+                *Kamera aktif tanpa pembatasan radius. Status kondisi GPS ini akan tercatat transparan di sistem dan wajib diverifikasi oleh Supervisor/Admin.
+              </p>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Photo Preview or Open Camera Trigger */}
@@ -414,11 +505,17 @@ export const FieldCameraCapture: React.FC<FieldCameraCaptureProps> = ({
               <span>KAMERA LAPANGAN AKTIF</span>
               <span>{new Date().toLocaleTimeString('id-ID')}</span>
             </div>
-            {officerLocation && (
+            {isManualGpsOverride ? (
+              <div className="font-mono text-[9px] text-amber-300 font-bold">
+                STATUS GPS: {gpsStatus.toUpperCase()} {gpsNotes ? `• ${gpsNotes}` : ''}
+              </div>
+            ) : officerLocation ? (
               <div className="font-mono text-[9px] opacity-90">
                 GPS: {officerLocation.lat.toFixed(6)}, {officerLocation.lng.toFixed(6)} |{' '}
                 {distance !== null ? `Jarak: ${formatDistance(distance)}` : 'Titik Baru'}
               </div>
+            ) : (
+              <div className="font-mono text-[9px] opacity-90">GPS: Terkunci di Objek</div>
             )}
           </div>
 
@@ -427,7 +524,7 @@ export const FieldCameraCapture: React.FC<FieldCameraCaptureProps> = ({
             <button
               type="button"
               onClick={handleOpenKamera}
-              disabled={disabled || !isWithinRadius}
+              disabled={disabled || !isAllowedToCapture}
               className="px-2.5 py-1 bg-white/90 dark:bg-slate-900/90 hover:bg-white text-slate-800 dark:text-white rounded-lg text-[11px] font-bold shadow-md transition-all flex items-center gap-1 backdrop-blur-xs"
             >
               <Camera className="w-3 h-3 text-blue-600" />
@@ -450,19 +547,21 @@ export const FieldCameraCapture: React.FC<FieldCameraCaptureProps> = ({
           <button
             type="button"
             onClick={handleOpenKamera}
-            disabled={disabled || !isWithinRadius || gpsLoading}
+            disabled={disabled || !isAllowedToCapture || (gpsLoading && !isManualGpsOverride)}
             className={`w-full py-3.5 px-4 rounded-2xl font-bold text-xs flex items-center justify-center gap-2.5 transition-all shadow-md active:scale-98 ${
-              !isWithinRadius || disabled || gpsLoading
+              !isAllowedToCapture || disabled || (gpsLoading && !isManualGpsOverride)
                 ? 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-600 border border-slate-300 dark:border-slate-700 cursor-not-allowed shadow-none'
                 : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/25 border border-blue-500'
             }`}
           >
             <Camera className="w-4 h-4 shrink-0" />
             <span>
-              {gpsLoading
+              {gpsLoading && !isManualGpsOverride
                 ? 'Mendeteksi Lokasi...'
-                : !isWithinRadius
+                : !isAllowedToCapture
                 ? `Di Luar Radius Objek (${distance !== null ? formatDistance(distance) : '-'})`
+                : isManualGpsOverride
+                ? 'Buka Kamera (Mode Pelaporan Lapangan)'
                 : 'Buka Kamera Lapangan'}
             </span>
           </button>

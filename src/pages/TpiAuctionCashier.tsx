@@ -633,8 +633,8 @@ export default function TpiAuctionCashier() {
 
       {/* MODAL BUKTI PEMBAYARAN SAH (DOKUMEN 173) */}
       {isModalOpen && completedTransaction && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
-          <div className="bg-white dark:bg-slate-800 w-full max-w-md rounded-3xl overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-700">
+        <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/70 backdrop-blur-sm p-3 sm:p-4 overflow-y-auto animate-fade-in">
+          <div className="bg-white dark:bg-slate-800 w-full max-w-md rounded-3xl overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-700 my-auto max-h-[88vh] overflow-y-auto">
             <div className="bg-gradient-to-r from-emerald-600 to-teal-600 p-6 text-white text-center">
               <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center mx-auto mb-2">
                 <CheckCircle2 className="w-7 h-7 text-white" />

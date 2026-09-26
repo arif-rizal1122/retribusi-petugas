@@ -1285,8 +1285,8 @@ export default function ParkingQuickCashier() {
 
       {/* Top-Up Deposit Modal */}
       {showTopupModal && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-sm w-full p-6 space-y-4 shadow-2xl relative">
+        <div className="fixed inset-0 z-[150] bg-black/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-sm w-full p-5 sm:p-6 space-y-4 shadow-2xl relative my-auto max-h-[88vh] overflow-y-auto">
             <button
               onClick={() => setShowTopupModal(false)}
               className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400"
@@ -1360,8 +1360,8 @@ export default function ParkingQuickCashier() {
 
       {/* Struk Thermal Mini Bluetooth Modal (ESC/POS 58mm) */}
       {showReceiptModal && receiptPayload && (
-        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white text-slate-900 rounded-3xl max-w-sm w-full p-6 space-y-4 shadow-2xl relative font-mono text-center border-4 border-slate-900">
+        <div className="fixed inset-0 z-[150] bg-black/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-in fade-in duration-200">
+          <div className="bg-white text-slate-900 rounded-3xl max-w-sm w-full p-5 sm:p-6 space-y-4 shadow-2xl relative font-mono text-center border-4 border-slate-900 my-auto max-h-[88vh] overflow-y-auto">
             <button
               onClick={() => setShowReceiptModal(false)}
               className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-900"
@@ -1467,8 +1467,8 @@ export default function ParkingQuickCashier() {
 
       {/* QRIS Modal */}
       {showQrisModal && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-sm w-full p-6 text-center space-y-4 shadow-2xl relative">
+        <div className="fixed inset-0 z-[150] bg-black/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-sm w-full p-5 sm:p-6 text-center space-y-4 shadow-2xl relative my-auto max-h-[88vh] overflow-y-auto">
             <button
               onClick={() => setShowQrisModal(false)}
               className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400"
@@ -1527,8 +1527,8 @@ export default function ParkingQuickCashier() {
 
       {/* Shift Close Confirmation Modal */}
       {showCloseModal && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-sm w-full p-6 text-center space-y-4 shadow-2xl">
+        <div className="fixed inset-0 z-[150] bg-black/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-sm w-full p-5 sm:p-6 text-center space-y-4 shadow-2xl my-auto max-h-[88vh] overflow-y-auto">
             <div className="w-14 h-14 rounded-2xl bg-rose-500/10 text-rose-600 dark:text-rose-400 mx-auto flex items-center justify-center">
               <AlertCircle size={28} />
             </div>

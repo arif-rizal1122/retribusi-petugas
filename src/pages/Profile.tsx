@@ -439,8 +439,8 @@ export default function Profile() {
 
       {/* Edit Profile Modal */}
       {showEditModal && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-sm overflow-y-auto">
-          <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-xl sm:rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden my-auto">
+        <div className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-sm overflow-y-auto animate-in fade-in duration-200">
+          <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl shadow-2xl overflow-y-auto max-h-[85vh] mb-20 sm:mb-auto my-auto">
             <div className="flex items-center justify-between p-4 sm:p-6 border-b border-slate-100 dark:border-slate-800">
               <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">Edit Profile</h3>
               <button onClick={() => setShowEditModal(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl">
@@ -523,8 +523,8 @@ export default function Profile() {
 
       {/* Change Password Modal */}
       {showPasswordModal && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-sm overflow-y-auto">
-          <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-xl sm:rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden my-auto">
+        <div className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-sm overflow-y-auto animate-in fade-in duration-200">
+          <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl shadow-2xl overflow-y-auto max-h-[85vh] mb-20 sm:mb-auto my-auto">
             <div className="flex items-center justify-between p-4 sm:p-6 border-b border-slate-100 dark:border-slate-800">
               <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">Ganti Password</h3>
               <button onClick={() => setShowPasswordModal(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl">

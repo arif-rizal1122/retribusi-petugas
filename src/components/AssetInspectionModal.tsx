@@ -1,15 +1,15 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import {
   X,
   Gauge,
-  Navigation,
   Loader2,
   FileCheck,
-  Camera,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { api } from '../lib/api';
 import { AssetRentalSurveyItem } from './AssetSurveyForm';
+import { FieldCameraCapture } from './FieldCameraCapture';
+import { OfficerLocation } from '../utils/geoValidation';
 
 interface AssetInspectionModalProps {
   rental: AssetRentalSurveyItem;
@@ -36,35 +36,12 @@ export const AssetInspectionModal: React.FC<AssetInspectionModalProps> = ({
     safety_cabin_k3: true,
   });
 
-  // GPS Coordinates
-  const [gpsLat, setGpsLat] = useState<number | null>(null);
-  const [gpsLng, setGpsLng] = useState<number | null>(null);
-  const [gpsLoading, setGpsLoading] = useState<boolean>(false);
+  // GPS Coordinates & Status
+  const [inspectionLocation, setInspectionLocation] = useState<OfficerLocation | null>(null);
 
-  // Foto alat (geotag GPS)
+  // Foto alat murni via live camera
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
-  const [uploadingPhoto, setUploadingPhoto] = useState<boolean>(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Ambil lokasi GPS saat modal terbuka
-  useEffect(() => {
-    if ('geolocation' in navigator) {
-      setGpsLoading(true);
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          setGpsLat(pos.coords.latitude);
-          setGpsLng(pos.coords.longitude);
-          setGpsLoading(false);
-        },
-        (err) => {
-          console.warn('Gagal membaca GPS:', err);
-          setGpsLoading(false);
-        },
-        { enableHighAccuracy: true, timeout: 8000 }
-      );
-    }
-  }, []);
 
   const handleToggleChecklist = (key: string) => {
     setChecklist((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -81,16 +58,14 @@ export const AssetInspectionModal: React.FC<AssetInspectionModalProps> = ({
     try {
       setSubmitting(true);
 
-      // Upload foto alat terlebih dahulu jika ada
+      // Upload foto alat jika ada via live camera
       let photoUrl: string | undefined;
       if (photoFile) {
-        setUploadingPhoto(true);
         const formData = new FormData();
         formData.append('image', photoFile);
         formData.append('folder', 'retribusi/inspeksi-alat');
         const uploadRes = await api.post('/api/upload', formData);
         photoUrl = uploadRes?.url || uploadRes?.data?.url;
-        setUploadingPhoto(false);
         if (!photoUrl) {
           toast.error('Gagal mengupload foto alat. Silakan coba lagi.');
           setSubmitting(false);
@@ -109,8 +84,10 @@ export const AssetInspectionModal: React.FC<AssetInspectionModalProps> = ({
           safety_cabin_k3: checklist.safety_cabin_k3 ? 'GOOD' : 'ATTENTION',
         },
         damage_notes: damageNotes.trim() || undefined,
-        inspector_gps_lat: gpsLat || undefined,
-        inspector_gps_lng: gpsLng || undefined,
+        inspector_gps_lat: inspectionLocation?.lat || undefined,
+        inspector_gps_lng: inspectionLocation?.lng || undefined,
+        inspector_gps_status: inspectionLocation?.gps_status || 'active',
+        inspector_gps_notes: inspectionLocation?.gps_notes || undefined,
         photo_path: photoUrl || undefined,
       });
 
@@ -135,8 +112,8 @@ export const AssetInspectionModal: React.FC<AssetInspectionModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
-      <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full p-6 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-5 my-8">
+    <div className="fixed inset-0 z-[150] flex items-center justify-center p-3 sm:p-4 bg-black/70 backdrop-blur-sm overflow-y-auto">
+      <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full p-5 sm:p-6 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-5 my-auto max-h-[88vh] overflow-y-auto">
         {/* HEADER */}
         <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
           <div className="flex items-center gap-2.5">
@@ -264,83 +241,30 @@ export const AssetInspectionModal: React.FC<AssetInspectionModalProps> = ({
             />
           </div>
 
-          {/* GPS BADGE */}
-          <div className="p-3 bg-slate-100 dark:bg-slate-800 rounded-xl flex items-center justify-between text-xs text-slate-600 dark:text-slate-400">
-            <div className="flex items-center gap-2">
-              <Navigation className="w-4 h-4 text-purple-600" />
-              <span>
-                {gpsLoading
-                  ? 'Mencari sinyal GPS...'
-                  : gpsLat && gpsLng
-                  ? `GPS: ${gpsLat.toFixed(5)}, ${gpsLng.toFixed(5)}`
-                  : 'GPS tidak terdeteksi'}
-              </span>
-            </div>
-            <span className="text-[10px] font-bold text-emerald-600">Anti-Fraud Terverifikasi</span>
-          </div>
-
-          {/* FOTO ALAT (Geotag GPS) */}
-          <div>
-            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-              Foto Kondisi Alat <span className="text-slate-400 font-normal">(opsional)</span>
-            </label>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              capture="environment"
-              className="hidden"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) {
-                  setPhotoFile(file);
-                  setPhotoPreview(URL.createObjectURL(file));
-                }
+          {/* Foto Kondisi Alat & Hour Meter (Wajib Live Camera) */}
+          <div className="pt-2">
+            <FieldCameraCapture
+              label="Foto Kondisi Fisik Alat & Hour Meter (Wajib Kamera Langsung)"
+              targetLat={rental.latitude ? Number(rental.latitude) : null}
+              targetLng={rental.longitude ? Number(rental.longitude) : null}
+              targetLabel={rental.asset_item?.name || 'Unit Alat Berat PUPR'}
+              currentPhotoPreview={photoPreview}
+              onPhotoCaptured={(file, loc) => {
+                setPhotoFile(file);
+                setPhotoPreview(URL.createObjectURL(file));
+                setInspectionLocation(loc);
               }}
+              onClearPhoto={() => {
+                setPhotoFile(null);
+                setPhotoPreview(null);
+                setInspectionLocation(null);
+              }}
+              required={false}
             />
-            {photoPreview ? (
-              <div className="relative rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700">
-                <img src={photoPreview} alt="Preview foto alat" className="w-full h-36 object-cover" />
-                <button
-                  type="button"
-                  onClick={() => { setPhotoFile(null); setPhotoPreview(null); if (fileInputRef.current) fileInputRef.current.value = ''; }}
-                  className="absolute top-2 right-2 p-1.5 bg-slate-900/70 text-white rounded-full hover:bg-red-600 transition"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-                <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-slate-900/60 text-white text-[10px] font-bold rounded-full flex items-center gap-1">
-                  <Navigation className="w-3 h-3" />
-                  {gpsLat && gpsLng ? `${gpsLat.toFixed(5)}, ${gpsLng.toFixed(5)}` : 'GPS Tertaut'}
-                </div>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploadingPhoto}
-                className="w-full py-6 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl text-slate-500 dark:text-slate-400 hover:border-purple-400 hover:text-purple-600 dark:hover:text-purple-400 transition flex flex-col items-center gap-1.5 disabled:opacity-50"
-              >
-                {uploadingPhoto ? (
-                  <>
-                    <Loader2 className="w-6 h-6 animate-spin" />
-                    <span className="text-xs font-bold">Mengupload Foto...</span>
-                  </>
-                ) : (
-                  <>
-                    <Camera className="w-6 h-6" />
-                    <span className="text-xs font-bold">Ambil Foto Alat</span>
-                    <span className="text-[10px]">Klik untuk buka kamera atau galeri</span>
-                  </>
-                )}
-              </button>
-            )}
-            <p className="text-[10px] text-slate-500 mt-1">
-              Geotag GPS otomatis tercantum di foto. Format: JPEG/PNG, maks 5MB.
-            </p>
           </div>
 
-          {/* ACTIONS */}
-          <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+          {/* ACTIONS (Sticky Bottom) */}
+          <div className="sticky bottom-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md pt-3 pb-3 -mx-5 sm:-mx-6 px-5 sm:px-6 -mb-5 sm:-mb-6 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-2 z-20">
             <button
               type="button"
               onClick={onClose}

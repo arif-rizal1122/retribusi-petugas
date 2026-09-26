@@ -712,8 +712,8 @@ export default function PasarDisperindagPage() {
 
       {/* MODAL BAYAR LAPAK */}
       {selectedStallForPay && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
-          <div className="bg-white dark:bg-slate-800 w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl p-5 shadow-2xl border border-slate-200 dark:border-slate-700 space-y-4">
+        <div className="fixed inset-0 z-[150] bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto animate-fadeIn">
+          <div className="bg-white dark:bg-slate-800 w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl p-5 shadow-2xl border border-slate-200 dark:border-slate-700 space-y-4 max-h-[90vh] overflow-y-auto pb-8 sm:pb-5">
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-700 pb-3">
               <div>
                 <h3 className="text-sm font-black text-slate-900 dark:text-white">

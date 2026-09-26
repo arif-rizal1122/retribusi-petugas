@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import {
   CheckCircle2,
   AlertTriangle,
@@ -7,15 +7,18 @@ import {
   FileCheck,
   ShieldCheck,
   Navigation,
-  Camera,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../lib/api';
+import { FieldCameraCapture } from './FieldCameraCapture';
+import { OfficerLocation } from '../utils/geoValidation';
 
 export interface AssetRentalSurveyItem {
   id: number;
   rental_code: string;
   nomor_kontrak?: string | null;
+  latitude?: number | string | null;
+  longitude?: number | string | null;
   taxpayer?: {
     id: number;
     name: string;
@@ -87,57 +90,37 @@ export const AssetSurveyForm: React.FC<AssetSurveyFormProps> = ({
     rental.survey_rekomendasi_alat || ''
   );
 
-  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
-  const [gettingLocation, setGettingLocation] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  // Foto lokasi survey (geotag GPS)
+  // Foto lokasi survey murni via live camera
   const [fotoFile, setFotoFile] = useState<File | null>(null);
-  const [fotoPreview, setFotoPreview] = useState<string | null>(null);
-  const [uploadingFoto, setUploadingFoto] = useState(false);
-  const fotoInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    // Auto-detect current GPS location
-    if ('geolocation' in navigator) {
-      setGettingLocation(true);
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          setCoords({
-            lat: pos.coords.latitude,
-            lng: pos.coords.longitude,
-          });
-          setGettingLocation(false);
-        },
-        () => setGettingLocation(false),
-        { enableHighAccuracy: true, timeout: 6000 }
-      );
-    }
-  }, []);
+  const [fotoPreview, setFotoPreview] = useState<string | null>(rental.survey_foto_path || null);
+  const [surveyGpsCoords, setSurveyGpsCoords] = useState<OfficerLocation | null>(null);
 
   const isAllEligible = aksesJalan && dekatJalanRaya && keamanan && lahanLuas;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!fotoFile && !rental.survey_foto_path) {
+      toast.error('Wajib mengambil foto bukti survei lapangan menggunakan kamera!');
+      return;
+    }
+
     setSubmitting(true);
     try {
-      // Upload foto lokasi jika ada
-      let fotoUrl: string | null = null;
+      // Upload foto lokasi via kamera
+      let fotoUrl: string | null = rental.survey_foto_path || null;
       if (fotoFile) {
-        setUploadingFoto(true);
         const formData = new FormData();
         formData.append('image', fotoFile);
         formData.append('folder', 'retribusi/survey-kelayakan');
         const uploadRes = await api.post('/api/upload', formData);
         fotoUrl = uploadRes?.url || uploadRes?.data?.url || null;
-        setUploadingFoto(false);
         if (!fotoUrl) {
           toast.error('Gagal mengupload foto. Silakan coba lagi.');
           setSubmitting(false);
           return;
         }
-      } else if (coords) {
-        fotoUrl = `GPS: ${coords.lat.toFixed(6)}, ${coords.lng.toFixed(6)}`;
       }
 
       await api.post(`/api/asset/rentals/${rental.id}/survey`, {
@@ -155,6 +138,10 @@ export const AssetSurveyForm: React.FC<AssetSurveyFormProps> = ({
             ? 'Lokasi layak & memenuhi standar operasional olah gerak alat berat.'
             : 'Perlu penyesuaian lokasi/akses jalan sebelum unit dimobilisasi.'),
         survey_foto_path: fotoUrl,
+        survey_gps_lat: surveyGpsCoords?.lat,
+        survey_gps_lng: surveyGpsCoords?.lng,
+        survey_gps_status: surveyGpsCoords?.gps_status || 'active',
+        survey_gps_notes: surveyGpsCoords?.gps_notes || undefined,
       });
 
       toast.success('Laporan lengkap survey kelayakan & tronton berhasil disimpan!');
@@ -169,8 +156,8 @@ export const AssetSurveyForm: React.FC<AssetSurveyFormProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-slate-800 w-full max-w-lg rounded-3xl p-6 shadow-2xl border border-slate-100 dark:border-slate-700 max-h-[90vh] overflow-y-auto space-y-5">
+    <div className="fixed inset-0 z-[150] flex items-center justify-center p-3 sm:p-4 bg-slate-900/70 backdrop-blur-sm overflow-y-auto animate-in fade-in duration-200">
+      <div className="bg-white dark:bg-slate-800 w-full max-w-lg rounded-3xl p-5 sm:p-6 shadow-2xl border border-slate-100 dark:border-slate-700 max-h-[88vh] overflow-y-auto space-y-5 my-auto">
         {/* Header */}
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
@@ -404,78 +391,30 @@ export const AssetSurveyForm: React.FC<AssetSurveyFormProps> = ({
             />
           </div>
 
-          {/* Foto Lokasi Survey (Geotag GPS) */}
-          <div>
-            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1.5">
-              Foto Lokasi / Kondisi Lapangan:
-            </label>
-            <input
-              ref={fotoInputRef}
-              type="file"
-              accept="image/*"
-              capture="environment"
-              className="hidden"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) {
-                  setFotoFile(file);
-                  setFotoPreview(URL.createObjectURL(file));
-                }
+          {/* Foto Bukti Survei Lapangan (Wajib Kamera Langsung) */}
+          <div className="pt-2">
+            <FieldCameraCapture
+              label="Foto Bukti Survei Lapangan & Akses Unit (Wajib Kamera Langsung)"
+              targetLat={rental.latitude ? Number(rental.latitude) : null}
+              targetLng={rental.longitude ? Number(rental.longitude) : null}
+              targetLabel={rental.lokasi_penggunaan || 'Lokasi Pekerjaan Sewa'}
+              currentPhotoPreview={fotoPreview}
+              onPhotoCaptured={(file, loc) => {
+                setFotoFile(file);
+                setFotoPreview(URL.createObjectURL(file));
+                setSurveyGpsCoords(loc);
               }}
+              onClearPhoto={() => {
+                setFotoFile(null);
+                setFotoPreview(null);
+                setSurveyGpsCoords(null);
+              }}
+              required={true}
             />
-            {fotoPreview ? (
-              <div className="relative rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700">
-                <img src={fotoPreview} alt="Foto lokasi survey" className="w-full h-32 object-cover" />
-                <button
-                  type="button"
-                  onClick={() => { setFotoFile(null); setFotoPreview(null); if (fotoInputRef.current) fotoInputRef.current.value = ''; }}
-                  className="absolute top-2 right-2 p-1.5 bg-slate-900/70 text-white rounded-full hover:bg-red-600 transition"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-                <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-slate-900/60 text-white text-[10px] font-bold rounded-full flex items-center gap-1">
-                  <Navigation className="w-3 h-3" />
-                  {coords ? `${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}` : 'GPS Tertaut'}
-                </div>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => fotoInputRef.current?.click()}
-                disabled={uploadingFoto}
-                className="w-full py-5 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl text-slate-500 dark:text-slate-400 hover:border-emerald-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition flex flex-col items-center gap-1.5 disabled:opacity-50"
-              >
-                {uploadingFoto ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    <span className="text-xs font-bold">Mengupload Foto...</span>
-                  </>
-                ) : (
-                  <>
-                    <Camera className="w-5 h-5" />
-                    <span className="text-xs font-bold">Ambil Foto Lokasi</span>
-                    <span className="text-[10px]">Geotag GPS otomatis tercantum</span>
-                  </>
-                )}
-              </button>
-            )}
           </div>
 
-          {/* Geolocation Stamp */}
-          <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 pt-1">
-            <span className="flex items-center gap-1">
-              <Navigation size={13} className="text-emerald-600" />
-              {coords
-                ? `GPS: ${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}`
-                : gettingLocation
-                ? 'Mendeteksi GPS...'
-                : 'GPS Terdeteksi Otomatis'}
-            </span>
-            <span className="text-slate-400">Standar PUPR Baubau</span>
-          </div>
-
-          {/* Actions */}
-          <div className="flex gap-2.5 pt-2">
+          {/* Actions (Sticky Bottom) */}
+          <div className="sticky bottom-0 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md pt-3 pb-3 -mx-5 sm:-mx-6 px-5 sm:px-6 -mb-5 sm:-mb-6 border-t border-slate-100 dark:border-slate-700/60 flex gap-2.5 z-20">
             <button
               type="button"
               onClick={onClose}
