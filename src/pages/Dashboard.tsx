@@ -681,49 +681,99 @@ export default function Dashboard() {
           </div>
 
           <div className="grid grid-cols-4 gap-2 sm:gap-2.5">
-            {/* Action 1: Input SPTPD */}
-            <button
-              onClick={() => navigate('/sptpd')}
-              className="bg-sky-50/80 border border-sky-100 p-2 sm:p-3 rounded-xl sm:rounded-2xl flex flex-col items-center justify-center text-center active:scale-95 transition-transform"
-            >
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-lg sm:rounded-xl shadow-sm flex items-center justify-center text-sky-600 mb-1.5 sm:mb-2">
-                <FileText size={16} className="sm:w-5 sm:h-5" />
-              </div>
-              <span className="text-[9px] sm:text-[10px] font-bold text-slate-700 leading-tight">Input SPTPD</span>
-            </button>
+            {isPupr ? (
+              <>
+                {/* Action 1: Survei Sewa */}
+                <button
+                  onClick={() => navigate('/tasks')}
+                  className="bg-amber-50/80 border border-amber-200/70 p-2 sm:p-3 rounded-xl sm:rounded-2xl flex flex-col items-center justify-center text-center active:scale-95 transition-transform"
+                >
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-lg sm:rounded-xl shadow-sm flex items-center justify-center text-amber-600 mb-1.5 sm:mb-2">
+                    <ClipboardList size={16} className="sm:w-5 sm:h-5" />
+                  </div>
+                  <span className="text-[9px] sm:text-[10px] font-bold text-slate-700 leading-tight">Survei Sewa</span>
+                </button>
 
-            {/* Action 2: Cek Wajib Pajak */}
-            <button
-              onClick={() => navigate('/taxpayers')}
-              className="bg-emerald-50/80 border border-emerald-100 p-2 sm:p-3 rounded-xl sm:rounded-2xl flex flex-col items-center justify-center text-center active:scale-95 transition-transform"
-            >
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-lg sm:rounded-xl shadow-sm flex items-center justify-center text-emerald-600 mb-1.5 sm:mb-2">
-                <Building2 size={16} className="sm:w-5 sm:h-5" />
-              </div>
-              <span className="text-[9px] sm:text-[10px] font-bold text-slate-700 leading-tight">Cek Wajib Pajak</span>
-            </button>
+                {/* Action 2: Inspeksi HM */}
+                <button
+                  onClick={() => navigate('/pupr-inspection')}
+                  className="bg-indigo-50/80 border border-indigo-200/70 p-2 sm:p-3 rounded-xl sm:rounded-2xl flex flex-col items-center justify-center text-center active:scale-95 transition-transform"
+                >
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-lg sm:rounded-xl shadow-sm flex items-center justify-center text-indigo-600 mb-1.5 sm:mb-2">
+                    <Gauge size={16} className="sm:w-5 sm:h-5" />
+                  </div>
+                  <span className="text-[9px] sm:text-[10px] font-bold text-slate-700 leading-tight">Inspeksi HM</span>
+                </button>
 
-            {/* Action 3: Scan Aset */}
-            <button
-              onClick={() => navigate('/scanner')}
-              className="bg-purple-50/80 border border-purple-100 p-2 sm:p-3 rounded-xl sm:rounded-2xl flex flex-col items-center justify-center text-center active:scale-95 transition-transform"
-            >
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-lg sm:rounded-xl shadow-sm flex items-center justify-center text-purple-600 mb-1.5 sm:mb-2">
-                <QrCode size={16} className="sm:w-5 sm:h-5" />
-              </div>
-              <span className="text-[9px] sm:text-[10px] font-bold text-slate-700 leading-tight">Scan Aset</span>
-            </button>
+                {/* Action 3: Peta Proyek */}
+                <button
+                  onClick={() => navigate('/peta')}
+                  className="bg-sky-50/80 border border-sky-200/70 p-2 sm:p-3 rounded-xl sm:rounded-2xl flex flex-col items-center justify-center text-center active:scale-95 transition-transform"
+                >
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-lg sm:rounded-xl shadow-sm flex items-center justify-center text-sky-600 mb-1.5 sm:mb-2">
+                    <MapPin size={16} className="sm:w-5 sm:h-5" />
+                  </div>
+                  <span className="text-[9px] sm:text-[10px] font-bold text-slate-700 leading-tight">Peta Proyek</span>
+                </button>
 
-            {/* Action 4: Laporan Cepat */}
-            <button
-              onClick={() => navigate('/reporting')}
-              className="bg-amber-50/80 border border-amber-100 p-2 sm:p-3 rounded-xl sm:rounded-2xl flex flex-col items-center justify-center text-center active:scale-95 transition-transform"
-            >
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-lg sm:rounded-xl shadow-sm flex items-center justify-center text-amber-600 mb-1.5 sm:mb-2">
-                <TrendingUp size={16} className="sm:w-5 sm:h-5" />
-              </div>
-              <span className="text-[9px] sm:text-[10px] font-bold text-slate-700 leading-tight">Laporan Cepat</span>
-            </button>
+                {/* Action 4: Panduan */}
+                <button
+                  onClick={() => navigate('/user-guide')}
+                  className="bg-slate-50 border border-slate-200 p-2 sm:p-3 rounded-xl sm:rounded-2xl flex flex-col items-center justify-center text-center active:scale-95 transition-transform"
+                >
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-lg sm:rounded-xl shadow-sm flex items-center justify-center text-slate-600 mb-1.5 sm:mb-2">
+                    <ShieldCheck size={16} className="sm:w-5 sm:h-5" />
+                  </div>
+                  <span className="text-[9px] sm:text-[10px] font-bold text-slate-700 leading-tight">Panduan UPTD</span>
+                </button>
+              </>
+            ) : (
+              <>
+                {/* Action 1: Input SPTPD */}
+                <button
+                  onClick={() => navigate('/sptpd')}
+                  className="bg-sky-50/80 border border-sky-100 p-2 sm:p-3 rounded-xl sm:rounded-2xl flex flex-col items-center justify-center text-center active:scale-95 transition-transform"
+                >
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-lg sm:rounded-xl shadow-sm flex items-center justify-center text-sky-600 mb-1.5 sm:mb-2">
+                    <FileText size={16} className="sm:w-5 sm:h-5" />
+                  </div>
+                  <span className="text-[9px] sm:text-[10px] font-bold text-slate-700 leading-tight">Input SPTPD</span>
+                </button>
+
+                {/* Action 2: Cek Wajib Pajak */}
+                <button
+                  onClick={() => navigate('/taxpayers')}
+                  className="bg-emerald-50/80 border border-emerald-100 p-2 sm:p-3 rounded-xl sm:rounded-2xl flex flex-col items-center justify-center text-center active:scale-95 transition-transform"
+                >
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-lg sm:rounded-xl shadow-sm flex items-center justify-center text-emerald-600 mb-1.5 sm:mb-2">
+                    <Building2 size={16} className="sm:w-5 sm:h-5" />
+                  </div>
+                  <span className="text-[9px] sm:text-[10px] font-bold text-slate-700 leading-tight">Cek Wajib Pajak</span>
+                </button>
+
+                {/* Action 3: Scan Aset */}
+                <button
+                  onClick={() => navigate('/scanner')}
+                  className="bg-purple-50/80 border border-purple-100 p-2 sm:p-3 rounded-xl sm:rounded-2xl flex flex-col items-center justify-center text-center active:scale-95 transition-transform"
+                >
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-lg sm:rounded-xl shadow-sm flex items-center justify-center text-purple-600 mb-1.5 sm:mb-2">
+                    <QrCode size={16} className="sm:w-5 sm:h-5" />
+                  </div>
+                  <span className="text-[9px] sm:text-[10px] font-bold text-slate-700 leading-tight">Scan Aset</span>
+                </button>
+
+                {/* Action 4: Laporan Cepat */}
+                <button
+                  onClick={() => navigate('/reporting')}
+                  className="bg-amber-50/80 border border-amber-100 p-2 sm:p-3 rounded-xl sm:rounded-2xl flex flex-col items-center justify-center text-center active:scale-95 transition-transform"
+                >
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-lg sm:rounded-xl shadow-sm flex items-center justify-center text-amber-600 mb-1.5 sm:mb-2">
+                    <TrendingUp size={16} className="sm:w-5 sm:h-5" />
+                  </div>
+                  <span className="text-[9px] sm:text-[10px] font-bold text-slate-700 leading-tight">Laporan Cepat</span>
+                </button>
+              </>
+            )}
           </div>
         </div>
 
