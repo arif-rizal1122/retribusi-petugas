@@ -388,32 +388,32 @@ export default function Dashboard() {
 
         {/* Hero Card Khusus Petugas PUPR Aset */}
         {isPupr && (
-          <div className="bg-gradient-to-r from-amber-600 via-orange-600 to-slate-900 rounded-3xl p-5 text-white shadow-xl shadow-amber-900/20 space-y-3">
+          <div className="bg-gradient-to-r from-[#0F2547] via-[#1E3A8A] to-[#0284c7] rounded-3xl p-5 text-white shadow-xl shadow-blue-950/25 border border-white/10 space-y-3">
             <div className="flex items-center justify-between">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 text-amber-100 text-[10px] font-black uppercase tracking-wider backdrop-blur-sm">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 text-sky-200 text-[10px] font-black uppercase tracking-wider backdrop-blur-sm border border-white/15">
                 <Wrench className="w-3.5 h-3.5" /> UPTD Peralatan & Workshop PUPR
               </span>
-              <span className="text-[10px] bg-amber-400 text-amber-950 font-black px-2 py-0.5 rounded-full">
+              <span className="text-[10px] bg-[#00C8E5] text-slate-950 font-black px-2.5 py-0.5 rounded-full shadow-sm">
                 Sewa Alat Berat
               </span>
             </div>
             <div>
               <h3 className="text-base font-black">Operasional & Survei Lapangan</h3>
-              <p className="text-xs text-amber-100/90 mt-0.5">
+              <p className="text-xs text-sky-100/90 mt-0.5">
                 Verifikasi 4 butir kelayakan lokasi proyek, cek akses tronton, dan catat Hour Meter (HM) unit.
               </p>
             </div>
             <div className="grid grid-cols-2 gap-2 pt-1">
               <button
                 onClick={() => navigate('/tasks')}
-                className="p-2.5 bg-white text-slate-900 hover:bg-amber-50 rounded-xl font-black text-xs flex items-center justify-center gap-1.5 shadow-sm transition-all active:scale-95"
+                className="p-2.5 bg-white text-[#0F2547] hover:bg-sky-50 rounded-xl font-black text-xs flex items-center justify-center gap-1.5 shadow-sm transition-all active:scale-95"
               >
-                <ClipboardList size={14} className="text-amber-600" />
+                <ClipboardList size={14} className="text-blue-600" />
                 <span>Survei Sewa</span>
               </button>
               <button
                 onClick={() => navigate('/pupr-inspection')}
-                className="p-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl font-black text-xs flex items-center justify-center gap-1.5 shadow-sm transition-all active:scale-95"
+                className="p-2.5 bg-[#00C8E5] hover:bg-[#00b5cf] text-slate-950 rounded-xl font-black text-xs flex items-center justify-center gap-1.5 shadow-sm transition-all active:scale-95"
               >
                 <Gauge size={14} />
                 <span>Inspeksi HM</span>
