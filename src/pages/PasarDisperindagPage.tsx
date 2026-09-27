@@ -26,6 +26,7 @@ import {
   MarketOfficerAssignmentItem,
 } from '../services/marketOfficerService';
 import { thermalPrintService, MarketReceiptData } from '../services/ThermalPrintService';
+import SearchableSelect, { Option } from '../components/SearchableSelect';
 
 export default function PasarDisperindagPage() {
   const { user } = useAuth();
@@ -43,6 +44,51 @@ export default function PasarDisperindagPage() {
   }>({ today_tickets_count: 0, today_tickets_amount: 0, assignment: null });
 
   // TAB 1: Hitungan Ukuran Lapak Pelataran (Perda 1/2024: Rp 1.000 / 3 m²)
+  const STALL_SIZE_OPTIONS: Option[] = useMemo(() => [
+    {
+      id: '1',
+      label: '1 Petak Standar',
+      subLabel: 'Hamparan / Meja Portabel (1,5 m × 2,0 m)',
+      badge: '3 m²',
+      rightText: 'Rp 1.000 / hari',
+    },
+    {
+      id: '2',
+      label: '2 Petak',
+      subLabel: 'Hamparan / Meja Ganda (3,0 m × 2,0 m)',
+      badge: '6 m²',
+      rightText: 'Rp 2.000 / hari',
+    },
+    {
+      id: '3',
+      label: '3 Petak',
+      subLabel: 'Area Lapak Sedang (4,5 m × 2,0 m)',
+      badge: '9 m²',
+      rightText: 'Rp 3.000 / hari',
+    },
+    {
+      id: '4',
+      label: '4 Petak',
+      subLabel: 'Area Lapak Luas (6,0 m × 2,0 m)',
+      badge: '12 m²',
+      rightText: 'Rp 4.000 / hari',
+    },
+    {
+      id: '5',
+      label: '5 Petak',
+      subLabel: 'Area Lapak Ekstra Luas (7,5 m × 2,0 m)',
+      badge: '15 m²',
+      rightText: 'Rp 5.000 / hari',
+    },
+    {
+      id: 'custom',
+      label: 'Ukuran Lainnya (Ketik Petak / Luas)',
+      subLabel: 'Hitung otomatis kelipatan 3 m² sesuai Perda 1/2024',
+      badge: 'Kustom',
+      rightText: 'Atur Petak...',
+    },
+  ], []);
+
   const [stallSizeOption, setStallSizeOption] = useState<string>('1');
   const [customUnits, setCustomUnits] = useState<number>(5);
 
@@ -59,7 +105,8 @@ export default function PasarDisperindagPage() {
     if (unitsCount === 2) return '3,0 m × 2,0 m (6 m²)';
     if (unitsCount === 3) return '4,5 m × 2,0 m (9 m²)';
     if (unitsCount === 4) return '6,0 m × 2,0 m (12 m²)';
-    return `${unitsCount} petak (± ${calculatedAreaM2} m²)`;
+    if (unitsCount === 5) return '7,5 m × 2,0 m (15 m²)';
+    return `${unitsCount} petak — ${(unitsCount * 1.5).toLocaleString('id-ID', { maximumFractionDigits: 1 })} m × 2,0 m (${calculatedAreaM2} m²)`;
   }, [unitsCount, calculatedAreaM2]);
 
   const calculatedTotalAmount = unitsCount * 1000;
@@ -83,6 +130,23 @@ export default function PasarDisperindagPage() {
     }
     return list;
   }, [stats.assignment]);
+
+  const pelataranOptions: Option[] = useMemo(() => {
+    return [
+      ...dynamicPelataranChips.map((opt) => ({
+        id: opt,
+        label: opt,
+        subLabel: selectedMarket,
+        badge: 'Blok Titik',
+      })),
+      {
+        id: '__custom__',
+        label: '+ Ketik Lokasi Pelataran Lainnya...',
+        subLabel: 'Input titik pasar manual',
+        badge: 'Manual',
+      },
+    ];
+  }, [dynamicPelataranChips, selectedMarket]);
 
   // TAB 2 & 3: Stalls State
   const [selectedBuilding, setSelectedBuilding] = useState<string>('');
@@ -145,6 +209,16 @@ export default function PasarDisperindagPage() {
       }
     }
   }, [currentBuildings, selectedBuilding]);
+
+  const buildingOptions: Option[] = useMemo(() => {
+    return currentBuildings.map((b) => ({
+      id: b.building_name,
+      label: b.building_name,
+      subLabel: `${b.active_units}/${b.total_units} Unit Aktif`,
+      badge: b.billing_cycle === 'yearly' ? 'Tahunan' : 'Bulanan',
+      rightText: `Rp ${Number(b.sample_tariff).toLocaleString('id-ID')} / ${b.billing_cycle === 'yearly' ? 'thn' : 'bln'}`,
+    }));
+  }, [currentBuildings]);
 
   // Load Stalls when selected building or tab changes
   const loadStalls = useCallback(async () => {
@@ -467,29 +541,32 @@ export default function PasarDisperindagPage() {
                     </span>
                   </div>
 
-                  <select
+                  <SearchableSelect
+                    options={STALL_SIZE_OPTIONS}
                     value={stallSizeOption}
-                    onChange={(e) => setStallSizeOption(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-800 dark:text-white outline-none focus:border-emerald-500 cursor-pointer"
-                  >
-                    <option value="1">1 Petak Standar — 1,5 m × 2,0 m (3 m²) = Rp 1.000</option>
-                    <option value="2">2 Petak — 3,0 m × 2,0 m (6 m²) = Rp 2.000</option>
-                    <option value="3">3 Petak — 4,5 m × 2,0 m (9 m²) = Rp 3.000</option>
-                    <option value="4">4 Petak — 6,0 m × 2,0 m (12 m²) = Rp 4.000</option>
-                    <option value="custom">Ukuran Lainnya (Ketik Jumlah Petak / Luas)...</option>
-                  </select>
+                    onSelect={(val) => setStallSizeOption(val.toString())}
+                    placeholder="Pilih Ukuran Lapak Pelataran"
+                    themeColor="emerald"
+                    size="sm"
+                    showSearch={false}
+                  />
 
                   {/* Input khusus bila ukuran lainnya / custom */}
                   {stallSizeOption === 'custom' && (
-                    <div className="mt-2 p-2.5 bg-emerald-50/60 dark:bg-emerald-950/40 rounded-xl border border-emerald-200 dark:border-emerald-800 flex items-center justify-between gap-3 animate-fadeIn">
-                      <div className="text-xs font-medium text-slate-700 dark:text-slate-200">
-                        Skema Jumlah Petak:
+                    <div className="mt-2 p-3 bg-emerald-50/70 dark:bg-emerald-950/50 rounded-2xl border border-emerald-200/80 dark:border-emerald-800/80 flex items-center justify-between gap-3 animate-fadeIn">
+                      <div>
+                        <div className="text-xs font-black text-slate-800 dark:text-white">
+                          Jumlah Petak: {customUnits} Petak
+                        </div>
+                        <div className="text-[11px] text-emerald-700 dark:text-emerald-300 font-medium">
+                          {(customUnits * 1.5).toLocaleString('id-ID', { maximumFractionDigits: 1 })} m × 2,0 m (± {customUnits * 3} m²)
+                        </div>
                       </div>
                       <div className="flex items-center gap-2">
                         <button
                           type="button"
                           onClick={() => setCustomUnits(Math.max(1, customUnits - 1))}
-                          className="w-7 h-7 rounded-lg bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 flex items-center justify-center font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100"
+                          className="w-8 h-8 rounded-xl bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 flex items-center justify-center font-black text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 shadow-xs active:scale-95 cursor-pointer"
                         >
                           -
                         </button>
@@ -499,12 +576,12 @@ export default function PasarDisperindagPage() {
                           max="50"
                           value={customUnits}
                           onChange={(e) => setCustomUnits(Math.max(1, parseInt(e.target.value) || 1))}
-                          className="w-14 py-1 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg text-center font-black text-xs text-slate-800 dark:text-white outline-none"
+                          className="w-14 py-1.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-xl text-center font-black text-xs text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500"
                         />
                         <button
                           type="button"
                           onClick={() => setCustomUnits(customUnits + 1)}
-                          className="w-7 h-7 rounded-lg bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 flex items-center justify-center font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100"
+                          className="w-8 h-8 rounded-xl bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 flex items-center justify-center font-black text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 shadow-xs active:scale-95 cursor-pointer"
                         >
                           +
                         </button>
@@ -513,11 +590,11 @@ export default function PasarDisperindagPage() {
                   )}
 
                   {/* Keterangan detail ukuran & tarif terpilih */}
-                  <div className="mt-1.5 flex items-center justify-between text-[11px] bg-slate-100/70 dark:bg-slate-800/60 px-3 py-1.5 rounded-lg border border-slate-200/60 dark:border-slate-700/60">
+                  <div className="mt-2 flex items-center justify-between text-[11px] bg-slate-100/80 dark:bg-slate-800/70 px-3.5 py-2 rounded-xl border border-slate-200/60 dark:border-slate-700/60">
                     <span className="text-slate-600 dark:text-slate-300 truncate">
                       Hamparan terbuka / meja portabel: <strong>{calculatedDimensions}</strong>
                     </span>
-                    <span className="font-black text-emerald-700 dark:text-emerald-400 font-mono shrink-0 ml-2">
+                    <span className="font-black text-emerald-700 dark:text-emerald-400 font-mono shrink-0 ml-2 text-xs">
                       Rp {calculatedTotalAmount.toLocaleString('id-ID')} / hari
                     </span>
                   </div>
@@ -525,27 +602,25 @@ export default function PasarDisperindagPage() {
 
                 {/* Titik Pelataran / Blok Dropdown */}
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1.5">
                     Titik Pelataran / Blok Pasar
                   </label>
-                  <select
+                  <SearchableSelect
+                    options={pelataranOptions}
                     value={dynamicPelataranChips.includes(ticketBuilding) ? ticketBuilding : '__custom__'}
-                    onChange={(e) => {
-                      if (e.target.value === '__custom__') {
+                    onSelect={(val) => {
+                      if (val === '__custom__') {
                         setTicketBuilding('');
                       } else {
-                        setTicketBuilding(e.target.value);
+                        setTicketBuilding(val.toString());
                       }
                     }}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-800 dark:text-white outline-none focus:border-emerald-500 cursor-pointer"
-                  >
-                    {dynamicPelataranChips.map((opt) => (
-                      <option key={opt} value={opt}>
-                        {opt}
-                      </option>
-                    ))}
-                    <option value="__custom__">+ Ketik Lokasi Pelataran Lainnya...</option>
-                  </select>
+                    placeholder="Pilih Titik Pelataran / Blok"
+                    themeColor="emerald"
+                    size="sm"
+                    showSearch={dynamicPelataranChips.length > 5}
+                    searchPlaceholder="Cari lokasi pelataran..."
+                  />
 
                   {(!dynamicPelataranChips.includes(ticketBuilding) || ticketBuilding === '') && (
                     <input
@@ -788,17 +863,16 @@ export default function PasarDisperindagPage() {
                 </button>
               </div>
 
-              <select
+              <SearchableSelect
+                options={buildingOptions}
                 value={selectedBuilding}
-                onChange={(e) => setSelectedBuilding(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-800 dark:text-white outline-none cursor-pointer"
-              >
-                {currentBuildings.map((b, idx) => (
-                  <option key={idx} value={b.building_name}>
-                    {b.building_name} ({b.active_units}/{b.total_units} Unit Aktif) • Rp {Number(b.sample_tariff).toLocaleString('id-ID')} / {b.billing_cycle === 'yearly' ? 'thn' : 'bln'}
-                  </option>
-                ))}
-              </select>
+                onSelect={(val) => setSelectedBuilding(val.toString())}
+                placeholder="Pilih Blok / Bangunan Pasar"
+                themeColor="emerald"
+                size="sm"
+                showSearch={currentBuildings.length > 5}
+                searchPlaceholder="Cari bangunan pasar..."
+              />
 
               {/* Search Bar */}
               <div className="relative">

@@ -25,6 +25,7 @@ import {
   DlhTrashCalculationResult,
 } from '../services/dlhCollectorService';
 import { thermalPrintService, DlhReceiptData } from '../services/ThermalPrintService';
+import SearchableSelect from '../components/SearchableSelect';
 
 const MARKET_LIST = [
   'Pasar Karya Nugraha',
@@ -453,17 +454,15 @@ export default function DlhCollectorPage() {
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
                   Lokasi Pasar
                 </label>
-                <select
+                <SearchableSelect
+                  options={MARKET_LIST.map((m) => ({ id: m, label: m }))}
                   value={selectedMarket}
-                  onChange={(e) => setSelectedMarket(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm font-medium focus:ring-2 focus:ring-emerald-500"
-                >
-                  {MARKET_LIST.map((m) => (
-                    <option key={m} value={m}>
-                      {m}
-                    </option>
-                  ))}
-                </select>
+                  onSelect={(val) => setSelectedMarket(val.toString())}
+                  placeholder="Pilih Lokasi Pasar"
+                  themeColor="emerald"
+                  size="sm"
+                  showSearch={false}
+                />
               </div>
 
               {/* Lapak & Pedagang */}
@@ -794,17 +793,20 @@ export default function DlhCollectorPage() {
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
                   Kategori Bangunan Fisik
                 </label>
-                <select
+                <SearchableSelect
+                  options={BUILDING_CATEGORIES.map((c) => ({
+                    id: c.key,
+                    label: c.label,
+                    subLabel: c.desc,
+                    badge: c.badge,
+                  }))}
                   value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm font-medium focus:ring-2 focus:ring-emerald-500"
-                >
-                  {BUILDING_CATEGORIES.map((c) => (
-                    <option key={c.key} value={c.key}>
-                      {c.label} ({c.badge})
-                    </option>
-                  ))}
-                </select>
+                  onSelect={(val) => setSelectedCategory(val.toString())}
+                  placeholder="Pilih Kategori Bangunan"
+                  themeColor="emerald"
+                  size="sm"
+                  showSearch={false}
+                />
               </div>
 
               <div>
@@ -899,14 +901,18 @@ export default function DlhCollectorPage() {
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                     Status Hubungan
                   </label>
-                  <select
+                  <SearchableSelect
+                    options={[
+                      { id: 'PENYEWA', label: 'Penyewa / Pengontrak Baru' },
+                      { id: 'PEMILIK', label: 'Pemilik Baru' },
+                    ]}
                     value={transferType}
-                    onChange={(e) => setTransferType(e.target.value as any)}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm font-medium focus:ring-2 focus:ring-emerald-500"
-                  >
-                    <option value="PENYEWA">Penyewa / Pengontrak Baru</option>
-                    <option value="PEMILIK">Pemilik Baru</option>
-                  </select>
+                    onSelect={(val) => setTransferType(val as any)}
+                    placeholder="Pilih Hubungan"
+                    themeColor="emerald"
+                    size="sm"
+                    showSearch={false}
+                  />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">

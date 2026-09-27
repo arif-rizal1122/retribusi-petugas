@@ -357,11 +357,12 @@ class ThermalPrintService {
         const separator = "--------------------------------\n";
         const doubleSep = "================================\n";
 
+        const isPelataran = !data.stall_type || data.stall_type === 'pelataran';
         const typeLabel = data.stall_type === 'kios'
             ? 'SEWA KIOS (JASA USAHA)'
             : data.stall_type === 'los'
             ? 'LOS PASAR (JASA UMUM)'
-            : 'KARCIS PASAR (PKL/SUBUH)';
+            : 'PELAYANAN & KEBERSIHAN PASAR';
 
         const header =
             "  PEMKOT BAUBAU - DISPERINDAG   \n" +
@@ -383,7 +384,16 @@ class ThermalPrintService {
             `TOTAL BAYAR : Rp ${data.amount.toLocaleString('id-ID')}\n` +
             separator;
 
+        const wasteNotice = isPelataran
+            ? " *SUDAH TERMASUK PENGANGKUTAN*  \n" +
+              " *SAMPAH LAPAK (RP 0 TAMBAHAN)* \n" +
+              " Dilarang bayar uang sampah     \n" +
+              " tanpa struk resmi M-PAD Baubau \n" +
+              separator
+            : "";
+
         const footer =
+            wasteNotice +
             "     BUKTI SAH RETRIBUSI PASAR  \n" +
             "    TERIMA KASIH ATAS KETAATAN  \n" +
             "   MEMBAYAR RETRIBUSI DAERAH    \n" +
