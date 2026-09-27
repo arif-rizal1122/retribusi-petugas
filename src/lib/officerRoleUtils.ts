@@ -63,12 +63,24 @@ export const isDisperindagOfficer = (user: User | null | undefined): boolean => 
   if (!user) return false;
   const opdCode = (user.opd?.code || '').toUpperCase();
   const opdName = (user.opd?.name || '').toLowerCase();
-  const dept = (user.department || '').toLowerCase();
+  const dept = (user.department || (user as any).metadata?.department || '').toLowerCase();
+  const roleCode = ((user as any).role_code || (user as any).metadata?.role_code || '').toLowerCase();
+  const subRole = ((user as any).metadata?.sub_role || '').toLowerCase();
+  const email = (user.email || '').toLowerCase();
   return (
     user.opd_id === 3 ||
-    opdCode === 'DISPERINDAG' ||
+    ['DISPERINDAG', 'PERINDAG', 'DISPERINDAGKOP', 'PERDAGINKOP'].includes(opdCode) ||
     opdName.includes('perdagangan') ||
-    dept.includes('perdagangan')
+    opdName.includes('perindustrian') ||
+    dept.includes('perdagangan') ||
+    dept.includes('pasar') ||
+    roleCode.includes('perindag') ||
+    roleCode.includes('pasar') ||
+    subRole.includes('pasar') ||
+    email.includes('pasar') ||
+    email.includes('disperindag') ||
+    !!(user as any).access?.flags?.disperindag ||
+    !!(user as any).access?.flags?.pasar
   );
 };
 
@@ -129,6 +141,23 @@ export const officerCanAccessPath = (user: User | null | undefined, path: string
       '/user-guide',
     ];
     return puprAllowedPaths.some((p) => path === p || path.startsWith(p + '/'));
+  }
+
+  // 2. ISOLASI KETAT PETUGAS DISPERINDAGKOP: HANYA BOLEH MENGAKSES LAYANAN PASAR & PERDAGANGAN
+  if (isDisperindagOfficer(user)) {
+    const disperindagAllowedPaths = [
+      '/dashboard',
+      '/pasar',
+      '/disperindag-pasar',
+      '/mpad-printer',
+      '/qr-saya',
+      '/scanner',
+      '/profile',
+      '/download',
+      '/about',
+      '/user-guide',
+    ];
+    return disperindagAllowedPaths.some((p) => path === p || path.startsWith(p + '/'));
   }
 
   // Halaman publik/umum operasional yang selalu boleh diakses semua petugas

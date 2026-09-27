@@ -33,7 +33,9 @@ import {
   Trash2,
   Store,
   Wrench,
+  MapPin,
 } from 'lucide-react';
+import { useGps } from '../contexts/GpsContext';
 import { UserRole } from '../types';
 import { officerCanAccessPath, isPuprOfficer } from '../lib/officerRoleUtils';
 
@@ -163,6 +165,54 @@ export default function Layout({ children }: LayoutProps) {
   
   const userAvatarUrl = (user as any)?.metadata?.avatar_url || null;
 
+  const { location: gpsLoc, gpsStatus, requestGpsPermission } = useGps();
+
+  const renderGpsBadge = (isMobile = false) => {
+    if (gpsStatus === 'active' && gpsLoc) {
+      return (
+        <button
+          type="button"
+          onClick={requestGpsPermission}
+          title={`GPS Terkunci: ${gpsLoc.lat.toFixed(5)}, ${gpsLoc.lng.toFixed(5)} (Akurasi ±${gpsLoc.accuracy}m)`}
+          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 font-bold transition-all hover:bg-emerald-100 ${
+            isMobile ? 'text-[10px] px-2 py-1' : 'text-xs'
+          }`}
+        >
+          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
+          <span className="truncate max-w-[120px]">{isMobile ? `±${gpsLoc.accuracy}m` : `GPS Aktif (±${gpsLoc.accuracy}m)`}</span>
+        </button>
+      );
+    }
+    if (gpsStatus === 'checking') {
+      return (
+        <button
+          type="button"
+          onClick={requestGpsPermission}
+          title="Mencari sinyal satelit GPS..."
+          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300 font-bold ${
+            isMobile ? 'text-[10px] px-2 py-1' : 'text-xs'
+          }`}
+        >
+          <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping shrink-0"></span>
+          <span>{isMobile ? 'GPS...' : 'Mencari GPS...'}</span>
+        </button>
+      );
+    }
+    return (
+      <button
+        type="button"
+        onClick={requestGpsPermission}
+        title="GPS Wajib Aktif. Klik untuk menghubungkan sensor lokasi."
+        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-rose-50 dark:bg-rose-950/60 border border-rose-300 dark:border-rose-800 text-rose-700 dark:text-rose-300 font-black animate-pulse ${
+          isMobile ? 'text-[10px] px-2 py-1' : 'text-xs'
+        }`}
+      >
+        <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0"></span>
+        <span>GPS Nonaktif</span>
+      </button>
+    );
+  };
+
   const handleLogout = () => {
     logout();
     navigate('/login');
@@ -206,6 +256,7 @@ export default function Layout({ children }: LayoutProps) {
 
           {/* Right: User Actions */}
           <div className="flex items-center gap-4">
+            {renderGpsBadge(false)}
             <ZoomControl />
             <div className="flex items-center bg-slate-50 dark:bg-slate-800 p-1 rounded-2xl border border-slate-100 dark:border-slate-800/50">
               <button
@@ -256,28 +307,29 @@ export default function Layout({ children }: LayoutProps) {
       </header>
 
       {/* Mobile Top Header (Unified Single Top Navbar) */}
-      <div className="lg:hidden px-5 pt-3 pb-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-100 dark:border-slate-800 sticky top-0 z-[40]">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-[#0F2547] rounded-2xl flex items-center justify-center p-1.5 shadow-sm border border-slate-700">
+      <div className="lg:hidden px-4 pt-2.5 pb-2 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-b border-slate-100 dark:border-slate-800 sticky top-0 z-[40]">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-9 h-9 bg-[#0F2547] rounded-xl flex items-center justify-center p-1.5 shadow-sm border border-slate-700 shrink-0">
               <img src="/mitra-logo.png" alt="Logo" className="w-full h-full object-contain" />
             </div>
-            <div>
-              <h1 className="text-base font-black text-[#0F2547] dark:text-white leading-none">M-PAD</h1>
-              <p className="text-[11px] font-bold text-slate-400 leading-none mt-0.5">Petugas Lapangan</p>
+            <div className="min-w-0">
+              <h1 className="text-sm font-black text-[#0F2547] dark:text-white leading-none truncate">M-PAD</h1>
+              <p className="text-[10px] font-bold text-slate-400 leading-none mt-0.5 truncate">Petugas Lapangan</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <button className="w-10 h-10 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-700 dark:text-slate-300 shadow-sm border border-slate-200/80 dark:border-slate-700 hover:bg-slate-100 active:scale-95 transition-all relative">
-              <Bell size={18} />
-              <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-rose-500 rounded-full border-2 border-white dark:border-slate-800"></span>
+          <div className="flex items-center gap-1.5 shrink-0">
+            {renderGpsBadge(true)}
+            <button className="w-9 h-9 bg-slate-50 dark:bg-slate-800 rounded-xl flex items-center justify-center text-slate-700 dark:text-slate-300 shadow-sm border border-slate-200/80 dark:border-slate-700 hover:bg-slate-100 active:scale-95 transition-all relative">
+              <Bell size={16} />
+              <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full border-2 border-white dark:border-slate-800"></span>
             </button>
             <button 
               onClick={() => setSidebarOpen(true)}
-              className="w-10 h-10 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-700 dark:text-slate-300 shadow-sm border border-slate-200/80 dark:border-slate-700 hover:bg-slate-100 active:scale-95 transition-all"
+              className="w-9 h-9 bg-slate-50 dark:bg-slate-800 rounded-xl flex items-center justify-center text-slate-700 dark:text-slate-300 shadow-sm border border-slate-200/80 dark:border-slate-700 hover:bg-slate-100 active:scale-95 transition-all"
             >
-              <Menu size={18} />
+              <Menu size={16} />
             </button>
           </div>
         </div>

@@ -4,6 +4,7 @@ import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { PWAProvider } from './contexts/PWAContext';
+import { GpsProvider } from './contexts/GpsContext';
 import { SplashScreen } from './components/SplashScreen';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
@@ -78,8 +79,9 @@ function App() {
       <ThemeProvider>
         <PWAProvider>
           <AuthProvider>
-          <Toaster position="top-right" />
-          <Routes>
+            <GpsProvider>
+              <Toaster position="top-right" />
+              <Routes>
             <Route path="/" element={<HomeRoute />} />
             <Route path="/login" element={<PetugasLogin />} />
             <Route path="/register" element={<PetugasRegister />} />
@@ -444,6 +446,7 @@ function App() {
 
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+            </GpsProvider>
         </AuthProvider>
       </PWAProvider>
       </ThemeProvider>

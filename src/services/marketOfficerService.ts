@@ -56,6 +56,9 @@ export interface IssueDailyTicketPayload {
   quantity: number;
   unit_amount: number;
   payment_method: 'TUNAI' | 'QRIS';
+  latitude?: number;
+  longitude?: number;
+  accuracy?: number;
 }
 
 export const marketOfficerService = {
@@ -113,6 +116,9 @@ export const marketOfficerService = {
       payment_method: 'TUNAI' | 'QRIS' | 'TRANSFER';
       period?: string;
       notes?: string;
+      latitude?: number;
+      longitude?: number;
+      accuracy?: number;
     }
   ) {
     const res: any = await api.post(`/api/v1/disperindag/stalls/${stallId}/pay`, payload);

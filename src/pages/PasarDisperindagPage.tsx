@@ -12,9 +12,13 @@ import {
   ShoppingBag,
   Lock,
   Unlock,
+  X,
+  MapPin,
 } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
+import { useGps } from '../contexts/GpsContext';
 import {
   marketOfficerService,
   MarketBuildingItem,
@@ -25,6 +29,7 @@ import { thermalPrintService, MarketReceiptData } from '../services/ThermalPrint
 
 export default function PasarDisperindagPage() {
   const { user } = useAuth();
+  const { location: gpsLoc, gpsStatus, requestGpsPermission } = useGps();
   const [activeTab, setActiveTab] = useState<'karcis' | 'los' | 'kios' | 'petugas'>('karcis');
 
   // Master Data State
@@ -37,14 +42,47 @@ export default function PasarDisperindagPage() {
     assignment: MarketOfficerAssignmentItem | null;
   }>({ today_tickets_count: 0, today_tickets_amount: 0, assignment: null });
 
-  // TAB 1: Karcis Cepat PKL State
-  const [ticketQty, setTicketQty] = useState<number>(1);
-  const ticketUnitAmount = 1000;
+  // TAB 1: Hitungan Ukuran Lapak Pelataran (Perda 1/2024: Rp 1.000 / 3 m²)
+  const [stallSizeOption, setStallSizeOption] = useState<string>('1');
+  const [customUnits, setCustomUnits] = useState<number>(5);
+
+  const unitsCount = useMemo(() => {
+    if (stallSizeOption === 'custom') {
+      return Math.max(1, customUnits);
+    }
+    return Math.max(1, parseInt(stallSizeOption) || 1);
+  }, [stallSizeOption, customUnits]);
+
+  const calculatedAreaM2 = unitsCount * 3;
+  const calculatedDimensions = useMemo(() => {
+    if (unitsCount === 1) return '1,5 m × 2,0 m (3 m²)';
+    if (unitsCount === 2) return '3,0 m × 2,0 m (6 m²)';
+    if (unitsCount === 3) return '4,5 m × 2,0 m (9 m²)';
+    if (unitsCount === 4) return '6,0 m × 2,0 m (12 m²)';
+    return `${unitsCount} petak (± ${calculatedAreaM2} m²)`;
+  }, [unitsCount, calculatedAreaM2]);
+
+  const calculatedTotalAmount = unitsCount * 1000;
   const [ticketMerchant, setTicketMerchant] = useState<string>('');
   const [ticketBuilding, setTicketBuilding] = useState<string>('Pelataran PKL Subuh');
   const [ticketPaymentMethod, setTicketPaymentMethod] = useState<'TUNAI' | 'QRIS'>('TUNAI');
   const [issuingTicket, setIssuingTicket] = useState<boolean>(false);
   const [latestTicket, setLatestTicket] = useState<any>(null);
+  const [showQrisModal, setShowQrisModal] = useState<boolean>(false);
+
+  // Dynamic Pelataran Quick Chips (Zero-Friction < 5 Detik)
+  const dynamicPelataranChips = useMemo(() => {
+    const list = ['Pelataran PKL Subuh', 'Depan Los A', 'Depan Los B', 'Depan Los C', 'Pelataran Ikan', 'Pelataran Sayur'];
+    if (stats.assignment?.assigned_areas) {
+      stats.assignment.assigned_areas.forEach((area) => {
+        const cleaned = area.replace(/^\d+\.\s*/, '').trim();
+        if (cleaned && !list.includes(cleaned) && !cleaned.toLowerCase().includes('petugas')) {
+          list.push(cleaned);
+        }
+      });
+    }
+    return list;
+  }, [stats.assignment]);
 
   // TAB 2 & 3: Stalls State
   const [selectedBuilding, setSelectedBuilding] = useState<string>('');
@@ -174,22 +212,35 @@ export default function PasarDisperindagPage() {
 
   // Submit Karcis Harian PKL
   const handleIssueTicket = async () => {
+    if (!gpsLoc || gpsStatus !== 'active') {
+      toast.error('Lokasi GPS belum terkunci. Petugas wajib mengaktifkan GPS sebelum menerbitkan karcis.');
+      await requestGpsPermission();
+      return;
+    }
+
     try {
       setIssuingTicket(true);
+      const buildingDetail = `${ticketBuilding} [${calculatedDimensions}]`;
       const res = await marketOfficerService.issueDailyTicket({
         market_name: selectedMarket,
-        building_name: ticketBuilding,
-        merchant_name: ticketMerchant || 'Pedagang PKL',
-        quantity: ticketQty,
-        unit_amount: ticketUnitAmount,
+        building_name: buildingDetail,
+        merchant_name: ticketMerchant || 'Pedagang Harian',
+        quantity: unitsCount,
+        unit_amount: 1000,
         payment_method: ticketPaymentMethod,
+        latitude: gpsLoc.lat,
+        longitude: gpsLoc.lng,
+        accuracy: gpsLoc.accuracy,
       });
 
       setLatestTicket(res);
       toast.success(`Karcis ${res.ticket_code} berhasil diterbitkan!`);
 
-      // Auto print if printer connected
-      if (isPrinterConnected) {
+      // If QRIS was selected, open QRIS modal for merchant to scan
+      if (ticketPaymentMethod === 'QRIS') {
+        setShowQrisModal(true);
+      } else if (isPrinterConnected) {
+        // Auto print if printer connected for cash
         await handlePrintDailyTicket(res);
       }
 
@@ -222,6 +273,9 @@ export default function PasarDisperindagPage() {
         amount: payAmount,
         payment_method: payMethod,
         period: payPeriod,
+        latitude: gpsLoc?.lat,
+        longitude: gpsLoc?.lng,
+        accuracy: gpsLoc?.accuracy,
       });
 
       toast.success(`Setoran lapak ${selectedStallForPay.full_code} berhasil dicatat!`);
@@ -277,17 +331,17 @@ export default function PasarDisperindagPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-20">
-      {/* Top Header */}
-      <div className="bg-gradient-to-r from-emerald-700 via-teal-700 to-cyan-800 text-white px-4 pt-5 pb-6 shadow-md">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20">
-                <Store size={22} className="text-emerald-200" />
+      {/* Top Header - Compact & Responsive */}
+      <div className="bg-gradient-to-r from-emerald-700 via-teal-700 to-cyan-800 text-white px-4 pt-3.5 pb-4 shadow-sm">
+        <div className="max-w-4xl mx-auto space-y-3">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center border border-white/20 shrink-0">
+                <Store size={20} className="text-emerald-200" />
               </div>
-              <div>
-                <h1 className="text-base font-black tracking-tight">Pos Pasar Disperindag</h1>
-                <p className="text-[11px] text-emerald-200 font-medium">
+              <div className="min-w-0">
+                <h1 className="text-sm sm:text-base font-black tracking-tight truncate">Pos Pasar Disperindag</h1>
+                <p className="text-[11px] text-emerald-200 font-medium truncate">
                   Petugas: <span className="font-bold text-white">{user?.name}</span>
                 </p>
               </div>
@@ -295,7 +349,7 @@ export default function PasarDisperindagPage() {
 
             <button
               onClick={handleConnectPrinter}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shadow-xs shrink-0 ${
                 isPrinterConnected
                   ? 'bg-emerald-500 text-white'
                   : 'bg-white/15 text-emerald-100 hover:bg-white/25 border border-white/20'
@@ -306,51 +360,40 @@ export default function PasarDisperindagPage() {
             </button>
           </div>
 
-          {/* Pasar Selector Pills */}
-          <div className="mt-4 flex items-center gap-2">
-            {['PASAR WAMEO', 'PASAR KARYA BARU'].map((m) => (
-              <button
-                key={m}
-                onClick={() => setSelectedMarket(m)}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  selectedMarket === m
-                    ? 'bg-white text-emerald-900 shadow-sm'
-                    : 'bg-white/10 text-emerald-100 hover:bg-white/20 border border-white/10'
-                }`}
-              >
-                {m}
-              </button>
-            ))}
-          </div>
-
-          {/* Quick Metrics KPI */}
-          <div className="grid grid-cols-2 gap-2.5 mt-4">
-            <div className="bg-white/10 backdrop-blur-md rounded-xl p-2.5 border border-white/15">
-              <div className="text-[10px] uppercase font-black text-emerald-200 tracking-wider">
-                Karcis Hari Ini
-              </div>
-              <div className="text-lg font-black text-white mt-0.5">
-                {stats.today_tickets_count} <span className="text-xs font-normal text-emerald-200">lbr</span>
-              </div>
+          {/* Pasar Selector + Quick Metric in 1 Clean Row */}
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-white/10">
+            <div className="flex items-center gap-1.5">
+              {['PASAR WAMEO', 'PASAR KARYA BARU'].map((m) => (
+                <button
+                  key={m}
+                  onClick={() => setSelectedMarket(m)}
+                  className={`px-3 py-1 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                    selectedMarket === m
+                      ? 'bg-white text-emerald-900 shadow-xs'
+                      : 'bg-white/10 text-emerald-100 hover:bg-white/20'
+                  }`}
+                >
+                  {m.replace('PASAR ', '')}
+                </button>
+              ))}
             </div>
-            <div className="bg-white/10 backdrop-blur-md rounded-xl p-2.5 border border-white/15">
-              <div className="text-[10px] uppercase font-black text-emerald-200 tracking-wider">
-                Total Setoran Hari Ini
-              </div>
-              <div className="text-lg font-black text-white mt-0.5">
-                Rp {Number(stats.today_tickets_amount).toLocaleString('id-ID')}
-              </div>
+
+            <div className="flex items-center gap-1.5 text-right">
+              <span className="text-[10px] text-emerald-200 font-semibold uppercase tracking-wider">Setoran Hari Ini:</span>
+              <span className="text-xs font-black text-white bg-white/15 px-2 py-0.5 rounded-lg border border-white/15">
+                {stats.today_tickets_count} lbr • Rp {Number(stats.today_tickets_amount).toLocaleString('id-ID')}
+              </span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Navigation Tabs */}
+      {/* Navigation Tabs - Responsive Scroll */}
       <div className="max-w-4xl mx-auto px-4 -mt-2">
-        <div className="bg-white dark:bg-slate-800 rounded-xl p-1.5 shadow-sm border border-slate-200 dark:border-slate-700 flex gap-1">
+        <div className="bg-white dark:bg-slate-800 rounded-xl p-1 shadow-sm border border-slate-200 dark:border-slate-700 flex gap-1 overflow-x-auto no-scrollbar">
           <button
             onClick={() => setActiveTab('karcis')}
-            className={`flex-1 py-2 rounded-lg text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
+            className={`flex-1 min-w-[75px] py-2 px-2 rounded-lg text-xs font-black transition-all flex items-center justify-center gap-1.5 shrink-0 ${
               activeTab === 'karcis'
                 ? 'bg-emerald-600 text-white shadow-xs'
                 : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
@@ -361,7 +404,7 @@ export default function PasarDisperindagPage() {
           </button>
           <button
             onClick={() => setActiveTab('los')}
-            className={`flex-1 py-2 rounded-lg text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
+            className={`flex-1 min-w-[75px] py-2 px-2 rounded-lg text-xs font-black transition-all flex items-center justify-center gap-1.5 shrink-0 ${
               activeTab === 'los'
                 ? 'bg-emerald-600 text-white shadow-xs'
                 : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
@@ -372,7 +415,7 @@ export default function PasarDisperindagPage() {
           </button>
           <button
             onClick={() => setActiveTab('kios')}
-            className={`flex-1 py-2 rounded-lg text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
+            className={`flex-1 min-w-[75px] py-2 px-2 rounded-lg text-xs font-black transition-all flex items-center justify-center gap-1.5 shrink-0 ${
               activeTab === 'kios'
                 ? 'bg-emerald-600 text-white shadow-xs'
                 : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
@@ -383,7 +426,7 @@ export default function PasarDisperindagPage() {
           </button>
           <button
             onClick={() => setActiveTab('petugas')}
-            className={`flex-1 py-2 rounded-lg text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
+            className={`flex-1 min-w-[75px] py-2 px-2 rounded-lg text-xs font-black transition-all flex items-center justify-center gap-1.5 shrink-0 ${
               activeTab === 'petugas'
                 ? 'bg-emerald-600 text-white shadow-xs'
                 : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
@@ -396,121 +439,216 @@ export default function PasarDisperindagPage() {
       </div>
 
       {/* Tab Contents */}
-      <div className="max-w-4xl mx-auto px-4 mt-4">
+      <div className="max-w-4xl mx-auto px-4 mt-3">
         {/* TAB 1: KARCIS CEPAT PKL */}
         {activeTab === 'karcis' && (
-          <div className="space-y-4">
-            <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-700 pb-3">
+          <div className="space-y-3">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-700 shadow-sm space-y-3.5">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-700 pb-2.5">
                 <div className="flex items-center gap-2 text-sm font-black text-slate-800 dark:text-white">
-                  <Receipt className="text-emerald-600" size={18} />
+                  <Receipt className="text-emerald-600" size={17} />
                   <span>Karcis Harian Pedagang Subuh / PKL</span>
                 </div>
-                <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
-                  Perda No. 1/2024
+                <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
+                  Perda 1/2024 (Rp 1.000 / 3 m²)
                 </span>
               </div>
 
-              {/* Preset Quantities */}
-              <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">
-                  Jumlah Lembar Karcis
-                </label>
-                <div className="grid grid-cols-4 gap-2">
-                  {[1, 2, 5, 10].map((qty) => (
-                    <button
-                      key={qty}
-                      type="button"
-                      onClick={() => setTicketQty(qty)}
-                      className={`py-2.5 rounded-xl font-black text-xs transition-all cursor-pointer ${
-                        ticketQty === qty
-                          ? 'bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-300'
-                          : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200'
-                      }`}
-                    >
-                      {qty} Karcis
-                      <div className="text-[10px] font-medium opacity-80">
-                        Rp {(qty * ticketUnitAmount).toLocaleString('id-ID')}
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
+              {/* Form Input Sederhana & Responsif */}
+              <div className="space-y-3">
+                {/* Ukuran Lapak Pelataran (Perda No. 1/2024: Rp 1.000 / 3 m²) */}
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-200">
+                      Ukuran Lapak Pelataran
+                    </label>
+                    <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+                      Tarif: Rp 1.000 / 3 m²
+                    </span>
+                  </div>
 
-              {/* Lokasi PKL & Nama Pedagang (Opsional) */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">
-                    Titik Pelataran / Blok
-                  </label>
-                  <input
-                    type="text"
-                    value={ticketBuilding}
-                    onChange={(e) => setTicketBuilding(e.target.value)}
-                    placeholder="Contoh: Pelataran Subuh, Depan Los A"
-                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-800 dark:text-white outline-none focus:border-emerald-500"
-                  />
+                  <select
+                    value={stallSizeOption}
+                    onChange={(e) => setStallSizeOption(e.target.value)}
+                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-800 dark:text-white outline-none focus:border-emerald-500 cursor-pointer"
+                  >
+                    <option value="1">1 Petak Standar — 1,5 m × 2,0 m (3 m²) = Rp 1.000</option>
+                    <option value="2">2 Petak — 3,0 m × 2,0 m (6 m²) = Rp 2.000</option>
+                    <option value="3">3 Petak — 4,5 m × 2,0 m (9 m²) = Rp 3.000</option>
+                    <option value="4">4 Petak — 6,0 m × 2,0 m (12 m²) = Rp 4.000</option>
+                    <option value="custom">Ukuran Lainnya (Ketik Jumlah Petak / Luas)...</option>
+                  </select>
+
+                  {/* Input khusus bila ukuran lainnya / custom */}
+                  {stallSizeOption === 'custom' && (
+                    <div className="mt-2 p-2.5 bg-emerald-50/60 dark:bg-emerald-950/40 rounded-xl border border-emerald-200 dark:border-emerald-800 flex items-center justify-between gap-3 animate-fadeIn">
+                      <div className="text-xs font-medium text-slate-700 dark:text-slate-200">
+                        Skema Jumlah Petak:
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setCustomUnits(Math.max(1, customUnits - 1))}
+                          className="w-7 h-7 rounded-lg bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 flex items-center justify-center font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100"
+                        >
+                          -
+                        </button>
+                        <input
+                          type="number"
+                          min="1"
+                          max="50"
+                          value={customUnits}
+                          onChange={(e) => setCustomUnits(Math.max(1, parseInt(e.target.value) || 1))}
+                          className="w-14 py-1 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg text-center font-black text-xs text-slate-800 dark:text-white outline-none"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setCustomUnits(customUnits + 1)}
+                          className="w-7 h-7 rounded-lg bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 flex items-center justify-center font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Keterangan detail ukuran & tarif terpilih */}
+                  <div className="mt-1.5 flex items-center justify-between text-[11px] bg-slate-100/70 dark:bg-slate-800/60 px-3 py-1.5 rounded-lg border border-slate-200/60 dark:border-slate-700/60">
+                    <span className="text-slate-600 dark:text-slate-300 truncate">
+                      Hamparan terbuka / meja portabel: <strong>{calculatedDimensions}</strong>
+                    </span>
+                    <span className="font-black text-emerald-700 dark:text-emerald-400 font-mono shrink-0 ml-2">
+                      Rp {calculatedTotalAmount.toLocaleString('id-ID')} / hari
+                    </span>
+                  </div>
                 </div>
+
+                {/* Titik Pelataran / Blok Dropdown */}
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">
-                    Nama Pedagang (Opsional)
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
+                    Titik Pelataran / Blok Pasar
+                  </label>
+                  <select
+                    value={dynamicPelataranChips.includes(ticketBuilding) ? ticketBuilding : '__custom__'}
+                    onChange={(e) => {
+                      if (e.target.value === '__custom__') {
+                        setTicketBuilding('');
+                      } else {
+                        setTicketBuilding(e.target.value);
+                      }
+                    }}
+                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-800 dark:text-white outline-none focus:border-emerald-500 cursor-pointer"
+                  >
+                    {dynamicPelataranChips.map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
+                    <option value="__custom__">+ Ketik Lokasi Pelataran Lainnya...</option>
+                  </select>
+
+                  {(!dynamicPelataranChips.includes(ticketBuilding) || ticketBuilding === '') && (
+                    <input
+                      type="text"
+                      value={ticketBuilding}
+                      onChange={(e) => setTicketBuilding(e.target.value)}
+                      placeholder="Tuliskan nama pelataran..."
+                      className="mt-2 w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium text-slate-800 dark:text-white outline-none focus:border-emerald-500"
+                    />
+                  )}
+                </div>
+
+                {/* Kategori / Nama Pedagang */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
+                    Kategori / Nama Pedagang <span className="text-[10px] font-normal text-slate-400">(Opsional)</span>
                   </label>
                   <input
                     type="text"
                     value={ticketMerchant}
                     onChange={(e) => setTicketMerchant(e.target.value)}
-                    placeholder="Nama pedagang / jenis jualan"
-                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-800 dark:text-white outline-none focus:border-emerald-500"
+                    placeholder="Pedagang Harian / Jenis jualan (opsional)"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium text-slate-800 dark:text-white outline-none focus:border-emerald-500"
                   />
                 </div>
-              </div>
 
-              {/* Payment Method Pills */}
-              <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">
-                  Metode Pembayaran
-                </label>
-                <div className="grid grid-cols-2 gap-2.5">
-                  <button
-                    type="button"
-                    onClick={() => setTicketPaymentMethod('TUNAI')}
-                    className={`py-2.5 rounded-xl font-black text-xs transition-all flex items-center justify-center gap-2 cursor-pointer ${
-                      ticketPaymentMethod === 'TUNAI'
-                        ? 'bg-emerald-600 text-white shadow-sm'
-                        : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
-                    }`}
-                  >
-                    <span>💵 Tunai Langsung</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setTicketPaymentMethod('QRIS')}
-                    className={`py-2.5 rounded-xl font-black text-xs transition-all flex items-center justify-center gap-2 cursor-pointer ${
-                      ticketPaymentMethod === 'QRIS'
-                        ? 'bg-emerald-600 text-white shadow-sm'
-                        : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
-                    }`}
-                  >
-                    <QrCode size={14} />
-                    <span>QRIS Dinamis</span>
-                  </button>
+                {/* Metode Pembayaran Segmented */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">
+                    Metode Pembayaran
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setTicketPaymentMethod('TUNAI')}
+                      className={`py-2.5 rounded-xl font-black text-xs transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                        ticketPaymentMethod === 'TUNAI'
+                          ? 'bg-emerald-600 text-white shadow-xs'
+                          : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200'
+                      }`}
+                    >
+                      <span>💵 Tunai Langsung</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setTicketPaymentMethod('QRIS')}
+                      className={`py-2.5 rounded-xl font-black text-xs transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                        ticketPaymentMethod === 'QRIS'
+                          ? 'bg-blue-600 text-white shadow-xs'
+                          : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200'
+                      }`}
+                    >
+                      <QrCode size={14} />
+                      <span>QRIS Dinamis</span>
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              {/* Action Button */}
-              <button
-                type="button"
-                disabled={issuingTicket}
-                onClick={handleIssueTicket}
-                className="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl font-black text-sm transition-all shadow-md flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer active:scale-98"
-              >
-                <Printer size={16} />
-                <span>
-                  {issuingTicket
-                    ? 'Menerbitkan Karcis...'
-                    : `Cetak Karcis SSRD (Rp ${(ticketQty * ticketUnitAmount).toLocaleString('id-ID')})`}
-                </span>
-              </button>
+              {/* Action Button & Strict GPS Enforcement */}
+              <div className="pt-2 border-t border-slate-100 dark:border-slate-700 space-y-2">
+                {!gpsLoc || gpsStatus !== 'active' ? (
+                  <div className="space-y-1.5">
+                    <button
+                      type="button"
+                      onClick={requestGpsPermission}
+                      className="w-full py-3.5 bg-gradient-to-r from-amber-500 to-rose-500 text-white rounded-xl font-black text-xs transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-98 animate-pulse"
+                    >
+                      <MapPin size={16} />
+                      <span>Aktifkan GPS HP untuk Cetak Karcis</span>
+                    </button>
+                    <p className="text-[10px] text-rose-500 dark:text-rose-400 text-center font-bold">
+                      ⚠️ Wajib GPS aktif: Koordinat satelit resmi dibutuhkan untuk validasi penugasan lapangan.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-1.5">
+                    <button
+                      type="button"
+                      disabled={issuingTicket}
+                      onClick={handleIssueTicket}
+                      className={`w-full py-3.5 text-white rounded-xl font-black text-sm transition-all shadow-md flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer active:scale-98 ${
+                        ticketPaymentMethod === 'QRIS'
+                          ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700'
+                          : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700'
+                      }`}
+                    >
+                      {ticketPaymentMethod === 'QRIS' ? <QrCode size={18} /> : <Printer size={18} />}
+                      <span>
+                        {issuingTicket
+                          ? 'Menerbitkan Karcis...'
+                          : ticketPaymentMethod === 'QRIS'
+                          ? `Tampilkan QRIS SSRD (Rp ${calculatedTotalAmount.toLocaleString('id-ID')})`
+                          : `Cetak Karcis SSRD (Rp ${calculatedTotalAmount.toLocaleString('id-ID')})`}
+                      </span>
+                    </button>
+                    <div className="flex items-center justify-center gap-1.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                      <span>GPS Terkunci (±{gpsLoc.accuracy}m) • Siap Cetak</span>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Latest Issued Ticket Preview */}
@@ -530,14 +668,101 @@ export default function PasarDisperindagPage() {
                     </div>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => handlePrintDailyTicket(latestTicket)}
-                  className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-bold flex items-center gap-1 shadow-xs hover:bg-emerald-700 cursor-pointer"
-                >
-                  <Printer size={13} />
-                  <span>Cetak Ulang</span>
-                </button>
+                <div className="flex items-center gap-1.5">
+                  {latestTicket.payment_method === 'QRIS' && (
+                    <button
+                      type="button"
+                      onClick={() => setShowQrisModal(true)}
+                      className="px-2.5 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-bold flex items-center gap-1 shadow-xs hover:bg-blue-700 cursor-pointer"
+                    >
+                      <QrCode size={13} />
+                      <span>Lihat QR</span>
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => handlePrintDailyTicket(latestTicket)}
+                    className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-bold flex items-center gap-1 shadow-xs hover:bg-emerald-700 cursor-pointer"
+                  >
+                    <Printer size={13} />
+                    <span>Cetak Struk</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Modal QRIS Dinamis */}
+            {showQrisModal && latestTicket && (
+              <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn">
+                <div className="bg-white dark:bg-slate-800 rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl border border-slate-100 dark:border-slate-700 relative">
+                  <button
+                    onClick={() => setShowQrisModal(false)}
+                    className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-full cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700"
+                  >
+                    <X size={20} />
+                  </button>
+
+                  <div className="flex items-center justify-center gap-1.5 mb-1.5">
+                    <span className="bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                      QRIS Standar Bank Indonesia
+                    </span>
+                  </div>
+
+                  <h3 className="text-base font-black text-slate-900 dark:text-white">
+                    Pindai QRIS Pembayaran
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    {latestTicket.market_name} • {latestTicket.building_name}
+                  </p>
+
+                  {/* QRIS SVG Render */}
+                  <div className="my-4 p-3 bg-white rounded-2xl shadow-inner inline-block border-2 border-emerald-500/30">
+                    <QRCodeSVG
+                      value={latestTicket.qr_token || `https://sipanda.online/v/${latestTicket.ticket_code}`}
+                      size={200}
+                      level="M"
+                      includeMargin={true}
+                    />
+                  </div>
+
+                  <div className="bg-slate-50 dark:bg-slate-900 p-3 rounded-xl mb-4 text-left">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-[11px] font-bold text-slate-500">Nominal Retribusi</span>
+                      <span className="text-lg font-black text-emerald-600">
+                        Rp {(latestTicket.quantity * Number(latestTicket.unit_amount)).toLocaleString('id-ID')}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center text-[11px] text-slate-500">
+                      <span>Pedagang:</span>
+                      <span className="font-bold text-slate-700 dark:text-slate-300">{latestTicket.merchant_name}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-[10px] text-slate-400 mt-1 pt-1 border-t border-slate-200 dark:border-slate-800">
+                      <span>Kode: {latestTicket.ticket_code}</span>
+                      <span>{latestTicket.quantity} Lembar Karcis</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        await handlePrintDailyTicket(latestTicket);
+                        setShowQrisModal(false);
+                      }}
+                      className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-black text-xs transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <Printer size={16} />
+                      <span>Konfirmasi Lunas & Cetak Struk</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowQrisModal(false)}
+                      className="w-full py-2 text-xs font-bold text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 cursor-pointer"
+                    >
+                      Tutup
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
           </div>

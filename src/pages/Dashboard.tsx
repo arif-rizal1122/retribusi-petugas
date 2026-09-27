@@ -31,6 +31,8 @@ import {
   Wrench,
   Gauge,
   ClipboardList,
+  Printer,
+  Receipt,
 } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -725,6 +727,52 @@ export default function Dashboard() {
                     <ShieldCheck size={16} className="sm:w-5 sm:h-5" />
                   </div>
                   <span className="text-[9px] sm:text-[10px] font-bold text-slate-700 leading-tight">Panduan UPTD</span>
+                </button>
+              </>
+            ) : isDisperindagOfficer(user) ? (
+              <>
+                {/* Action 1: Karcis PKL */}
+                <button
+                  onClick={() => navigate('/pasar')}
+                  className="bg-emerald-50/80 border border-emerald-200/70 p-2 sm:p-3 rounded-xl sm:rounded-2xl flex flex-col items-center justify-center text-center active:scale-95 transition-transform cursor-pointer"
+                >
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-lg sm:rounded-xl shadow-sm flex items-center justify-center text-emerald-600 mb-1.5 sm:mb-2">
+                    <Receipt size={16} className="sm:w-5 sm:h-5" />
+                  </div>
+                  <span className="text-[9px] sm:text-[10px] font-bold text-slate-700 leading-tight">Karcis PKL</span>
+                </button>
+
+                {/* Action 2: Lapak Pasar */}
+                <button
+                  onClick={() => navigate('/pasar')}
+                  className="bg-teal-50/80 border border-teal-200/70 p-2 sm:p-3 rounded-xl sm:rounded-2xl flex flex-col items-center justify-center text-center active:scale-95 transition-transform cursor-pointer"
+                >
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-lg sm:rounded-xl shadow-sm flex items-center justify-center text-teal-600 mb-1.5 sm:mb-2">
+                    <Store size={16} className="sm:w-5 sm:h-5" />
+                  </div>
+                  <span className="text-[9px] sm:text-[10px] font-bold text-slate-700 leading-tight">Lapak Pasar</span>
+                </button>
+
+                {/* Action 3: Printer Thermal */}
+                <button
+                  onClick={() => navigate('/mpad-printer')}
+                  className="bg-indigo-50/80 border border-indigo-200/70 p-2 sm:p-3 rounded-xl sm:rounded-2xl flex flex-col items-center justify-center text-center active:scale-95 transition-transform cursor-pointer"
+                >
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-lg sm:rounded-xl shadow-sm flex items-center justify-center text-indigo-600 mb-1.5 sm:mb-2">
+                    <Printer size={16} className="sm:w-5 sm:h-5" />
+                  </div>
+                  <span className="text-[9px] sm:text-[10px] font-bold text-slate-700 leading-tight">Printer Mini</span>
+                </button>
+
+                {/* Action 4: Panduan */}
+                <button
+                  onClick={() => navigate('/user-guide')}
+                  className="bg-slate-50 border border-slate-200 p-2 sm:p-3 rounded-xl sm:rounded-2xl flex flex-col items-center justify-center text-center active:scale-95 transition-transform cursor-pointer"
+                >
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-lg sm:rounded-xl shadow-sm flex items-center justify-center text-slate-600 mb-1.5 sm:mb-2">
+                    <ShieldCheck size={16} className="sm:w-5 sm:h-5" />
+                  </div>
+                  <span className="text-[9px] sm:text-[10px] font-bold text-slate-700 leading-tight">Panduan</span>
                 </button>
               </>
             ) : (
