@@ -43,6 +43,27 @@ export default function PasarDisperindagPage() {
     assignment: MarketOfficerAssignmentItem | null;
   }>({ today_tickets_count: 0, today_tickets_amount: 0, assignment: null });
 
+  // SK Petugas Modal & Filter State
+  const [showOfficersModal, setShowOfficersModal] = useState<boolean>(false);
+  const [officerSearchQuery, setOfficerSearchQuery] = useState<string>('');
+  const [officerMarketFilter, setOfficerMarketFilter] = useState<string>('ALL');
+
+  const filteredOfficers = useMemo(() => {
+    return officers.filter((off) => {
+      const matchMarket =
+        officerMarketFilter === 'ALL' ||
+        off.market_name.toUpperCase().includes(officerMarketFilter);
+      if (!matchMarket) return false;
+      if (!officerSearchQuery.trim()) return true;
+      const q = officerSearchQuery.toLowerCase();
+      const matchName = off.officer_name.toLowerCase().includes(q);
+      const matchAreas =
+        Array.isArray(off.assigned_areas) &&
+        off.assigned_areas.some((a) => a.toLowerCase().includes(q));
+      return matchName || matchAreas;
+    });
+  }, [officers, officerMarketFilter, officerSearchQuery]);
+
   // TAB 1: Hitungan Ukuran Lapak Pelataran (Perda 1/2024: Rp 1.000 / 3 m²)
   const STALL_SIZE_OPTIONS: Option[] = useMemo(() => [
     {
@@ -403,48 +424,151 @@ export default function PasarDisperindagPage() {
     }
   };
 
+  // Render Officers List (Shared for Tab and Header Modal)
+  const renderOfficersList = (isInsideModal = false) => (
+    <div className="space-y-3">
+      {/* Search & Filter Bar */}
+      <div className="flex flex-col sm:flex-row gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-2.5 text-slate-400" size={15} />
+          <input
+            type="text"
+            value={officerSearchQuery}
+            onChange={(e) => setOfficerSearchQuery(e.target.value)}
+            placeholder="Cari nama petugas atau area/blok..."
+            className="w-full pl-9 pr-8 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-800 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+          />
+          {officerSearchQuery && (
+            <button
+              onClick={() => setOfficerSearchQuery('')}
+              className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 cursor-pointer"
+            >
+              <X size={14} />
+            </button>
+          )}
+        </div>
+
+        <div className="flex items-center gap-1.5 shrink-0 overflow-x-auto no-scrollbar">
+          {['ALL', 'WAMEO', 'KARYA BARU'].map((filter) => (
+            <button
+              key={filter}
+              onClick={() => setOfficerMarketFilter(filter)}
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                officerMarketFilter === filter
+                  ? 'bg-emerald-600 text-white shadow-xs'
+                  : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
+              }`}
+            >
+              {filter === 'ALL' ? 'Semua Pasar' : filter}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Officers List */}
+      <div className={`divide-y divide-slate-100 dark:divide-slate-700 ${isInsideModal ? 'max-h-[55vh]' : 'max-h-[500px]'} overflow-y-auto pr-1`}>
+        {filteredOfficers.length > 0 ? (
+          filteredOfficers.map((off) => (
+            <div key={off.id} className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 px-2 rounded-xl transition-colors">
+              <div>
+                <div className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-2">
+                  <span>{off.officer_name}</span>
+                  {off.collects_daily_pkl && (
+                    <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                      Pungut PKL
+                    </span>
+                  )}
+                  {Boolean(user?.name && off.officer_name.toLowerCase().includes(user.name.toLowerCase())) && (
+                    <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                      Profil Anda
+                    </span>
+                  )}
+                </div>
+                <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                  Pasar: <strong className="text-slate-700 dark:text-slate-300">{off.market_name}</strong>
+                </div>
+                <div className="text-[11px] text-emerald-700 dark:text-emerald-400 mt-1 flex flex-wrap gap-1">
+                  {Array.isArray(off.assigned_areas) &&
+                    off.assigned_areas.map((area, i) => (
+                      <span
+                        key={i}
+                        className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-[10px] font-medium"
+                      >
+                        {area}
+                      </span>
+                    ))}
+                </div>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="py-8 text-center text-xs text-slate-500">
+            Tidak ada petugas yang cocok dengan filter pencarian.
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-20">
-      {/* Top Header - Compact & Responsive */}
-      <div className="bg-gradient-to-r from-emerald-700 via-teal-700 to-cyan-800 text-white px-4 pt-3.5 pb-4 shadow-sm">
-        <div className="max-w-4xl mx-auto space-y-3">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center border border-white/20 shrink-0">
-                <Store size={20} className="text-emerald-200" />
+      {/* Top Header - Compact & Clean */}
+      <div className="bg-gradient-to-r from-emerald-700 via-teal-700 to-cyan-800 text-white px-4 pt-3 pb-3.5 shadow-sm">
+        <div className="max-w-4xl mx-auto space-y-2.5">
+          {/* Row 1: Profile & Actions */}
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center border border-white/20 shrink-0">
+                <Store size={18} className="text-emerald-200" />
               </div>
               <div className="min-w-0">
-                <h1 className="text-sm sm:text-base font-black tracking-tight truncate">Pos Pasar Disperindag</h1>
-                <p className="text-[11px] text-emerald-200 font-medium truncate">
+                <h1 className="text-sm font-black tracking-tight leading-none truncate">Pos Pasar</h1>
+                <p className="text-[11px] text-emerald-200 font-medium truncate mt-0.5">
                   Petugas: <span className="font-bold text-white">{user?.name}</span>
                 </p>
               </div>
             </div>
 
-            <button
-              onClick={handleConnectPrinter}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shadow-xs shrink-0 ${
-                isPrinterConnected
-                  ? 'bg-emerald-500 text-white'
-                  : 'bg-white/15 text-emerald-100 hover:bg-white/25 border border-white/20'
-              }`}
-            >
-              <Printer size={14} />
-              <span>{isPrinterConnected ? 'Printer Aktif' : 'Sambung Printer'}</span>
-            </button>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                type="button"
+                onClick={() => setShowOfficersModal(true)}
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-white/15 text-emerald-100 hover:bg-white/25 border border-white/20 active:scale-95 cursor-pointer"
+                title="Daftar 8 Petugas Resmi SK Disperindag"
+              >
+                <UserCheck size={14} className="text-emerald-300" />
+                <span className="hidden xs:inline text-[11px]">SK</span>
+                <span className="bg-emerald-500 text-white text-[10px] font-black px-1.5 py-0.2 rounded-full">
+                  {officers.length || 8}
+                </span>
+              </button>
+
+              <button
+                onClick={handleConnectPrinter}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all shadow-xs ${
+                  isPrinterConnected
+                    ? 'bg-emerald-500 text-white'
+                    : 'bg-white/15 text-emerald-100 hover:bg-white/25 border border-white/20'
+                }`}
+                title={isPrinterConnected ? 'Printer Aktif' : 'Sambungkan Printer Bluetooth'}
+              >
+                <Printer size={14} />
+                <span className="text-[11px]">{isPrinterConnected ? 'Aktif' : 'Printer'}</span>
+              </button>
+            </div>
           </div>
 
-          {/* Pasar Selector + Quick Metric in 1 Clean Row */}
-          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-white/10">
-            <div className="flex items-center gap-1.5">
+          {/* Row 2: Pasar Selector + Quick Metric */}
+          <div className="flex items-center justify-between gap-2 pt-2 border-t border-white/10">
+            <div className="flex items-center gap-1 bg-black/20 p-0.5 rounded-lg shrink-0">
               {['PASAR WAMEO', 'PASAR KARYA BARU'].map((m) => (
                 <button
                   key={m}
                   onClick={() => setSelectedMarket(m)}
-                  className={`px-3 py-1 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                  className={`px-2.5 py-1 rounded-md text-xs font-black transition-all cursor-pointer ${
                     selectedMarket === m
                       ? 'bg-white text-emerald-900 shadow-xs'
-                      : 'bg-white/10 text-emerald-100 hover:bg-white/20'
+                      : 'text-emerald-100 hover:text-white'
                   }`}
                 >
                   {m.replace('PASAR ', '')}
@@ -452,9 +576,8 @@ export default function PasarDisperindagPage() {
               ))}
             </div>
 
-            <div className="flex items-center gap-1.5 text-right">
-              <span className="text-[10px] text-emerald-200 font-semibold uppercase tracking-wider">Setoran Hari Ini:</span>
-              <span className="text-xs font-black text-white bg-white/15 px-2 py-0.5 rounded-lg border border-white/15">
+            <div className="text-right truncate">
+              <span className="text-[11px] font-black text-white bg-white/15 px-2.5 py-1 rounded-lg border border-white/15 whitespace-nowrap">
                 {stats.today_tickets_count} lbr • Rp {Number(stats.today_tickets_amount).toLocaleString('id-ID')}
               </span>
             </div>
@@ -462,52 +585,41 @@ export default function PasarDisperindagPage() {
         </div>
       </div>
 
-      {/* Navigation Tabs - Responsive Scroll */}
+      {/* Navigation Tabs - 3 Main Transaction Tabs (Clean & No Truncation) */}
       <div className="max-w-4xl mx-auto px-4 -mt-2">
-        <div className="bg-white dark:bg-slate-800 rounded-xl p-1 shadow-sm border border-slate-200 dark:border-slate-700 flex gap-1 overflow-x-auto no-scrollbar">
+        <div className="bg-white dark:bg-slate-800 rounded-xl p-1 shadow-sm border border-slate-200 dark:border-slate-700 grid grid-cols-3 gap-1">
           <button
             onClick={() => setActiveTab('karcis')}
-            className={`flex-1 min-w-[75px] py-2 px-2 rounded-lg text-xs font-black transition-all flex items-center justify-center gap-1.5 shrink-0 ${
+            className={`py-2 px-2 rounded-lg text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
               activeTab === 'karcis'
                 ? 'bg-emerald-600 text-white shadow-xs'
                 : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
             }`}
           >
-            <Receipt size={14} />
-            <span>Karcis PKL</span>
+            <Receipt size={14} className="shrink-0" />
+            <span className="whitespace-nowrap">Karcis PKL</span>
           </button>
           <button
             onClick={() => setActiveTab('los')}
-            className={`flex-1 min-w-[75px] py-2 px-2 rounded-lg text-xs font-black transition-all flex items-center justify-center gap-1.5 shrink-0 ${
+            className={`py-2 px-2 rounded-lg text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
               activeTab === 'los'
                 ? 'bg-emerald-600 text-white shadow-xs'
                 : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
             }`}
           >
-            <ShoppingBag size={14} />
-            <span>Los Bulanan</span>
+            <ShoppingBag size={14} className="shrink-0" />
+            <span className="whitespace-nowrap">Los Bulanan</span>
           </button>
           <button
             onClick={() => setActiveTab('kios')}
-            className={`flex-1 min-w-[75px] py-2 px-2 rounded-lg text-xs font-black transition-all flex items-center justify-center gap-1.5 shrink-0 ${
+            className={`py-2 px-2 rounded-lg text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
               activeTab === 'kios'
                 ? 'bg-emerald-600 text-white shadow-xs'
                 : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
             }`}
           >
-            <Building2 size={14} />
-            <span>Kios Sewa</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('petugas')}
-            className={`flex-1 min-w-[75px] py-2 px-2 rounded-lg text-xs font-black transition-all flex items-center justify-center gap-1.5 shrink-0 ${
-              activeTab === 'petugas'
-                ? 'bg-emerald-600 text-white shadow-xs'
-                : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
-            }`}
-          >
-            <UserCheck size={14} />
-            <span>SK Petugas</span>
+            <Building2 size={14} className="shrink-0" />
+            <span className="whitespace-nowrap">Kios Sewa</span>
           </button>
         </div>
       </div>
@@ -523,8 +635,8 @@ export default function PasarDisperindagPage() {
                   <Receipt className="text-emerald-600" size={17} />
                   <span>Karcis Harian Pedagang Subuh / PKL</span>
                 </div>
-                <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
-                  Perda 1/2024 (Rp 1.000 / 3 m²)
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                  Rp 1.000 / 3 m²
                 </span>
               </div>
 
@@ -532,14 +644,9 @@ export default function PasarDisperindagPage() {
               <div className="space-y-3">
                 {/* Ukuran Lapak Pelataran (Perda No. 1/2024: Rp 1.000 / 3 m²) */}
                 <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="text-xs font-bold text-slate-700 dark:text-slate-200">
-                      Ukuran Lapak Pelataran
-                    </label>
-                    <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
-                      Tarif: Rp 1.000 / 3 m²
-                    </span>
-                  </div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
+                    Ukuran Lapak Pelataran
+                  </label>
 
                   <SearchableSelect
                     options={STALL_SIZE_OPTIONS}
@@ -588,16 +695,6 @@ export default function PasarDisperindagPage() {
                       </div>
                     </div>
                   )}
-
-                  {/* Keterangan detail ukuran & tarif terpilih */}
-                  <div className="mt-2 flex items-center justify-between text-[11px] bg-slate-100/80 dark:bg-slate-800/70 px-3.5 py-2 rounded-xl border border-slate-200/60 dark:border-slate-700/60">
-                    <span className="text-slate-600 dark:text-slate-300 truncate">
-                      Hamparan terbuka / meja portabel: <strong>{calculatedDimensions}</strong>
-                    </span>
-                    <span className="font-black text-emerald-700 dark:text-emerald-400 font-mono shrink-0 ml-2 text-xs">
-                      Rp {calculatedTotalAmount.toLocaleString('id-ID')} / hari
-                    </span>
-                  </div>
                 </div>
 
                 {/* Titik Pelataran / Blok Dropdown */}
@@ -970,44 +1067,48 @@ export default function PasarDisperindagPage() {
                   <span>Daftar 43 Petugas Penagih Pasar (SK Disperindag)</span>
                 </div>
                 <span className="text-xs font-bold text-emerald-600">
-                  Total: {officers.length} Petugas
+                  Total: {officers.length || 43} Petugas
                 </span>
               </div>
 
-              <div className="divide-y divide-slate-100 dark:divide-slate-700 max-h-[500px] overflow-y-auto">
-                {officers.map((off) => (
-                  <div key={off.id} className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <div>
-                      <div className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-2">
-                        <span>{off.officer_name}</span>
-                        {off.collects_daily_pkl && (
-                          <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">
-                            Pungut PKL
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                        Pasar: <strong className="text-slate-700 dark:text-slate-300">{off.market_name}</strong>
-                      </div>
-                      <div className="text-[11px] text-emerald-700 dark:text-emerald-400 mt-1 flex flex-wrap gap-1">
-                        {Array.isArray(off.assigned_areas) &&
-                          off.assigned_areas.map((area, i) => (
-                            <span
-                              key={i}
-                              className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-[10px]"
-                            >
-                              {area}
-                            </span>
-                          ))}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              {renderOfficersList(false)}
             </div>
           </div>
         )}
       </div>
+
+      {/* MODAL SK PENUGASAN 43 PETUGAS */}
+      {showOfficersModal && (
+        <div className="fixed inset-0 z-[150] bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto animate-fadeIn">
+          <div className="bg-white dark:bg-slate-800 w-full sm:max-w-xl rounded-t-3xl sm:rounded-3xl p-5 shadow-2xl border border-slate-200 dark:border-slate-700 space-y-4 max-h-[90vh] overflow-y-auto pb-8 sm:pb-5">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-700 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 flex items-center justify-center text-emerald-600 shrink-0">
+                  <UserCheck size={18} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-slate-900 dark:text-white">
+                    SK Penugasan Petugas Pasar
+                  </h3>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                    Disperindag Kota Baubau • Total: {officers.length || 43} Petugas
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowOfficersModal(false)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer"
+                title="Tutup"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {renderOfficersList(true)}
+          </div>
+        </div>
+      )}
 
       {/* MODAL BAYAR LAPAK */}
       {selectedStallForPay && (

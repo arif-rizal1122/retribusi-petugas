@@ -36,8 +36,7 @@ import {
   MapPin,
 } from 'lucide-react';
 import { useGps } from '../contexts/GpsContext';
-import { UserRole } from '../types';
-import { officerCanAccessPath, isPuprOfficer } from '../lib/officerRoleUtils';
+import { officerCanAccessPath, isPuprOfficer, isDisperindagOfficer } from '../lib/officerRoleUtils';
 
 interface LayoutProps {
   children: ReactNode;
@@ -435,6 +434,13 @@ export default function Layout({ children }: LayoutProps) {
               { icon: Map, path: '/peta', label: 'Peta Proyek' },
               { icon: User, path: '/profile', label: 'Akun' },
             ]
+          : isDisperindagOfficer(user)
+          ? [
+              { icon: Home, path: '/dashboard', label: 'Home' },
+              { icon: Store, path: '/pasar', label: 'Pasar' },
+              { icon: Printer, path: '/mpad-printer', label: 'Printer' },
+              { icon: User, path: '/profile', label: 'Akun' },
+            ]
           : [
               { icon: Home, path: '/dashboard', label: 'Home' },
               { icon: Users, path: '/taxpayers', label: 'WP' },
@@ -447,7 +453,8 @@ export default function Layout({ children }: LayoutProps) {
             (item.path === '/billing' && location.pathname.includes('/billing')) ||
             (item.path === '/taxpayers' && location.pathname.includes('/taxpayers')) ||
             (item.path === '/tasks' && location.pathname.includes('/tasks')) ||
-            (item.path === '/pupr-inspection' && location.pathname.includes('/pupr-inspection'));
+            (item.path === '/pupr-inspection' && location.pathname.includes('/pupr-inspection')) ||
+            (item.path === '/pasar' && (location.pathname.startsWith('/pasar') || location.pathname.startsWith('/disperindag-pasar')));
 
           return (
             <button 
