@@ -118,6 +118,29 @@ export const isPuprOfficer = (user: User | null | undefined): boolean => {
   );
 };
 
+export const isPerkimOfficer = (user: User | null | undefined): boolean => {
+  if (!user) return false;
+  const opdCode = (user.opd?.code || '').toUpperCase();
+  const opdName = (user.opd?.name || '').toLowerCase();
+  const dept = (user.department || (user as any).metadata?.department || '').toLowerCase();
+  const roleCode = ((user as any).role_code || (user as any).metadata?.role_code || '').toLowerCase();
+  const email = (user.email || '').toLowerCase();
+  return (
+    user.opd_id === 11 ||
+    opdCode === 'PERKIM' ||
+    opdCode === 'DISPERKIM' ||
+    opdName.includes('perumahan') ||
+    opdName.includes('permukiman') ||
+    dept.includes('rusun') ||
+    dept.includes('perumahan') ||
+    roleCode.includes('perkim') ||
+    roleCode.includes('rusun') ||
+    email.includes('perkim') ||
+    email.includes('rusun') ||
+    !!(user as any).access?.flags?.perkim
+  );
+};
+
 /**
  * Filter wewenang akses rute & menu petugas lapangan M-PAD
  * Berdasarkan Hybrid RBAC + OPD Scoping
