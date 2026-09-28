@@ -212,6 +212,70 @@ export default function DaftarTugas() {
     return clean.startsWith('/storage/') ? `${baseUrl}${clean}` : `${baseUrl}/storage${clean}`;
   };
 
+  const getProofMedia = (task: Task) => {
+    const meta = (task?.tax_object?.metadata || {}) as Record<string, any>;
+    const classification = (task?.tax_object?.classification?.name || '').toLowerCase();
+    const taxObjName = (task?.tax_object?.name || '').toLowerCase();
+    const taskNotes = (task?.notes || '').toLowerCase();
+
+    const isMapsUrl = (url: unknown) => typeof url === 'string' && (
+      url.includes('maps.google.') ||
+      url.includes('google.com/maps') ||
+      url.includes('goo.gl/maps') ||
+      url.includes('openstreetmap.org')
+    );
+
+    // Cari dari metadata
+    const metaPhotoUrl = [
+      meta.foto_bangunan,
+      meta.foto_gedung,
+      meta.foto_lokasi,
+      meta.foto_lokasi_open_kamera,
+      meta.foto_titik,
+      meta.foto_objek,
+      meta.foto_usaha,
+      meta.foto_tempat,
+      meta.materi_reklame,
+      meta.foto_reklame,
+      meta.formulir_data_dukung,
+      meta.bukti_lahan,
+    ].find((u) => u && typeof u === 'string' && !isMapsUrl(u));
+
+    const proofUrl = task?.verification?.proof_file_url;
+    const validProofUrl = (proofUrl && !isMapsUrl(proofUrl)) ? proofUrl : null;
+
+    const rawUrl = metaPhotoUrl || validProofUrl;
+    if (!rawUrl) return null;
+
+    const finalUrl = getFileUrl(rawUrl);
+
+    // Tentukan label adaptif berdasarkan jenis objek / klasifikasi
+    let label = 'Lihat Bukti Foto Objek';
+
+    if (classification.includes('walet') || taxObjName.includes('walet') || taskNotes.includes('walet')) {
+      label = 'Lihat Foto Bangunan Walet';
+    } else if (classification.includes('reklame') || taxObjName.includes('reklame') || taskNotes.includes('reklame') || meta.materi_reklame) {
+      label = 'Lihat Materi / Desain Reklame';
+    } else if (classification.includes('mblb') || classification.includes('tambang') || classification.includes('galian')) {
+      label = 'Lihat Foto Lokasi Galian / Tambang';
+    } else if (classification.includes('rusun') || classification.includes('kamar') || taxObjName.includes('rusun')) {
+      label = 'Lihat Foto Unit Rusunawa';
+    } else if (classification.includes('pasar') || classification.includes('kios') || classification.includes('lapak')) {
+      label = 'Lihat Foto Kios / Lapak';
+    } else if (classification.includes('hotel') || classification.includes('restoran') || classification.includes('hiburan') || classification.includes('pbjt')) {
+      label = 'Lihat Foto Tempat Usaha';
+    } else if (meta.foto_bangunan) {
+      label = 'Lihat Foto Bangunan Fisik';
+    } else if (meta.foto_lokasi || meta.foto_titik) {
+      label = 'Lihat Foto Lokasi Objek';
+    }
+
+    return {
+      url: finalUrl,
+      label,
+    };
+  };
+
   const fetchPbbApplications = async () => {
     if (isPupr) return; // Petugas PUPR tidak memiliki akses PBB Bapenda
     try {
@@ -1446,60 +1510,67 @@ export default function DaftarTugas() {
                     </div>
                   )}
 
-                  {task.tax_object && (
-                    <div className="p-3 bg-blue-50/70 dark:bg-blue-950/30 rounded-2xl border border-blue-100 dark:border-blue-900/40 space-y-2">
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <p className="text-[10px] font-bold text-blue-500 uppercase tracking-wider">Objek Pajak / Reklame</p>
-                          <p className="text-xs font-bold text-blue-950 dark:text-blue-200">{task.tax_object.name}</p>
-                          {task.tax_object.classification && (
-                            <span className="inline-block mt-0.5 px-2 py-0.5 rounded text-[10px] font-black bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                              {task.tax_object.classification.name}
+                  {task.tax_object && (() => {
+                    const proofMedia = getProofMedia(task);
+                    return (
+                      <div className="p-3 bg-blue-50/70 dark:bg-blue-950/30 rounded-2xl border border-blue-100 dark:border-blue-900/40 space-y-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <p className="text-[10px] font-bold text-blue-500 uppercase tracking-wider">
+                              {task.tax_object.classification?.name
+                                ? `Objek Pajak • ${task.tax_object.classification.name}`
+                                : 'Detail Objek Pajak'}
+                            </p>
+                            <p className="text-xs font-bold text-blue-950 dark:text-blue-200">{task.tax_object.name}</p>
+                            {task.tax_object.classification && (
+                              <span className="inline-block mt-0.5 px-2 py-0.5 rounded text-[10px] font-black bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                                {task.tax_object.classification.name}
+                              </span>
+                            )}
+                          </div>
+                          {task.task_type === 'field_survey' && (
+                            <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-amber-200 text-amber-900">
+                              Survei Lapangan
                             </span>
                           )}
                         </div>
-                        {task.task_type === 'field_survey' && (
-                          <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-amber-200 text-amber-900">
-                            Survei Lapangan
-                          </span>
+
+                        {task.tax_object.address && (
+                          <p className="text-[11px] text-slate-600 dark:text-slate-300 line-clamp-2">
+                            {task.tax_object.address}
+                          </p>
+                        )}
+
+                        {/* Navigation Link if GPS Available */}
+                        {task.tax_object.latitude && task.tax_object.longitude && (
+                          <a
+                            href={`https://www.google.com/maps/dir/?api=1&destination=${task.tax_object.latitude},${task.tax_object.longitude}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-full py-1.5 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-blue-700 dark:text-blue-300 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors border border-blue-200 dark:border-blue-800 shadow-sm"
+                          >
+                            <Navigation size={12} className="text-blue-600" />
+                            <span>Navigasi Titik Objek ({Number(task.tax_object.latitude).toFixed(4)}, {Number(task.tax_object.longitude).toFixed(4)})</span>
+                            <ExternalLink size={11} />
+                          </a>
+                        )}
+
+                        {/* Dokumen / Foto Bukti Objek (Adaptif sesuai jenis layanan, bukan hardcode Reklame) */}
+                        {proofMedia && (
+                          <a
+                            href={proofMedia.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-full py-1.5 bg-amber-50 dark:bg-amber-950/30 hover:bg-amber-100 text-amber-800 dark:text-amber-300 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors border border-amber-200 dark:border-amber-800"
+                          >
+                            <Camera size={12} className="text-amber-600" />
+                            <span>{proofMedia.label}</span>
+                            <ExternalLink size={11} />
+                          </a>
                         )}
                       </div>
-
-                      {task.tax_object.address && (
-                        <p className="text-[11px] text-slate-600 dark:text-slate-300 line-clamp-2">
-                          {task.tax_object.address}
-                        </p>
-                      )}
-
-                      {/* Navigation Link if GPS Available */}
-                      {task.tax_object.latitude && task.tax_object.longitude && (
-                        <a
-                          href={`https://www.google.com/maps/dir/?api=1&destination=${task.tax_object.latitude},${task.tax_object.longitude}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="w-full py-1.5 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-blue-700 dark:text-blue-300 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors border border-blue-200 dark:border-blue-800 shadow-sm"
-                        >
-                          <Navigation size={12} className="text-blue-600" />
-                          <span>Navigasi Titik Objek ({Number(task.tax_object.latitude).toFixed(4)}, {Number(task.tax_object.longitude).toFixed(4)})</span>
-                          <ExternalLink size={11} />
-                        </a>
-                      )}
-
-                      {/* Materi Reklame Link if Available */}
-                      {(task.tax_object.metadata?.materi_reklame || task.verification?.proof_file_url) && (
-                        <a
-                          href={task.tax_object.metadata?.materi_reklame || task.verification?.proof_file_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="w-full py-1.5 bg-amber-50 dark:bg-amber-950/30 hover:bg-amber-100 text-amber-800 dark:text-amber-300 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors border border-amber-200 dark:border-amber-800"
-                        >
-                          <Camera size={12} className="text-amber-600" />
-                          <span>Lihat Materi / Desain Reklame</span>
-                          <ExternalLink size={11} />
-                        </a>
-                      )}
-                    </div>
-                  )}
+                    );
+                  })()}
                   {/* Status Verifikasi Hasil Kunjungan Lapangan */}
                   {task.status === 'completed' && (
                     <div className="pt-2">
