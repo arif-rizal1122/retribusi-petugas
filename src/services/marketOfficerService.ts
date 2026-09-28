@@ -54,6 +54,8 @@ export interface IssueDailyTicketPayload {
   building_name?: string;
   merchant_name?: string;
   quantity: number;
+  area_sqm?: number;
+  dimensions?: string;
   unit_amount: number;
   payment_method: 'TUNAI' | 'QRIS';
   latitude?: number;

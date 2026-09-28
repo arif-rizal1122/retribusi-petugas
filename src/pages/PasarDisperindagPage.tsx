@@ -321,6 +321,8 @@ export default function PasarDisperindagPage() {
         building_name: buildingDetail,
         merchant_name: ticketMerchant || 'Pedagang Harian',
         quantity: unitsCount,
+        area_sqm: calculatedAreaM2,
+        dimensions: calculatedDimensions,
         unit_amount: 1000,
         payment_method: ticketPaymentMethod,
         latitude: gpsLoc.lat,
