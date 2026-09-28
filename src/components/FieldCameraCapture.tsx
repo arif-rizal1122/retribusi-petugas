@@ -147,9 +147,7 @@ export const FieldCameraCapture: React.FC<FieldCameraCaptureProps> = ({
 
   const isAllowedToCapture = isWithinRadius || isManualGpsOverride;
 
-  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
-  // Start In-App Camera Viewfinder (Wajib Kamera Belakang jika HP)
+  // Start In-App Camera Viewfinder (Memprioritaskan Kamera Belakang jika tersedia)
   const startCamera = async (mode: 'environment' | 'user' = 'environment') => {
     setCameraLoading(true);
     setIsCameraOpen(true);
@@ -165,38 +163,45 @@ export const FieldCameraCapture: React.FC<FieldCameraCaptureProps> = ({
         throw new Error('Browser atau perangkat ini tidak mendukung akses kamera langsung.');
       }
 
-      let stream: MediaStream;
-      // Jika HP / Mobile, wajib prioritaskan kamera belakang (exact environment)
-      if (isMobile) {
-        try {
-          stream = await navigator.mediaDevices.getUserMedia({
-            video: {
-              facingMode: { exact: 'environment' },
-              width: { ideal: 1920 },
-              height: { ideal: 1080 },
-            },
-            audio: false,
-          });
-        } catch (exactErr) {
-          console.warn('Exact rear camera unavailable, falling back to ideal environment:', exactErr);
-          stream = await navigator.mediaDevices.getUserMedia({
-            video: {
-              facingMode: { ideal: 'environment' },
-              width: { ideal: 1920 },
-              height: { ideal: 1080 },
-            },
-            audio: false,
-          });
-        }
-      } else {
-        stream = await navigator.mediaDevices.getUserMedia({
+      let stream: MediaStream | null = null;
+
+      // Urutan kandidat constraint dari yang paling ideal ke yang paling kompatibel
+      const candidateConstraints: MediaStreamConstraints[] = [
+        // 1. Ideal mode dengan target resolusi tinggi (tidak pakai exact agar kompatibel di semua hardware)
+        {
           video: {
             facingMode: { ideal: mode },
             width: { ideal: 1920 },
             height: { ideal: 1080 },
           },
           audio: false,
-        });
+        },
+        // 2. Ideal mode dengan resolusi standar
+        {
+          video: {
+            facingMode: { ideal: mode },
+          },
+          audio: false,
+        },
+        // 3. Fallback generic: kamera apapun yang tersedia di perangkat
+        {
+          video: true,
+          audio: false,
+        },
+      ];
+
+      let lastError: any = null;
+      for (const constraints of candidateConstraints) {
+        try {
+          stream = await navigator.mediaDevices.getUserMedia(constraints);
+          if (stream) break;
+        } catch (err) {
+          lastError = err;
+        }
+      }
+
+      if (!stream) {
+        throw lastError || new Error('Tidak dapat menginisialisasi kamera pada perangkat ini.');
       }
 
       streamRef.current = stream;
@@ -212,7 +217,7 @@ export const FieldCameraCapture: React.FC<FieldCameraCaptureProps> = ({
       }
     } catch (err: any) {
       console.error('Camera stream error:', err);
-      alert('Gagal membuka kamera belakang: ' + (err.message || 'Izin kamera ditolak oleh browser/sistem.'));
+      alert('Gagal membuka kamera: ' + (err.message || 'Izin kamera ditolak oleh browser/sistem.'));
       stopCamera();
     } finally {
       setCameraLoading(false);

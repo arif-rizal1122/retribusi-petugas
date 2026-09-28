@@ -55,6 +55,9 @@ export interface OfficerLocation {
 
 /**
  * Mengambil koordinat GPS petugas saat ini via HTML5 Geolocation API
+ * Mendukung graceful degradation: mencoba akurasi tinggi lebih dulu,
+ * jika timeout atau sinyal lemah otomatis fallback ke akurasi jaringan (wifi/cell tower)
+ * agar tidak gagal timeout.
  */
 export function getOfficerCurrentPosition(
   options?: PositionOptions
@@ -65,6 +68,51 @@ export function getOfficerCurrentPosition(
       return;
     }
 
+    const highAccuracyOptions: PositionOptions = {
+      enableHighAccuracy: true,
+      timeout: 6000,
+      maximumAge: 10000,
+      ...options,
+    };
+
+    const tryLowAccuracyFallback = (initialError?: GeolocationPositionError) => {
+      // Jika izin ditolak oleh pengguna, langsung kembalikan pesan
+      if (initialError?.code === initialError?.PERMISSION_DENIED) {
+        reject(new Error('Izin akses lokasi (GPS) ditolak. Mohon aktifkan izin lokasi di browser/perangkat Anda.'));
+        return;
+      }
+
+      // Coba akurasi jaringan/wifi/cell tower yang cepat dan tidak mudah timeout
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          resolve({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+            accuracy: position.coords.accuracy,
+            timestamp: position.timestamp,
+            gps_status: 'active',
+          });
+        },
+        (fallbackError) => {
+          let msg = 'Gagal mendeteksi lokasi GPS.';
+          if (fallbackError.code === fallbackError.PERMISSION_DENIED) {
+            msg = 'Izin akses lokasi (GPS) ditolak. Mohon aktifkan izin lokasi di browser/perangkat Anda.';
+          } else if (fallbackError.code === fallbackError.POSITION_UNAVAILABLE) {
+            msg = 'Sinyal lokasi / GPS tidak tersedia saat ini.';
+          } else if (fallbackError.code === fallbackError.TIMEOUT) {
+            msg = 'Waktu permintaan lokasi GPS habis (timeout). Silakan periksa koneksi atau aktifkan GPS perangkat.';
+          }
+          reject(new Error(msg));
+        },
+        {
+          enableHighAccuracy: false,
+          timeout: 6000,
+          maximumAge: 60000,
+        }
+      );
+    };
+
+    // Percobaan pertama: Akurasi Tinggi
     navigator.geolocation.getCurrentPosition(
       (position) => {
         resolve({
@@ -72,25 +120,21 @@ export function getOfficerCurrentPosition(
           lng: position.coords.longitude,
           accuracy: position.coords.accuracy,
           timestamp: position.timestamp,
+          gps_status: 'active',
         });
       },
       (error) => {
-        let msg = 'Gagal mendeteksi lokasi GPS.';
-        if (error.code === error.PERMISSION_DENIED) {
-          msg = 'Izin akses lokasi (GPS) ditolak. Mohon aktifkan izin lokasi di browser/perangkat Anda.';
-        } else if (error.code === error.POSITION_UNAVAILABLE) {
-          msg = 'Sinyal lokasi / GPS tidak tersedia saat ini.';
-        } else if (error.code === error.TIMEOUT) {
-          msg = 'Waktu permintaan lokasi GPS habis (timeout).';
+        if (error.code === error.TIMEOUT || error.code === error.POSITION_UNAVAILABLE) {
+          tryLowAccuracyFallback(error);
+        } else {
+          let msg = 'Gagal mendeteksi lokasi GPS.';
+          if (error.code === error.PERMISSION_DENIED) {
+            msg = 'Izin akses lokasi (GPS) ditolak. Mohon aktifkan izin lokasi di browser/perangkat Anda.';
+          }
+          reject(new Error(msg));
         }
-        reject(new Error(msg));
       },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 5000,
-        ...options,
-      }
+      highAccuracyOptions
     );
   });
 }
