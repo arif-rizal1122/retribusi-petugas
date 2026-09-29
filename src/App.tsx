@@ -339,6 +339,56 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/tugas/:id"
+              element={
+                <ProtectedRoute allowedRoles={['super_admin', 'opd', 'petugas']}>
+                  <Layout>
+                    <DaftarTugas />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/tugas"
+              element={
+                <ProtectedRoute allowedRoles={['super_admin', 'opd', 'petugas']}>
+                  <Layout>
+                    <DaftarTugas />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/lokasi/validasi"
+              element={
+                <ProtectedRoute allowedRoles={['super_admin', 'opd', 'petugas']}>
+                  <Layout>
+                    <PetaLapangan />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/setor/panduan"
+              element={
+                <ProtectedRoute allowedRoles={['super_admin', 'opd', 'petugas']}>
+                  <Layout>
+                    <PaymentConfirmation />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/shift/close"
+              element={
+                <ProtectedRoute allowedRoles={['super_admin', 'opd', 'petugas']}>
+                  <Layout>
+                    <MpadPrinter />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
 
             <Route
               path="/verification"
