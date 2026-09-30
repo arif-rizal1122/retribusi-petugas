@@ -8,7 +8,7 @@ import {
   Locate
 } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { api } from '../lib/api';
 import { Taxpayer, Opd, RetributionType } from '../types';
 import { useAuth } from '../contexts/AuthContext';
@@ -98,14 +98,26 @@ export default function TaxpayerManagement() {
   const [retributionTypes, setRetributionTypes] = useState<RetributionType[]>([]);
   const [classifications, setClassifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [opdFilter, setOpdFilter] = useState('');
-  const [page, setPage] = useState(1);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [search, setSearch] = useState(searchParams.get('search') || '');
+  const [opdFilter, setOpdFilter] = useState(searchParams.get('opd_id') || '');
+  const [page, setPage] = useState(parseInt(searchParams.get('page') || '1', 10));
   const [totalPages, setTotalPages] = useState(1);
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [completionFilter, setCompletionFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState(searchParams.get('status') || 'all');
+  const [completionFilter, setCompletionFilter] = useState(searchParams.get('completion') || 'all');
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
-  const [showOrphansOnly, setShowOrphansOnly] = useState(false);
+  const [showOrphansOnly, setShowOrphansOnly] = useState(searchParams.get('orphans') === 'true');
+
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (search) params.set('search', search);
+    if (opdFilter) params.set('opd_id', opdFilter);
+    if (page > 1) params.set('page', page.toString());
+    if (statusFilter !== 'all') params.set('status', statusFilter);
+    if (completionFilter !== 'all') params.set('completion', completionFilter);
+    if (showOrphansOnly) params.set('orphans', 'true');
+    setSearchParams(params, { replace: true });
+  }, [search, opdFilter, page, statusFilter, completionFilter, showOrphansOnly, setSearchParams]);
 
   // Modal State
   const [showModal, setShowModal] = useState(false);
@@ -161,6 +173,13 @@ export default function TaxpayerManagement() {
         ...(opdFilter ? { opd_id: opdFilter } : user?.role !== 'super_admin' ? { opd_id: user?.opd_id?.toString() || '' } : {}),
       });
 
+      if (statusFilter !== 'all') {
+        queryParams.append('is_active', statusFilter === 'active' ? '1' : '0');
+      }
+      if (showOrphansOnly) {
+        queryParams.append('orphans_only', '1');
+      }
+
       const [taxpayersRes, opdsRes, typesRes, classificationsRes] = await Promise.all([
         api.get(`/api/taxpayers?${queryParams}`),
         user?.role === 'super_admin' ? api.get('/api/opds') : Promise.resolve({ data: [] }),
@@ -186,7 +205,7 @@ export default function TaxpayerManagement() {
 
   useEffect(() => {
     fetchData();
-  }, [page, search, opdFilter]);
+  }, [page, search, opdFilter, statusFilter, showOrphansOnly]);
 
   // Auto-open edit modal when coming from detail page
   const location = useLocation();
@@ -501,11 +520,6 @@ export default function TaxpayerManagement() {
   const processedTaxpayers = useMemo(() => {
     let result = [...taxpayers];
 
-    if (statusFilter !== 'all') {
-      const isActive = statusFilter === 'active';
-      result = result.filter(tp => tp.is_active === isActive);
-    }
-
     if (completionFilter !== 'all') {
       result = result.filter(tp => {
         const score = calculateCompletion(tp);
@@ -535,13 +549,8 @@ export default function TaxpayerManagement() {
       });
     }
 
-    // Client-side orphan filter
-    if (showOrphansOnly) {
-      result = result.filter(tp => !tp.tax_objects || tp.tax_objects.length === 0);
-    }
-
     return result;
-  }, [taxpayers, statusFilter, completionFilter, sortConfig]);
+  }, [taxpayers, completionFilter, sortConfig]);
 
   const filteredRetributionTypes = useMemo(() => {
     const selectedOpdId = parseInt(form.opd_id);
@@ -639,7 +648,7 @@ export default function TaxpayerManagement() {
           <table className="w-full">
             <thead className="bg-gray-50 dark:bg-gray-700/50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">NIK & Nama</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Nama</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Kontak</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Objek & OPD</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
@@ -665,7 +674,6 @@ export default function TaxpayerManagement() {
                     <td className="px-6 py-3 sm:py-4">
                       <div className="flex flex-col">
                         <div className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white leading-tight">{tp.name}</div>
-                        <div className="text-[10px] text-gray-400 dark:text-gray-500 font-bold mt-0.5">NIK: {tp.nik}</div>
                         {tp.npwpd && <div className="text-[10px] text-blue-600 dark:text-blue-400 uppercase font-black tracking-tighter mt-0.5">NPWPD: {tp.npwpd}</div>}
                         
                         <div className="max-w-[180px]">
@@ -741,7 +749,6 @@ export default function TaxpayerManagement() {
                 <div className="flex justify-between items-start mb-3">
                   <div className="min-w-0 flex-1">
                     <h4 className="text-xs sm:text-sm font-black text-gray-900 dark:text-white truncate">{tp.name}</h4>
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">NIK: {tp.nik}</p>
                     <div className="max-w-[150px]">
                       <CompletionBar percentage={calculateCompletion(tp)} />
                     </div>
