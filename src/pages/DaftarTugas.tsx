@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import api, { API_URL } from '../lib/api';
 import { 
   ClipboardList, 
@@ -172,6 +172,7 @@ export default function DaftarTugas() {
   const [loading, setLoading] = useState(true);
   const [pbbLoading, setPbbLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const skipLoaderRef = useRef(false);
   const [activeTab, setActiveTab] = useState<'pending' | 'completed' | 'asset_survey' | 'pbb_survey'>(() => {
     return isPuprOfficer(user) ? 'asset_survey' : 'pending';
   });
@@ -279,7 +280,7 @@ export default function DaftarTugas() {
   const fetchPbbApplications = async () => {
     if (isPupr) return; // Petugas PUPR tidak memiliki akses PBB Bapenda
     try {
-      setPbbLoading(true);
+      if (!skipLoaderRef.current) setPbbLoading(true);
       const [nopRes, mutRes] = await Promise.allSettled([
         api.get('/api/pbb/bapenda/nop-applications', { params: { status: 'SURVEY' } }),
         api.get('/api/pbb/mutations/my-assignments'),
@@ -300,6 +301,7 @@ export default function DaftarTugas() {
       console.error('Error fetching PBB applications:', err);
     } finally {
       setPbbLoading(false);
+      skipLoaderRef.current = false;
     }
   };
 
@@ -363,6 +365,7 @@ export default function DaftarTugas() {
       setSurveyNotesInput('');
       setSurveyPhotoFile(null);
       setSurveyPhotoPreview(null);
+      skipLoaderRef.current = true;
       fetchPbbApplications();
     } catch (err: any) {
       console.error('Error submitting survey:', err);
@@ -434,6 +437,7 @@ export default function DaftarTugas() {
       setMutationSurveyPhotoFile(null);
       setMutationSurveyPhotoPreview(null);
       setMutationSurveyCoords(null);
+      skipLoaderRef.current = true;
       fetchPbbApplications();
     } catch (err: any) {
       console.error('Error submitting mutation survey:', err);
@@ -460,7 +464,7 @@ export default function DaftarTugas() {
 
   const fetchTasks = async () => {
     try {
-      setLoading(true);
+      if (!skipLoaderRef.current) setLoading(true);
       const res = await api.get('/api/petugas-tasks', {
         params: { status: activeTab }
       });
@@ -470,6 +474,7 @@ export default function DaftarTugas() {
       console.error('Error fetching tasks:', err);
     } finally {
       setLoading(false);
+      skipLoaderRef.current = false;
     }
   };
 
@@ -516,7 +521,13 @@ export default function DaftarTugas() {
 
       if (res.data?.status === 'success') {
         toast.success('Tugas ditandai selesai dengan bukti foto');
-        setTasks(tasks.filter(t => t.id !== id));
+        setTasks(tasks.map(t => 
+          t.id === id 
+            ? { ...t, status: 'completed', completed_at: new Date().toISOString() } 
+            : t
+        ));
+        skipLoaderRef.current = true;
+        setActiveTab('completed');
       }
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Gagal menyelesaikan tugas');
@@ -555,6 +566,10 @@ export default function DaftarTugas() {
     );
 
     if (!matchesSearch) return false;
+
+    if (activeTab === 'completed' || activeTab === 'pending') {
+      if (task.status !== activeTab) return false;
+    }
 
     if (activeTab === 'completed' && verificationFilter !== 'all') {
       const isVerified = isTaskVerified(task);
