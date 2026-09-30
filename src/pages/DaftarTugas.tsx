@@ -535,6 +535,8 @@ export default function DaftarTugas() {
             ? { ...t, status: 'completed', completed_at: new Date().toISOString() } 
             : t
         ));
+        // Auto-redirect ke tab Riwayat Kunjungan setelah selesai verifikasi
+        setActiveTab('completed');
       }
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Gagal menyelesaikan tugas');
@@ -697,7 +699,7 @@ export default function DaftarTugas() {
               }`}
             >
               <CheckCircle className="w-3.5 h-3.5" />
-              <span>Riwayat Selesai</span>
+              <span>Riwayat Kunjungan</span>
             </button>
           </>
         ) : (
