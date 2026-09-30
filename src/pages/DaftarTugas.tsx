@@ -204,6 +204,7 @@ export default function DaftarTugas() {
   const [mutationRecommendation, setMutationRecommendation] = useState<'RECOMMENDED' | 'NEEDS_REVISION'>('RECOMMENDED');
   const [submittingMutationSurvey, setSubmittingMutationSurvey] = useState(false);
   const [selectedTaskForCamera, setSelectedTaskForCamera] = useState<Task | null>(null);
+  const [taskLateReason, setTaskLateReason] = useState('');
 
   const getFileUrl = (path?: string | null) => {
     if (!path) return '';
@@ -361,12 +362,11 @@ export default function DaftarTugas() {
 
       await api.post(`/api/pbb/bapenda/nop-applications/${selectedPbbForSurvey.id}/status`, formData);
       toast.success(`Hasil survei permohonan #${selectedPbbForSurvey.id} berhasil dikirim ke Admin Bapenda!`);
+      setPbbApplications(prev => prev.filter(app => app.id !== selectedPbbForSurvey.id));
       setSelectedPbbForSurvey(null);
       setSurveyNotesInput('');
       setSurveyPhotoFile(null);
       setSurveyPhotoPreview(null);
-      skipLoaderRef.current = true;
-      fetchPbbApplications();
     } catch (err: any) {
       console.error('Error submitting survey:', err);
       toast.error(err.message || 'Gagal menyimpan hasil survei');
@@ -432,13 +432,12 @@ export default function DaftarTugas() {
 
       await api.post(`/api/pbb/mutations/${selectedMutationForSurvey.id}/status`, formData);
       toast.success(`Hasil survei mutasi ${selectedMutationForSurvey.ticket_no} berhasil dikirim ke Admin Bapenda!`);
+      setPbbMutations(prev => prev.filter(mut => mut.id !== selectedMutationForSurvey.id));
       setSelectedMutationForSurvey(null);
       setMutationSurveyNotes('');
       setMutationSurveyPhotoFile(null);
       setMutationSurveyPhotoPreview(null);
       setMutationSurveyCoords(null);
-      skipLoaderRef.current = true;
-      fetchPbbApplications();
     } catch (err: any) {
       console.error('Error submitting mutation survey:', err);
       toast.error(err.message || 'Gagal menyimpan hasil survei mutasi');
@@ -478,13 +477,20 @@ export default function DaftarTugas() {
     }
   };
 
-  const markAsCompleted = async (id: number, photo: File | null) => {
+  const markAsCompleted = async (id: number, photo: File | null, lateReason?: string) => {
     if (!photo) {
       toast.error('Gunakan Kamera untuk bukti penyelesaian!');
       return;
     }
 
     const targetTask = tasks.find(t => t.id === id);
+    const isLate = targetTask && new Date(targetTask.due_date) < new Date();
+    
+    if (isLate && (!lateReason || !lateReason.trim())) {
+      toast.error('Mohon isi alasan keterlambatan karena tugas ini sudah melewati tenggat waktu.');
+      return;
+    }
+
     const taskLat = targetTask?.latitude ?? targetTask?.tax_object?.latitude;
     const taskLng = targetTask?.longitude ?? targetTask?.tax_object?.longitude;
 
@@ -511,6 +517,9 @@ export default function DaftarTugas() {
       const formData = new FormData();
       formData.append('status', 'completed');
       formData.append('photo', photo);
+      if (isLate && lateReason) {
+        formData.append('late_reason', lateReason.trim());
+      }
       // Laravel PUT with file requires _method spoofing if using POST or a proper multipart PUT (which is tricky with some PHP versions)
       // Since our backend is PHP, we use POST + _method: PUT
       formData.append('_method', 'PUT');
@@ -526,8 +535,6 @@ export default function DaftarTugas() {
             ? { ...t, status: 'completed', completed_at: new Date().toISOString() } 
             : t
         ));
-        skipLoaderRef.current = true;
-        setActiveTab('completed');
       }
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Gagal menyelesaikan tugas');
@@ -1698,7 +1705,10 @@ export default function DaftarTugas() {
                 {task.status === 'pending' ? (
                   <div className="flex flex-col gap-2">
                     <button
-                      onClick={() => setSelectedTaskForCamera(task)}
+                      onClick={() => {
+                        setSelectedTaskForCamera(task);
+                        setTaskLateReason('');
+                      }}
                       disabled={uploadingId === task.id}
                       className="w-full flex items-center justify-center gap-2 py-3 bg-[#0F2547] hover:bg-blue-600 disabled:bg-slate-400 text-white rounded-xl font-bold uppercase tracking-wider text-xs transition-colors shadow-lg shadow-blue-500/20 active:scale-98"
                     >
@@ -2263,6 +2273,22 @@ export default function DaftarTugas() {
               </button>
             </div>
 
+            {selectedTaskForCamera && new Date(selectedTaskForCamera.due_date) < new Date() && (
+              <div className="mb-4 space-y-2 border-b border-rose-100 dark:border-rose-900/30 pb-4">
+                <label className="text-xs font-bold text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  Alasan Keterlambatan
+                </label>
+                <textarea
+                  value={taskLateReason}
+                  onChange={(e) => setTaskLateReason(e.target.value)}
+                  placeholder="Tugas ini telah melewati tenggat. Mohon jelaskan alasan keterlambatan..."
+                  className="w-full text-sm p-3 rounded-xl border border-rose-200 dark:border-rose-800 bg-rose-50 dark:bg-rose-900/10 focus:ring-2 focus:ring-rose-500 focus:border-rose-500 dark:text-white"
+                  rows={2}
+                />
+              </div>
+            )}
+
             <FieldCameraCapture
               targetLat={selectedTaskForCamera.latitude ? parseFloat(String(selectedTaskForCamera.latitude)) : (selectedTaskForCamera.tax_object?.latitude ? parseFloat(String(selectedTaskForCamera.tax_object.latitude)) : null)}
               targetLng={selectedTaskForCamera.longitude ? parseFloat(String(selectedTaskForCamera.longitude)) : (selectedTaskForCamera.tax_object?.longitude ? parseFloat(String(selectedTaskForCamera.tax_object.longitude)) : null)}
@@ -2270,8 +2296,15 @@ export default function DaftarTugas() {
               label="Kamera Lapangan (Wajib Kamera & GPS Valid)"
               onPhotoCaptured={(file) => {
                 const targetId = selectedTaskForCamera.id;
+                const isLate = new Date(selectedTaskForCamera.due_date) < new Date();
+                
+                if (isLate && !taskLateReason.trim()) {
+                  toast.error('Mohon isi alasan keterlambatan terlebih dahulu');
+                  return;
+                }
+                
                 setSelectedTaskForCamera(null);
-                markAsCompleted(targetId, file);
+                markAsCompleted(targetId, file, taskLateReason);
               }}
               required={true}
             />
